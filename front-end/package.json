@@ -10,8 +10,17 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^4.7.0",
     "@astrojs/check": "^0.5.10",
+    "@astrojs/react": "^3.3.1",
+    "@astrojs/tailwind": "^5.1.0",
+    "@nextui-org/react": "^2.3.6",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "astro": "^4.7.0",
+    "framer-motion": "^11.1.7",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5"
   }
 }
