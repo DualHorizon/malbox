@@ -7,7 +7,6 @@ use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ReportModel {
-    pub id: Uuid,
     pub title: String,
     pub body: String,
     pub published: bool,

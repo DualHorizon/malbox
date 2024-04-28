@@ -15,32 +15,30 @@ struct ReportBody<T> { // NOTE: Currenlty using Generic as there may be more str
 // NOTE: Temporary placeholder fields for the reports
 #[derive(Serialize)]
 pub struct Report {
-    pub id: Uuid,
     pub title: String,
     pub body: String,
     pub published: bool,
 }
 
-async fn create_report(
-    ctx: Extension<AppState>,
-    Json(req): Json<ReportBody<Report>>,
+pub async fn insert(
+    ctx: AppState,
+    new_report: Report,
 ) -> Result<ReportModel, InfraError> {
 
     // NOTE: Temporary placeholder values for the reports
     let report = sqlx::query_scalar!(
         r#"insert into "report" (title, body, published) values ($1, $2, $3)"#,
-        req.report.title,
-        req.report.body,
-        req.report.published
+        new_report.title,
+        new_report.body,
+        new_report.published
     )
     .fetch_one(&ctx.pool)
     .await
     .map_err(adapt_infra_error)?;
 
     Ok(ReportModel {
-        id: req.report.id,
-        title: req.report.title,
-        body: req.report.body,
-        published: req.report.published
+        title: new_report.title,
+        body: new_report.body,
+        published: new_report.published
     })
 }

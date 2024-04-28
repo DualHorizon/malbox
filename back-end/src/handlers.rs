@@ -1,1 +1,1 @@
-pub mod create_report;
+pub mod reports;
