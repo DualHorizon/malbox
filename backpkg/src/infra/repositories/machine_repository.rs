@@ -2,29 +2,26 @@ use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::AppState;
 use crate::domain::models::report::ReportModel;
 use crate::infra::errors::{adapt_infra_error, InfraError};
+use crate::AppState;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct ReportBody<T> { // NOTE: Currenlty using Generic as there may be more strucs concerning reports, for ex. OpenReport/ClosedReport
-    report: T,
+struct MachineBody<T> {
+    // NOTE: Currenlty using Generic as there may be more strucs concerning reports, for ex. OpenReport/ClosedReport
+    Machine: T,
 }
 
 // NOTE: Temporary placeholder fields for the reports
 #[derive(Serialize)]
-pub struct Report {
-    pub title: String,
-    pub body: String,
+pub struct Machine {
+    pub _type: String,
+    pub content: String,
     pub published: bool,
 }
 
-pub async fn insert(
-    ctx: AppState,
-    new_report: Report,
-) -> Result<ReportModel, InfraError> {
-
+pub async fn insert(ctx: AppState, new_report: Machine) -> Result<ReportModel, InfraError> {
     // NOTE: Temporary placeholder values for the reports
     let report = sqlx::query_scalar!(
         r#"insert into "report" (title, body, published) values ($1, $2, $3)"#,
@@ -39,6 +36,6 @@ pub async fn insert(
     Ok(ReportModel {
         title: new_report.title,
         body: new_report.body,
-        published: new_report.published
+        published: new_report.published,
     })
 }

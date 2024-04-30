@@ -1,5 +1,5 @@
 [package]
-name = "back-end"
+name = "malbox-server"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.82"
-axum = "0.7.5"
+axum = { version = "0.7.5", features = ["multipart"] }
 axum-macros = "0.4.1"
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenvy = "0.15.7"
@@ -24,4 +24,3 @@ tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 uuid = { version = "1.8.0", features = ["fast-rng", "v4", "serde"] }
-virt = "0.3.1"

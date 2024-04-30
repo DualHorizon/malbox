@@ -39,16 +39,15 @@ async fn main() {
     let host = config.server_host();
     let port = config.server_port();
 
-
     let address = format!("{}:{}", host, port);
     let listener = tokio::net::TcpListener::bind(&address).await.unwrap();
 
     tracing::info!("listening on http://{}", address);
 
     axum::serve(listener, app)
-        .await.map_err(internal_error)
+        .await
+        .map_err(internal_error)
         .unwrap();
-
 }
 
 fn init_tracing() {

@@ -1,0 +1,3 @@
+[workspace]
+resolver = "2"
+members = ["malbox-core", "malbox-server", "malbox-shared"]
