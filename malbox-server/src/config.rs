@@ -1,19 +1,19 @@
-use std::env;
 use dotenvy::dotenv;
+use std::env;
 use tokio::sync::OnceCell;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct ServerConfig {
     host: String,
     port: u16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct DatabaseConfig {
     url: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     server: ServerConfig,
     db: DatabaseConfig,

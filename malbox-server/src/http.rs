@@ -1,0 +1,69 @@
+use crate::config::Config;
+use anyhow::Context;
+use axum::{
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{get, post},
+    Router,
+};
+use sqlx::PgPool;
+use std::sync::Arc;
+use tokio::net::TcpListener;
+use tower_http::trace::TraceLayer;
+
+mod error;
+mod submissions;
+
+#[derive(Clone)]
+struct AppState {
+    config: Config,
+    pool: PgPool,
+}
+
+pub async fn serve(conf: Config, db: PgPool) -> anyhow::Result<()> {
+    let shared_state = Arc::new(AppState {
+        config: conf,
+        pool: db,
+    });
+
+    let app = api_router()
+        .layer(TraceLayer::new_for_http())
+        .with_state(shared_state.clone());
+
+    let host = shared_state.config.server_host();
+    let port = shared_state.config.server_port();
+
+    let address = format!("{}:{}", host, port);
+    let listener = TcpListener::bind(&address)
+        .await
+        .context("error binding TcpListener")
+        .unwrap();
+
+    tracing::info!("listening on http://{}", address);
+
+    axum::serve(listener, app)
+        .await
+        .context("error running HTTP server!")
+}
+
+fn api_router() -> Router<Arc<AppState>> {
+    Router::new()
+        .route("/", get(root))
+        .fallback(handler_404)
+        .merge(submissions::router())
+}
+
+async fn root() -> &'static str {
+    "Server is running!"
+}
+
+async fn handler_404() -> impl IntoResponse {
+    (
+        StatusCode::NOT_FOUND,
+        "The requested resource was not found",
+    )
+}
+
+// fn analysis_routes() -> Router<Arc<AppState>> {
+//     Router::new().route("/:file", post(submit_file))
+// }

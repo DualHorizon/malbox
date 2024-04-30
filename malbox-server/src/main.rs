@@ -1,26 +1,13 @@
 use sqlx::postgres::PgPoolOptions;
-use sqlx::PgPool;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::config::config;
-use crate::errors::internal_error;
-use crate::router::app_router;
 
 mod config;
-mod domain;
-mod errors;
-mod handlers;
-mod infra;
-mod router;
-mod utils;
-
-#[derive(Clone)]
-pub struct AppState {
-    pool: PgPool,
-}
+mod http;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     init_tracing();
 
     let config = config().await;
@@ -33,28 +20,16 @@ async fn main() {
 
     sqlx::migrate!().run(&db).await.unwrap();
 
-    let state = AppState { pool: db };
-    let app = app_router(state);
+    http::serve(config.clone(), db).await?;
 
-    let host = config.server_host();
-    let port = config.server_port();
-
-    let address = format!("{}:{}", host, port);
-    let listener = tokio::net::TcpListener::bind(&address).await.unwrap();
-
-    tracing::info!("listening on http://{}", address);
-
-    axum::serve(listener, app)
-        .await
-        .map_err(internal_error)
-        .unwrap();
+    Ok(())
 }
 
 fn init_tracing() {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "back_end=debug".into()),
+                .unwrap_or_else(|_| "malbox_server=debug".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
