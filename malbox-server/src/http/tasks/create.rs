@@ -7,6 +7,7 @@ use axum::{
     Json, Router,
 };
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipart};
+use malbox_shared::hashing::md5;
 use std::sync::Arc;
 use tempfile::NamedTempFile;
 use tokio::fs::File;
