@@ -50,7 +50,7 @@
                         "rust-analyzer"
                       ];
                     };
-                    packages = with pkgs; [ sqlx-cli openssl ];
+                    packages = with pkgs; [ sqlx-cli openssl cargo-watch ];
                   }
                 ];
               };
