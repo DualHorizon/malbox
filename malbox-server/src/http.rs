@@ -12,7 +12,7 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 
 mod error;
-mod submissions;
+mod tasks;
 
 #[derive(Clone)]
 struct AppState {
@@ -50,7 +50,7 @@ fn api_router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(root))
         .fallback(handler_404)
-        .merge(submissions::router())
+        .merge(tasks::create::router())
 }
 
 async fn root() -> &'static str {

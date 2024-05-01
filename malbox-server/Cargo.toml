@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = "1.0.82"
 axum = { version = "0.7.5", features = ["multipart"] }
 axum-macros = "0.4.1"
+axum_typed_multipart = "0.11.1"
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenvy = "0.15.7"
 serde = { version = "1.0.199", features = ["derive"] }
