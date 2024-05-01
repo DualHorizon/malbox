@@ -14,6 +14,9 @@ use tower_http::trace::TraceLayer;
 mod error;
 mod tasks;
 
+pub use error::{Error, ResultExt};
+pub type Result<T, E = Error> = std::result::Result<T, E>;
+
 #[derive(Clone)]
 struct AppState {
     config: Config,
