@@ -5,6 +5,7 @@ use crate::config::config;
 
 mod config;
 mod http;
+mod repositories;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
