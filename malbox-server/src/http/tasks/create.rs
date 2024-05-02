@@ -2,6 +2,7 @@ use crate::http;
 use crate::http::AppState;
 use crate::http::Result;
 use crate::http::ResultExt;
+use crate::repositories::samples_repository::{insert_sample, Sample};
 use axum::extract::DefaultBodyLimit;
 use axum::{
     body::Bytes,
@@ -9,10 +10,16 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use axum_macros::debug_handler;
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipart};
+use magic::cookie;
 use magic::cookie::DatabasePaths;
 use malbox_shared::hash::*;
+use send_wrapper::SendWrapper;
 use std::io::Read;
+use std::sync::mpsc::channel;
+use std::sync::Arc;
+use std::thread;
 use tempfile::NamedTempFile;
 
 pub fn router() -> Router<AppState> {
@@ -49,11 +56,11 @@ struct CreateTaskRequest {
     enforce_timeout: Option<bool>,
 }
 
+#[debug_handler]
 async fn tasks_create_file(
     State(state): State<AppState>,
     TypedMultipart(multipart): TypedMultipart<CreateTaskRequest>,
 ) -> Result<Json<TaskBody<NewTask>>, http::error::Error> {
-    tracing::info!("{:#?}", state);
     let file_name = multipart
         .file
         .metadata
@@ -71,7 +78,7 @@ async fn tasks_create_file(
     let mut file_contents: Vec<u8> = Vec::new();
     file_handle.read_to_end(&mut file_contents).unwrap();
 
-    let file_size = file_contents.len() as i32;
+    let file_size = file_contents.len() as i64;
     // very slow
     let md5_hash = get_md5(&mut file_contents);
     let sha1_hash = get_sha1(&mut file_contents);
@@ -87,25 +94,36 @@ async fn tasks_create_file(
     tracing::info!("ssdeep: {:#?}", ssdeep_hash);
 
     let cookie = magic::Cookie::open(magic::cookie::Flags::default()).unwrap();
-    let cookie = cookie.load(&DatabasePaths::default()).unwrap();
+    let wrapped_cookie = SendWrapper::new(cookie);
 
-    let file_type = cookie.buffer(&file_contents).unwrap();
+    let (sender, receiver) = channel();
+
+    let t = thread::spawn(move || {
+        sender.send(wrapped_cookie).unwrap();
+    });
+
+    let wrapped_cookie = receiver.recv().unwrap();
+
+    // let cookie = cookie.load(&DatabasePaths::default()).unwrap();
+
+    // let file_type = cookie.buffer(&file_contents).unwrap();
+    let file_type = String::from("asd");
     tracing::info!("{file_type}");
     tracing::info!("file name: {file_name}");
     tracing::info!("file size: {file_size}");
 
-    let created_sample = sqlx::query_scalar!(
-        r#"INSERT into "samples" (file_size, file_type, md5, crc32, sha1, sha256, sha512, ssdeep) values ($1, $2, $3, $4, $5, $6, $7, $8) returning id"#,
-        file_size,
-        file_type,
-        md5_hash,
-        crc32_hash,
-        sha1_hash,
-        sha256_hash,
-        sha512_hash,
-        ssdeep_hash
-    ).fetch_one(&state.pool)
-    .await;
+    let sample_entity = Sample {
+        file_size: file_size,
+        file_type: file_type,
+        md5: md5_hash,
+        crc32: crc32_hash,
+        sha1: sha1_hash,
+        sha256: sha256_hash,
+        sha512: sha512_hash,
+        ssdeep: ssdeep_hash,
+    };
+
+    insert_sample(state.pool, sample_entity).await;
 
     Ok(Json(TaskBody {
         task: NewTask { task_id: 123 },
