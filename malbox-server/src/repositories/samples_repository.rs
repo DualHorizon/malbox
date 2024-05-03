@@ -12,7 +12,7 @@ pub struct Sample {
     pub ssdeep: String,
 }
 
-#[derive(FromRow)]
+#[derive(FromRow, Debug)]
 pub struct SampleEntity {
     pub id: i64,
     pub file_size: i64,

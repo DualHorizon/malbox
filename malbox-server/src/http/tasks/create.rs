@@ -12,14 +12,9 @@ use axum::{
 };
 use axum_macros::debug_handler;
 use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipart};
-use magic::cookie;
 use magic::cookie::DatabasePaths;
 use malbox_shared::hash::*;
-use send_wrapper::SendWrapper;
 use std::io::Read;
-use std::sync::mpsc::channel;
-use std::sync::Arc;
-use std::thread;
 use tempfile::NamedTempFile;
 
 pub fn router() -> Router<AppState> {
@@ -35,7 +30,7 @@ struct TaskBody<T> {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct NewTask {
-    task_id: u32,
+    task_id: i64,
 }
 
 #[derive(TryFromMultipart)]
@@ -93,22 +88,13 @@ async fn tasks_create_file(
     tracing::info!("crc32: {:#?}", crc32_hash);
     tracing::info!("ssdeep: {:#?}", ssdeep_hash);
 
-    let cookie = magic::Cookie::open(magic::cookie::Flags::default()).unwrap();
-    let wrapped_cookie = SendWrapper::new(cookie);
+    let file_type = {
+        let cookie = magic::Cookie::open(magic::cookie::Flags::default()).unwrap();
+        let cookie = cookie.load(&DatabasePaths::default()).unwrap();
+        cookie.buffer(&file_contents).unwrap()
+    };
 
-    let (sender, receiver) = channel();
-
-    let t = thread::spawn(move || {
-        sender.send(wrapped_cookie).unwrap();
-    });
-
-    let wrapped_cookie = receiver.recv().unwrap();
-
-    // let cookie = cookie.load(&DatabasePaths::default()).unwrap();
-
-    // let file_type = cookie.buffer(&file_contents).unwrap();
-    let file_type = String::from("asd");
-    tracing::info!("{file_type}");
+    tracing::info!("file type: {file_type}");
     tracing::info!("file name: {file_name}");
     tracing::info!("file size: {file_size}");
 
@@ -123,9 +109,11 @@ async fn tasks_create_file(
         ssdeep: ssdeep_hash,
     };
 
-    insert_sample(state.pool, sample_entity).await;
+    let created_sample = insert_sample(state.pool, sample_entity).await.unwrap();
 
     Ok(Json(TaskBody {
-        task: NewTask { task_id: 123 },
+        task: NewTask {
+            task_id: created_sample.id,
+        },
     }))
 }
