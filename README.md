@@ -27,5 +27,7 @@ Malbox is fully open-source, modular, and community-oriented, making it an excel
 **v0.2.0**
 TBD
 
+---
+
 ![image](https://github.com/shard77/malbox/assets/106669955/0dfc864a-c5c2-498e-9b7e-3df972ccf603)
 
