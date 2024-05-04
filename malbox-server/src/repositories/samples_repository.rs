@@ -41,7 +41,7 @@ impl Default for SampleEntity {
     }
 }
 
-pub async fn insert_sample(pool: PgPool, sample: Sample) -> anyhow::Result<SampleEntity> {
+pub async fn insert_sample(pool: &PgPool, sample: Sample) -> anyhow::Result<SampleEntity> {
     query_as!(
         SampleEntity,
         r#"
@@ -58,7 +58,7 @@ pub async fn insert_sample(pool: PgPool, sample: Sample) -> anyhow::Result<Sampl
         sample.sha512,
         sample.ssdeep
     )
-    .fetch_one(&pool)
+    .fetch_one(pool)
     .await
     .context("failed to insert sample")
 }

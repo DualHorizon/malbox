@@ -12,6 +12,7 @@ use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 
 mod error;
+mod submissions;
 mod tasks;
 
 pub use error::{Error, ResultExt};
