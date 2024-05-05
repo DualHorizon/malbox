@@ -43,7 +43,7 @@ pub async fn serve(conf: Config, db: PgPool) -> anyhow::Result<()> {
         .context("error binding TcpListener")
         .unwrap();
 
-    tracing::info!("listening on http://{}", address);
+    tracing::info!("[OK] listening on http://{}", address);
 
     axum::serve(listener, app)
         .await
