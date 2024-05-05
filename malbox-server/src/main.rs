@@ -1,5 +1,5 @@
-use sqlx::postgres::PgPoolOptions;
-use std::sync::Arc;
+use sqlx::{postgres::PgPoolOptions, PgPool};
+use std::{sync::Arc, time::Duration};
 use tokio::sync::{mpsc, Semaphore};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -9,8 +9,6 @@ mod actor;
 mod config;
 mod http;
 mod repositories;
-
-use actor::{ActorMessage, MyActor};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,27 +24,30 @@ async fn main() -> anyhow::Result<()> {
 
     sqlx::migrate!().run(&db).await.unwrap();
 
+    let db_arc = Arc::new(db.clone());
     tracing::info!("Launching scheduler");
 
-    let (tx, mut rx) = mpsc::channel::<ActorMessage>(100);
+    let (tx, rx) = mpsc::channel::<String>(100);
+    let permits = Arc::new(Semaphore::new(4));
 
-    let max_concurrency = 4;
-    let permits = Arc::new(Semaphore::new(max_concurrency));
+    // no need to limit threads, tokio seems to handle it fine with balancing
+    for _ in 0..4 {
+        let sem = permits.clone();
 
-    let mut actor = MyActor::new(rx, permits.clone(), db.clone());
-
-    tokio::spawn(async move {
-        actor.run().await;
-    });
-
-    tokio::spawn({
-        let db_pool = db.clone();
-        async move {
-            loop {
-                tracing::info!("fetching tasks");
-
-                tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+        tokio::spawn(async move {
+            while let Some(task_id) = rx.recv().await {
+                let permit = sem.acquire().await.unwrap();
+                tracing::info!("thread spawned");
             }
+        });
+    }
+
+    let db_clone = db_arc.clone();
+    tokio::spawn(async move {
+        loop {
+            tracing::info!("checking db");
+            fetch_pending_tasks(&db_clone, &tx);
+            tokio::time::sleep(Duration::from_secs(10)).await;
         }
     });
 
@@ -63,4 +64,8 @@ fn init_tracing() {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+}
+
+async fn fetch_pending_tasks(pool: &Arc<PgPool>, tx: &mpsc::Sender<String>) {
+    tx.send(String::from("task"));
 }
