@@ -116,3 +116,16 @@ pub async fn insert_task(pool: &PgPool, task: Task) -> anyhow::Result<TaskEntity
     .await
     .context("failed to insert sample")
 }
+
+pub async fn fetch_pending_tasks(pool: &PgPool) -> anyhow::Result<Vec<TaskEntity>> {
+    query_as!(
+        TaskEntity,
+        r#"
+        SELECT id, target, category, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, added_on, started_on, completed_on, status AS "status!: StatusType", sample_id
+        from "tasks" WHERE status = 'pending'
+        "#,
+    )
+    .fetch_all(pool)
+    .await
+    .context("failed to fetch pending tasks")
+}
