@@ -17,10 +17,10 @@ Malbox is fully open-source, modular, and community-oriented, making it an excel
 - [x] Integrate PostgreSQL
 - [x] Basic back-end structure and logic
 - [x] Task/submission management
-- [ ] Configuration options (machines, submissions, file persistence, etc..) 
 - [ ] Integrate different hypervisors support (VMWare, VirtualBox, QEMU, KVM, Xen)
 - [ ] Conduct basic statical analysis
 - [ ] Conduct basic dynamic analysis
+- [ ] Configuration options (machines, submissions, file persistence, etc..) 
 - [ ] Plugin & module support
 - [ ] Extend analysis functionalities
 - [ ] Modularize analysis settings
