@@ -1,4 +1,5 @@
 use repositories::tasks_repository::TaskEntity;
+use scheduler::{TaskScheduler, TaskWorker};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{sync::Arc, time::Duration};
 use tokio::sync::{mpsc, Semaphore};
@@ -25,42 +26,15 @@ async fn main() -> anyhow::Result<()> {
 
     sqlx::migrate!().run(&db).await.unwrap();
 
-    let (tx, mut rx) = mpsc::channel::<TaskEntity>(8);
-
     let db_clone = db.clone();
 
-    let mut sent_tasks: Vec<i64> = Vec::new();
+    let (tx, rx) = mpsc::channel::<TaskEntity>(8);
 
-    tokio::spawn(async move {
-        tracing::info!("[INIT] launching workers");
+    let scheduler = TaskScheduler::new(tx, db_clone);
+    let worker = TaskWorker::new(rx);
 
-        while let Some(task) = rx.recv().await {
-            tracing::info!("[WORKER] received task: {:#?}", task.id);
-        }
-    });
-
-    tokio::spawn(async move {
-        tracing::info!("[INIT] running tasks scheduler");
-        loop {
-            let pending_tasks =
-                repositories::tasks_repository::fetch_pending_tasks(&db_clone).await; // sends values to receiver
-
-            if let Ok(pending) = pending_tasks {
-                for task in pending {
-                    if !sent_tasks.contains(&task.id) {
-                        sent_tasks.push(task.id);
-
-                        if let Err(e) = tx.send(task).await {
-                            tracing::error!("Failed to send task: {}", e);
-                        }
-                    }
-                }
-            }
-
-            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-        }
-    });
-
+    tokio::spawn(scheduler.scheduler());
+    tokio::spawn(worker.worker());
     http::serve(config.clone(), db).await?;
 
     Ok(())
