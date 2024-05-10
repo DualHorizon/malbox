@@ -67,7 +67,3 @@ async fn handler_404() -> impl IntoResponse {
         "The requested resource was not found",
     )
 }
-
-// fn analysis_routes() -> Router<Arc<AppState>> {
-//     Router::new().route("/:file", post(submit_file))
-// }

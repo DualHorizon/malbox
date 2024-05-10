@@ -6,7 +6,7 @@ use tokio::sync::{mpsc, Semaphore};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::config::config;
-
+use malbox_config::load_config;
 mod config;
 mod http;
 mod repositories;
@@ -15,6 +15,8 @@ mod scheduler;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     init_tracing();
+
+    load_config();
 
     let config = config().await;
 
