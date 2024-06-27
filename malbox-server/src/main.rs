@@ -1,3 +1,4 @@
+use anyhow::Context;
 use repositories::tasks_repository::TaskEntity;
 use scheduler::{TaskScheduler, TaskWorker};
 use sqlx::{postgres::PgPoolOptions, PgPool};

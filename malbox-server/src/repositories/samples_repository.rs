@@ -1,5 +1,5 @@
 use anyhow::Context;
-use sqlx::{query, query_as, FromRow, PgPool};
+use sqlx::{postgres::PgDatabaseError, query, query_as, FromRow, PgPool};
 
 pub struct Sample {
     pub file_size: i64,
@@ -42,13 +42,13 @@ impl Default for SampleEntity {
 }
 
 pub async fn insert_sample(pool: &PgPool, sample: Sample) -> anyhow::Result<SampleEntity> {
-    query_as!(
+    match query_as!(
         SampleEntity,
         r#"
-    INSERT into "samples" (file_size, file_type, md5, crc32, sha1, sha256, sha512, ssdeep)
-    values ($1::bigint, $2::varchar, $3::varchar, $4::varchar, $5::varchar, $6::varchar, $7::varchar, $8::varchar)
-    returning *
-    "#,
+        INSERT INTO "samples" (file_size, file_type, md5, crc32, sha1, sha256, sha512, ssdeep)
+        VALUES ($1::bigint, $2::varchar, $3::varchar, $4::varchar, $5::varchar, $6::varchar, $7::varchar, $8::varchar)
+        RETURNING *
+        "#,
         sample.file_size,
         sample.file_type,
         sample.md5,
@@ -60,5 +60,5 @@ pub async fn insert_sample(pool: &PgPool, sample: Sample) -> anyhow::Result<Samp
     )
     .fetch_one(pool)
     .await
-    .context("failed to insert sample")
+    .context()
 }

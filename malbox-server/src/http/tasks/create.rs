@@ -112,7 +112,12 @@ async fn tasks_create_file(
         ssdeep: ssdeep_hash,
     };
 
-    let created_sample = insert_sample(&state.pool, sample_entity).await.unwrap();
+    let created_sample = insert_sample(&state.pool, sample_entity)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to insert or fetch existing sample: {:#?}", e);
+            http::error::Error::from(e)
+        })?;
 
     let task_entity = Task {
         target: file_path.into_os_string().into_string().unwrap(),
