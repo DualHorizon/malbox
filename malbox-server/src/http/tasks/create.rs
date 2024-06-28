@@ -4,6 +4,7 @@ use crate::http::Result;
 use crate::http::ResultExt;
 use crate::repositories::samples_repository::{insert_sample, Sample};
 use crate::repositories::tasks_repository::{insert_task, StatusType, Task};
+use axum::extract::multipart;
 use axum::extract::DefaultBodyLimit;
 use axum::http::status;
 use axum::{
@@ -17,8 +18,10 @@ use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipart};
 use magic::cookie::DatabasePaths;
 use malbox_shared::hash::*;
 use std::io::Read;
+use std::task;
 use tempfile::NamedTempFile;
 use time::macros::date;
+use time::OffsetDateTime;
 use time::PrimitiveDateTime;
 
 pub fn router() -> Router<AppState> {
@@ -42,8 +45,9 @@ struct CreateTaskRequest {
     #[form_data(limit = "unlimited")]
     file: FieldData<NamedTempFile>,
     package: Option<String>,
-    timeout: Option<String>,
-    priority: Option<String>,
+    module: Option<String>,
+    timeout: Option<i64>,
+    priority: Option<i64>,
     options: Option<String>,
     machine: Option<String>,
     platform: Option<String>,
@@ -119,32 +123,41 @@ async fn tasks_create_file(
             http::error::Error::from(e)
         })?;
 
+    let now = OffsetDateTime::now_utc();
+    let current_primitive_datetime = PrimitiveDateTime::new(now.date(), now.time());
+
     let task_entity = Task {
         target: file_path.into_os_string().into_string().unwrap(),
-        category: String::from("test"),
-        timeout: Some(0),
-        priority: Some(0),
-        custom: String::from("he"),
-        machine: String::from("t"),
-        package: String::from("asd"),
-        options: String::from("asd"),
-        platform: String::from("asd"),
-        memory: Some(false),
-        enforce_timeout: Some(false),
-        added_on: PrimitiveDateTime::new(date!(2019 - 01 - 01), time::macros::time!(0:00)),
-        started_on: PrimitiveDateTime::new(date!(2019 - 01 - 01), time::macros::time!(0:00)),
-        completed_on: PrimitiveDateTime::new(date!(2019 - 01 - 01), time::macros::time!(0:00)),
+        module: multipart.module.unwrap_or("file_analysis".to_string()),
+        timeout: multipart.timeout.unwrap_or(1),
+        priority: multipart.priority.unwrap_or(1),
+        custom: multipart.custom,
+        machine: multipart.machine,
+        package: multipart.package,
+        options: multipart.options,
+        platform: multipart.platform,
+        unique: multipart.unique,
+        tags: multipart.tags,
+        owner: multipart.owner,
+        memory: multipart.memory.unwrap_or(false),
+        enforce_timeout: multipart.enforce_timeout.unwrap_or(false),
+        added_on: current_primitive_datetime,
+        started_on: None,
+        completed_on: None,
         status: StatusType::Pending,
         sample_id: created_sample.id,
     };
 
-    let created_task = insert_task(&state.pool, task_entity).await.unwrap();
+    let created_task = insert_task(&state.pool, task_entity).await.map_err(|e| {
+        tracing::error!("Failed to insert task: {:#?}", e);
+        http::error::Error::from(e)
+    })?;
 
     tracing::info!("{:#?}", created_task);
 
     Ok(Json(TaskBody {
         task: NewTask {
-            task_id: created_sample.id,
+            task_id: created_task.id,
         },
     }))
 }

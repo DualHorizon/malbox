@@ -33,11 +33,16 @@ async fn main() -> anyhow::Result<()> {
 
     let (tx, rx) = mpsc::channel::<TaskEntity>(8);
 
-    let scheduler = TaskScheduler::new(tx, db_clone);
-    let worker = TaskWorker::new(rx);
+    let scheduler = TaskScheduler::new(tx.clone(), db_clone);
+    tokio::spawn(async move {
+        scheduler.scheduler().await;
+    });
 
-    tokio::spawn(scheduler.scheduler());
-    tokio::spawn(worker.worker());
+    let worker = TaskWorker::new(rx, 1); // Limit to 5 concurrent workers
+    tokio::spawn(async move {
+        worker.worker().await;
+    });
+
     http::serve(config.clone(), db).await?;
 
     Ok(())

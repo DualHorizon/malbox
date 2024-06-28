@@ -60,5 +60,33 @@ pub async fn insert_sample(pool: &PgPool, sample: Sample) -> anyhow::Result<Samp
     )
     .fetch_one(pool)
     .await
-    .context()
+    {
+        Ok(new_sample) => Ok(new_sample),
+        Err(e) => {
+            if let Some(db_error) = e.as_database_error() {
+                let pg_error = db_error.downcast_ref::<PgDatabaseError>();
+                    if pg_error.code() == "23505" {
+                        let existing_sample = query_as!(
+                            SampleEntity,
+                            r#"
+                            SELECT * FROM "samples"
+                            WHERE md5 = $1 AND crc32 = $2 AND sha1 = $3 AND sha256 = $4 AND sha512 = $5
+                            "#,
+                            sample.md5,
+                            sample.crc32,
+                            sample.sha1,
+                            sample.sha256,
+                            sample.sha512
+                        )
+                        .fetch_one(pool)
+                        .await
+                        .context("failed to fetch existing sample")?;
+
+                        return Ok(existing_sample);
+                    }
+                }
+
+            Err(e).context("failed to insert sample")
+        }
+    }
 }
