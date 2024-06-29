@@ -2,8 +2,11 @@ use anyhow::Context;
 use repositories::tasks_repository::TaskEntity;
 use scheduler::{TaskScheduler, TaskWorker};
 use sqlx::{postgres::PgPoolOptions, PgPool};
+use std::collections::HashMap;
 use std::{sync::Arc, time::Duration};
 use tokio::sync::{mpsc, Semaphore};
+use tracing::{level_filters::LevelFilter, subscriber};
+use tracing_subscriber::prelude::*;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::config::config;
@@ -15,7 +18,7 @@ mod scheduler;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    init_tracing();
+    init_tracing("malbox_server=debug,tower_http=debug");
 
     load_config();
 
@@ -25,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
         .max_connections(50)
         .connect(config.db_url())
         .await
-        .unwrap(); // TODO: handle error properly
+        .unwrap();
 
     sqlx::migrate!().run(&db).await.unwrap();
 
@@ -38,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
         scheduler.scheduler().await;
     });
 
-    let worker = TaskWorker::new(rx, 1); // Limit to 5 concurrent workers
+    let worker = TaskWorker::new(rx, 1);
     tokio::spawn(async move {
         worker.worker().await;
     });
@@ -48,12 +51,41 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn init_tracing() {
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "malbox_server=debug".into()),
-        )
+fn parse_log_filters(log_filters: &str) -> HashMap<String, tracing::Level> {
+    let mut log_levels = HashMap::new();
+
+    for filter in log_filters.split(',') {
+        let parts: Vec<&str> = filter.split('=').collect();
+        if parts.len() == 2 {
+            let module = parts[0].trim().to_string();
+            let level_str = parts[1].trim().to_lowercase();
+            let level = match level_str.as_str() {
+                "trace" => tracing::Level::TRACE,
+                "debug" => tracing::Level::DEBUG,
+                "info" => tracing::Level::INFO,
+                "warn" => tracing::Level::WARN,
+                "error" => tracing::Level::ERROR,
+                _ => continue,
+            };
+            log_levels.insert(module, level);
+        }
+    }
+
+    log_levels
+}
+
+fn init_tracing(log_filter: &str) {
+    let log_levels = parse_log_filters(log_filter);
+
+    let subscriber = tracing_subscriber::Registry::default()
         .with(tracing_subscriber::fmt::layer())
-        .init();
+        .with(
+            tracing_subscriber::filter::Targets::new().with_targets(
+                log_levels
+                    .into_iter()
+                    .map(|(module, level)| (module, LevelFilter::from_level(level))),
+            ),
+        );
+
+    tracing::subscriber::set_global_default(subscriber).expect("Failed to set global subscriber");
 }
