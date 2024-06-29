@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "malbox-config","malbox-core", "malbox-server", "malbox-shared"]
+members = ["malbox-core", "malbox-server", "malbox-shared"]
 
 [workspace.dependencies]
 tokio = { version = "1.37.0", features = ["full"] }

@@ -1,4 +1,3 @@
-use crate::config::Config;
 use anyhow::Context;
 use axum::{
     http::StatusCode,
@@ -6,6 +5,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use malbox_shared::config::Config;
 use sqlx::PgPool;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
@@ -32,8 +32,8 @@ pub async fn serve(conf: Config, db: PgPool) -> anyhow::Result<()> {
         .layer(TraceLayer::new_for_http())
         .with_state(shared_state.clone());
 
-    let host = shared_state.config.server_host();
-    let port = shared_state.config.server_port();
+    let host = shared_state.config.http.host;
+    let port = shared_state.config.http.port;
 
     let address = format!("{}:{}", host, port);
     let listener = TcpListener::bind(&address)

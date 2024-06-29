@@ -1,10 +1,10 @@
 [http]
-host = "192.0.0.1"
-port = 3333
+host = "127.0.0.1"
+port = 5000
 
 [postgres]
 database_url = "postgresql://postgres:password@localhost/malbox-postgres-16"
 port = 5000
 
 [debug]
-rust_log = "malbox_server=debug,tower_http=debug"
+rust_log = "malbox_server=debug,tower_http=debug,sqlx=info"

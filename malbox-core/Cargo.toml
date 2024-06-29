@@ -9,4 +9,3 @@ edition = "2021"
 
 tokio = { workspace = true }
 virt = "0.3.1"
-malbox-config = { path = "../malbox-config" }

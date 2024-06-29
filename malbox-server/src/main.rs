@@ -9,24 +9,20 @@ use tracing::{level_filters::LevelFilter, subscriber};
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::config::config;
-use malbox_config::load_config;
-mod config;
+use malbox_shared::config::load_config;
 mod http;
 mod repositories;
 mod scheduler;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    init_tracing("malbox_server=debug,tower_http=debug");
+    let config = load_config().await;
 
-    load_config();
-
-    let config = config().await;
+    init_tracing(&config.debug.rust_log);
 
     let db = PgPoolOptions::new()
         .max_connections(50)
-        .connect(config.db_url())
+        .connect(&config.postgres.database_url)
         .await
         .unwrap();
 
