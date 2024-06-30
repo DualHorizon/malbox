@@ -8,3 +8,6 @@ port = 5000
 
 [debug]
 rust_log = "malbox_server=debug,tower_http=debug,sqlx=info"
+
+[machinery]
+hypervisor = "vmware"

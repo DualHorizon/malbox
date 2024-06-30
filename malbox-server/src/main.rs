@@ -1,13 +1,10 @@
-use anyhow::Context;
 use repositories::tasks_repository::TaskEntity;
 use scheduler::{TaskScheduler, TaskWorker};
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::postgres::PgPoolOptions;
 use std::collections::HashMap;
-use std::{sync::Arc, time::Duration};
-use tokio::sync::{mpsc, Semaphore};
-use tracing::{level_filters::LevelFilter, subscriber};
-use tracing_subscriber::prelude::*;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tokio::sync::mpsc;
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::layer::SubscriberExt;
 
 use malbox_shared::config::load_config;
 mod http;
@@ -18,11 +15,11 @@ mod scheduler;
 async fn main() -> anyhow::Result<()> {
     let config = load_config().await;
 
-    init_tracing(&config.debug.rust_log);
+    init_tracing(&config.malbox.debug.rust_log);
 
     let db = PgPoolOptions::new()
-        .max_connections(50)
-        .connect(&config.postgres.database_url)
+        .max_connections(10)
+        .connect(&config.malbox.postgres.database_url)
         .await
         .unwrap();
 
@@ -42,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
         worker.worker().await;
     });
 
-    http::serve(config.clone(), db).await?;
+    http::serve(config.malbox.clone(), db).await?;
 
     Ok(())
 }

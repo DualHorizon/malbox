@@ -66,11 +66,10 @@ impl TaskWorker {
             let task_id = task.id;
             tokio::spawn(async move {
                 tracing::info!("[WORKER] processing task: {:#?}", task_id);
-                // Simulate some work with the task
+
                 tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
                 tracing::info!("[WORKER] completed task: {:#?}", task_id);
 
-                // Permit is dropped here, allowing another task to start
                 drop(permit);
             });
         }

@@ -1,5 +1,5 @@
 use anyhow::Context;
-use sqlx::{postgres::PgDatabaseError, query, query_as, FromRow, PgPool};
+use sqlx::{postgres::PgDatabaseError, query_as, FromRow, PgPool};
 
 pub struct Sample {
     pub file_size: i64,

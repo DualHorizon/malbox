@@ -1,7 +1,6 @@
 use anyhow::Context;
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use sqlx::{query, query_as, FromRow, PgPool};
+use sqlx::{query_as, FromRow, PgPool};
 use time::{macros::date, PrimitiveDateTime};
 
 #[derive(sqlx::Type, Debug, Serialize, Deserialize)]

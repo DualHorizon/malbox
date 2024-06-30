@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use malbox_shared::config::Config;
+use malbox_shared::config::malbox::MalboxConfig;
 use sqlx::PgPool;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
@@ -18,11 +18,11 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Clone, Debug)]
 struct AppState {
-    config: Config,
+    config: MalboxConfig,
     pool: PgPool,
 }
 
-pub async fn serve(conf: Config, db: PgPool) -> anyhow::Result<()> {
+pub async fn serve(conf: MalboxConfig, db: PgPool) -> anyhow::Result<()> {
     let shared_state = AppState {
         config: conf,
         pool: db,
