@@ -2,13 +2,15 @@
 resolver = "2"
 members = [
     "malbox-config",
-    "malbox-core",
     "malbox-database",
     "malbox-hashing",
     "malbox-scheduler",
     "malbox-http",
     "malbox-storage",
-    "malbox-tracing", "malbox-machinery", "malbox-processor", "malbox-analysis",
+    "malbox-tracing",
+    "malbox-machinery",
+    "malbox-processor",
+    "malbox-analysis",
 ]
 
 [workspace.dependencies]

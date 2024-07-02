@@ -6,7 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-malbox-core = { path = "../malbox-core" }
 malbox-database = { path = "../malbox-database" }
 malbox-hashing = { path = "../malbox-hashing" }
 malbox-config = { path = "../malbox-config" }
