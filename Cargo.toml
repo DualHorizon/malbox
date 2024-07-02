@@ -1,7 +1,21 @@
 [workspace]
 resolver = "2"
-members = ["malbox-core", "malbox-server", "malbox-shared"]
+members = [
+    "malbox-config",
+    "malbox-core",
+    "malbox-database",
+    "malbox-hashing",
+    "malbox-scheduler",
+    "malbox-http",
+    "malbox-storage",
+    "malbox-tracing", "malbox-machinery", "malbox-processor", "malbox-analysis",
+]
 
 [workspace.dependencies]
 tokio = { version = "1.37.0", features = ["full"] }
 sqlx = { version = "0.7.4" }
+serde = { version = "1.0.199", features = ["derive"] }
+anyhow = { version = "1.0.82" }
+chrono = { version = "0.4.38", features = ["serde"] }
+time = { version = "0.3.36" }
+tracing = { version = "0.1.40" }

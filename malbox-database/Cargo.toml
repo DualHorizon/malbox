@@ -1,0 +1,20 @@
+[package]
+name = "malbox-database"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+malbox-config = { path = "../malbox-config" }
+anyhow = { workspace = true }
+serde = { workspace = true }
+time = { workspace = true }
+chrono = { workspace = true }
+sqlx = { version = "0.7.4", features = [
+    "runtime-tokio",
+    "tls-native-tls",
+    "postgres",
+    "uuid",
+    "time",
+] }

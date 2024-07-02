@@ -7,7 +7,7 @@ database_url = "postgresql://postgres:password@localhost/malbox-postgres-16"
 port = 5000
 
 [debug]
-rust_log = "malbox_server=debug,tower_http=debug,sqlx=info"
+rust_log = "malbox_server=debug,tower_http=debug,sqlx=info,malbox_database=debug,malbox_scheduler=debug"
 
 [machinery]
 hypervisor = "vmware"
