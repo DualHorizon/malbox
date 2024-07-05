@@ -3,26 +3,26 @@ mode = "gui"
 interface = "virbr0"
 vmrun_path = "/usr/bin/vmrun"
 
-[machines.xpsp3]
+[[machines]]
 name = "xpsp3"
 vmx_path = "/data/vms/xpsp3/xpsp3.vmx"
 snapshot = "Base"
-platform = "windows"
+platform = "Windows"
 ip = "10.152.152.55"
 arch = "x64"
-tags = []
-interface = ""
-result_server_ip = ""
-result_server_port = ""
+# tags = []
+# interface = ""
+# result_server_ip = ""
+# result_server_port = ""
 
-[machines.win7x64sp1]
+[[machines]]
 name = "win7x64sp1"
 vmx_path = "/data/vms/win7x64sp1/win7x64sp1.vmx"
 snapshot = "Base"
 platform = "windows"
 ip = "10.152.152.60"
 arch = "x64"
-tags = []
-interface = ""
-result_server_ip = ""
-result_server_port = ""
+# tags = []
+# interface = ""
+# result_server_ip = ""
+# result_server_port = ""

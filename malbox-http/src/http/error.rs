@@ -7,8 +7,8 @@ use axum::{
 use malbox_database::{DatabaseError, Error as SqlxError};
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::hash::Hash;
 
+// NOTE - Maybe the errors should be less detailed, returning INTERNAL_SERVER_ERROR for db/processing errors
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("authentication required")]

@@ -1,5 +1,5 @@
 use malbox_config::load_config;
-use malbox_database::init_database;
+use malbox_database::{init_database, init_machines};
 use malbox_scheduler::init_scheduler;
 use malbox_tracing::init_tracing;
 
@@ -12,6 +12,8 @@ async fn main() -> anyhow::Result<()> {
     init_tracing(&config.malbox.debug.rust_log);
 
     let db = init_database(&config.malbox.postgres).await;
+
+    init_machines(&db, &config.machinery).await;
 
     init_scheduler(db.clone(), 1).await;
 

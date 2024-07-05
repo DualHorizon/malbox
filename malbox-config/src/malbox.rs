@@ -32,7 +32,7 @@ pub struct Machinery {
 }
 
 pub fn load_config() -> Result<MalboxConfig, String> {
-    let file_name = "../configuration/malbox.toml";
+    let file_name = "./configuration/malbox.toml";
 
     let contents = fs::read_to_string(file_name)
         .map_err(|e| format!("Could not read file `{}`: {}", file_name, e))?;

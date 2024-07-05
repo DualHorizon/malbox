@@ -1,4 +1,7 @@
 use anyhow::Context;
+use malbox_config::machinery::{
+    MachineArch as MachineArchConfig, MachinePlatform as MachinePlatformConfig,
+};
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgRow, query, query_as, FromRow, PgPool};
 use time::PrimitiveDateTime;
@@ -18,6 +21,25 @@ pub enum MachinePlatform {
     Windows,
     Linux,
     MacOs,
+}
+
+impl From<MachineArchConfig> for MachineArch {
+    fn from(value: MachineArchConfig) -> Self {
+        match value {
+            MachineArchConfig::X64 => MachineArch::X64,
+            MachineArchConfig::X86 => MachineArch::X86,
+        }
+    }
+}
+
+impl From<MachinePlatformConfig> for MachinePlatform {
+    fn from(value: MachinePlatformConfig) -> Self {
+        match value {
+            MachinePlatformConfig::Linux => MachinePlatform::Linux,
+            MachinePlatformConfig::MacOs => MachinePlatform::MacOs,
+            MachinePlatformConfig::Windows => MachinePlatform::Windows,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -100,13 +122,13 @@ pub async fn insert_machine(pool: &PgPool, machine: Machine) -> anyhow::Result<M
     .context("failed to insert sample")
 }
 
-pub async fn clean_machines(pool: &PgPool) -> anyhow::Result<PgRow, anyhow::Error> {
+pub async fn clean_machines(pool: &PgPool) -> anyhow::Result<(), anyhow::Error> {
     query!(
         r#"
         TRUNCATE "machines";
         "#
     )
-    .fetch_one(pool)
+    .execute(pool)
     .await
     .context("failed to truncate `machines` table")?;
 
@@ -115,9 +137,11 @@ pub async fn clean_machines(pool: &PgPool) -> anyhow::Result<PgRow, anyhow::Erro
         DELETE FROM "machines";
         "#
     )
-    .fetch_one(pool)
+    .execute(pool)
     .await
-    .context("failed to delete from `machines` table")
+    .context("failed to delete from `machines` table")?;
+
+    Ok(())
 }
 
 //TODO

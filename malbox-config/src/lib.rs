@@ -1,14 +1,13 @@
-use serde::Deserialize;
+use machinery::MachineryConfig;
 use std::process::exit;
 use tokio::sync::OnceCell;
 
 pub mod machinery;
 pub mod malbox;
 
-use machinery::MachineryConfig;
 use malbox::MalboxConfig;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Config {
     pub malbox: MalboxConfig,
     pub machinery: MachineryConfig,
@@ -28,7 +27,7 @@ pub async fn load_config() -> &'static Config {
     let machinery_config = match machinery::load_config(&malbox_config.machinery.hypervisor) {
         Ok(config) => config,
         Err(e) => {
-            eprintln!("Failed to load machinery config: {}", e);
+            eprintln!("Failed to load malbox config: {}", e);
             exit(1);
         }
     };
