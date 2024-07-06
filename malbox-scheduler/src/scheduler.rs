@@ -60,7 +60,7 @@ impl TaskWorker {
 
     pub async fn worker(mut self) {
         tracing::info!("[STARTUP] launching workers");
-
+        let t = 1;
         while let Some(task) = self.rx.recv().await {
             let permit = self.semaphore.clone().acquire_owned().await.unwrap();
             let task_id = task.id;

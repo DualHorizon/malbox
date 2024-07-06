@@ -11,6 +11,7 @@ malbox-hashing = { path = "../malbox-hashing" }
 malbox-config = { path = "../malbox-config" }
 malbox-scheduler = { path = "../malbox-scheduler" }
 malbox-tracing = { path = "../malbox-tracing" }
+malbox-machinery = { path = "../malbox-machinery" }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
