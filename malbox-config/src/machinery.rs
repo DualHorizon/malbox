@@ -1,9 +1,14 @@
 use std::{fs, path::Path};
 
 use serde::Deserialize;
+
+pub use kvm::KvmConfig;
 use virtualbox::VirtualBoxConfig;
 use vmware::VmwareConfig;
 
+use super::malbox::MachineryType;
+
+mod kvm;
 mod virtualbox;
 mod vmware;
 
@@ -29,6 +34,7 @@ pub enum MachinePlatform {
 pub enum MachineryConfig {
     Vmware(VmwareConfig),
     VirtualBox(VirtualBoxConfig),
+    Kvm(KvmConfig),
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -47,6 +53,7 @@ pub struct CommonMachine {
     pub interface: Option<String>,
     pub result_server_ip: Option<String>,
     pub result_server_port: Option<String>,
+    pub reserved: Option<bool>,
 }
 
 trait HypervisorConfig {
@@ -59,6 +66,7 @@ impl MachineryConfig {
         match &self {
             MachineryConfig::Vmware(config) => config.get_common_machine(),
             MachineryConfig::VirtualBox(config) => config.get_common_machine(),
+            MachineryConfig::Kvm(config) => config.get_common_machine(),
         }
     }
 
@@ -66,15 +74,17 @@ impl MachineryConfig {
         match &self {
             MachineryConfig::Vmware(config) => config.get_common_hypervisor(),
             MachineryConfig::VirtualBox(config) => config.get_common_hypervisor(),
+            MachineryConfig::Kvm(config) => config.get_common_hypervisor(),
         }
     }
 }
 
-pub fn load_config(hypervisor: &str) -> Result<MachineryConfig, String> {
-    let specific_path = format!("./configuration/machinery/{}.toml", hypervisor);
+pub fn load_config(machinery_type: &MachineryType) -> Result<MachineryConfig, String> {
+    let machinery_type_str = machinery_type.to_string().to_lowercase();
+    let specific_path = format!("./configuration/machinery/{}.toml", machinery_type_str);
     let default_path = format!(
         "./configuration/machinery/default/{}.default.toml",
-        hypervisor
+        machinery_type_str
     );
 
     let config_path = if Path::new(&specific_path).exists() {
@@ -84,24 +94,29 @@ pub fn load_config(hypervisor: &str) -> Result<MachineryConfig, String> {
     } else {
         return Err(format!(
             "No configuration file found for hypervisor `{}`",
-            hypervisor
+            machinery_type_str
         ));
     };
 
     let contents = fs::read_to_string(&config_path)
         .map_err(|e| format!("Could not read file `{}`: {}", config_path, e))?;
 
-    match hypervisor {
-        "vmware" => {
+    match machinery_type {
+        MachineryType::Vmware => {
             let config: VmwareConfig = toml::from_str(&contents)
                 .map_err(|e| format!("Failed to parse Vmware config: {}", e))?;
             Ok(MachineryConfig::Vmware(config))
         }
-        "virtualbox" => {
+        MachineryType::VirtualBox => {
             let config: VirtualBoxConfig = toml::from_str(&contents)
                 .map_err(|e| format!("Failed to parse VirtualBox config: {}", e))?;
             Ok(MachineryConfig::VirtualBox(config))
         }
-        _ => Err(format!("Unsupported hypervisor: {}", hypervisor)),
+        MachineryType::Kvm => {
+            let config: KvmConfig = toml::from_str(&contents)
+                .map_err(|e| format!("Failed to parse Kvm config: {}", e))?;
+            Ok(MachineryConfig::Kvm(config))
+        }
+        _ => Err(format!("Unsupported hypervisor: {}", machinery_type_str)),
     }
 }

@@ -24,7 +24,7 @@ pub async fn load_config() -> &'static Config {
         }
     };
 
-    let machinery_config = match machinery::load_config(&malbox_config.machinery.hypervisor) {
+    let machinery_config = match machinery::load_config(&malbox_config.machinery._type) {
         Ok(config) => config,
         Err(e) => {
             eprintln!("Failed to load malbox config: {}", e);

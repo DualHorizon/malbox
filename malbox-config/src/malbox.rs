@@ -1,3 +1,4 @@
+use core::fmt;
 use serde::Deserialize;
 use std::fs;
 
@@ -28,7 +29,24 @@ pub struct Debug {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Machinery {
-    pub hypervisor: String,
+    #[serde(rename = "type")]
+    pub _type: MachineryType,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub enum MachineryType {
+    #[serde(alias = "kvm")]
+    Kvm,
+    #[serde(alias = "Virtualbox", alias = "virtualbox")]
+    VirtualBox,
+    #[serde(alias = "vmware")]
+    Vmware,
+}
+
+impl fmt::Display for MachineryType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 pub fn load_config() -> Result<MalboxConfig, String> {

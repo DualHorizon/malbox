@@ -1,0 +1,29 @@
+[kvm]
+interface = "virbr0"
+dsn = "qemu:///system"
+
+[[machines]]
+name = "malbox-kvm"
+label = "malbox1"
+snapshot = "Base"
+platform = "Windows"
+ip = "10.152.152.55"
+arch = "x64"
+# tags = []
+# interface = ""
+# result_server_ip = ""
+# result_server_port = ""
+reserved = false
+
+# [[machines]]
+# name = "win7x64sp1"
+# label = "malbox2"
+# snapshot = "Base"
+# platform = "windows"
+# ip = "10.152.152.60"
+# arch = "x64"
+# # tags = []
+# # interface = ""
+# # result_server_ip = ""
+# # result_server_port = ""
+# reserved = true

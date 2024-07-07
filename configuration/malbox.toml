@@ -10,4 +10,4 @@ port = 5000
 rust_log = "malbox_server=debug,tower_http=debug,sqlx=info,malbox_database=debug,malbox_scheduler=debug,malbox_machinery=debug"
 
 [machinery]
-hypervisor = "vmware"
+type = "kvm"
