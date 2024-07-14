@@ -1,5 +1,5 @@
 [package]
-name = "malbox-processor"
+name = "malbox-module-manager"
 version = "0.1.0"
 edition = "2021"
 

@@ -15,15 +15,15 @@ arch = "x64"
 # result_server_port = ""
 reserved = false
 
-# [[machines]]
-# name = "win7x64sp1"
-# label = "malbox2"
-# snapshot = "Base"
-# platform = "windows"
-# ip = "10.152.152.60"
-# arch = "x64"
-# # tags = []
-# # interface = ""
-# # result_server_ip = ""
-# # result_server_port = ""
+[[machines]]
+name = "malbox-debian"
+label = "malbox2"
+snapshot = "clean"
+platform = "linux"
+ip = "10.152.152.60"
+arch = "x64"
+# tags = []
+# interface = ""
+# result_server_ip = ""
+# result_server_port = ""
 # reserved = true

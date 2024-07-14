@@ -1,2 +1,1 @@
-mod machinery;
-pub mod startup;
+pub mod machinery;

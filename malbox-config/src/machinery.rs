@@ -117,6 +117,5 @@ pub fn load_config(machinery_type: &MachineryType) -> Result<MachineryConfig, St
                 .map_err(|e| format!("Failed to parse Kvm config: {}", e))?;
             Ok(MachineryConfig::Kvm(config))
         }
-        _ => Err(format!("Unsupported hypervisor: {}", machinery_type_str)),
     }
 }

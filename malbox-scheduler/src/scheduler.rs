@@ -1,11 +1,16 @@
-use malbox_database::PgPool;
+use malbox_database::{repositories::machinery::MachinePlatform, PgPool};
 use std::sync::Arc;
 use tokio::sync::{
     mpsc::{Receiver, Sender},
     Semaphore,
 };
 
-use malbox_database::repositories::tasks::{fetch_pending_tasks, TaskEntity};
+use malbox_database::repositories::{
+    machinery::{MachineFilter, fetch_machine},
+    tasks::{fetch_pending_tasks, TaskEntity},
+};
+
+use malbox_machinery::machinery::kvm::start_machine;
 
 pub struct TaskScheduler {
     tx: Sender<TaskEntity>,
@@ -47,28 +52,56 @@ impl TaskScheduler {
 
 pub struct TaskWorker {
     rx: Receiver<TaskEntity>,
+    db: PgPool,
     semaphore: Arc<Semaphore>,
 }
 
 impl TaskWorker {
-    pub fn new(rx: Receiver<TaskEntity>, max_workers: usize) -> Self {
+    pub fn new(rx: Receiver<TaskEntity>, db: PgPool, max_workers: usize) -> Self {
         TaskWorker {
             rx,
+            db,
             semaphore: Arc::new(Semaphore::new(max_workers)),
         }
     }
 
     pub async fn worker(mut self) {
         tracing::info!("[STARTUP] launching workers");
-        let t = 1;
+
         while let Some(task) = self.rx.recv().await {
             let permit = self.semaphore.clone().acquire_owned().await.unwrap();
-            let task_id = task.id;
+        
+            let db = self.db.clone();
+
             tokio::spawn(async move {
-                tracing::info!("[WORKER] processing task: {:#?}", task_id);
+                tracing::info!("[WORKER] processing task: {:#?}", task.id);
+
+                tracing::info!("[WORKER] Checking for free machine...");
+
+                let free_machine = fetch_machine(&db, Some(MachineFilter {
+                    locked: Some(false),
+                    platform: Some(MachinePlatform::Linux),
+                    ..MachineFilter::default()
+                })).await.unwrap();
+
+                if free_machine.is_none() {
+                    tracing::info!("[WORKER] No free machine found, waiting...");
+                }
+
+                if let Some(free_machine) = free_machine {
+                    if free_machine.snapshot.is_none() {
+                        start_machine(free_machine.name, None).await.unwrap();
+                    } else {
+                        start_machine(free_machine.name, free_machine.snapshot).await.unwrap();
+                    }
+                }
+                
+
+                
+
 
                 tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                tracing::info!("[WORKER] completed task: {:#?}", task_id);
+                tracing::info!("[WORKER] completed task: {:#?}", task.id);
 
                 drop(permit);
             });

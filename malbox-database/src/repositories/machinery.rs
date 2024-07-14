@@ -3,7 +3,7 @@ use malbox_config::machinery::{
     MachineArch as MachineArchConfig, MachinePlatform as MachinePlatformConfig,
 };
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgRow, query, query_as, FromRow, PgPool};
+use sqlx::{query, query_as, FromRow, PgPool, QueryBuilder, Postgres};
 use time::PrimitiveDateTime;
 
 #[derive(sqlx::Type, Debug, Serialize, Deserialize, Default)]
@@ -63,7 +63,7 @@ pub struct Machine {
 
 #[derive(FromRow, Debug)]
 pub struct MachineEntity {
-    pub id: i64,
+    pub id: i32,
     pub name: String,
     pub label: String,
     pub arch: MachineArch,
@@ -83,13 +83,13 @@ pub struct MachineEntity {
 
 #[derive(Default)]
 pub struct MachineFilter {
-    locked: Option<bool>,
-    label: Option<String>,
-    platform: Option<MachinePlatform>,
-    tags: Option<String>,
-    arch: Option<MachineArch>,
-    include_reserved: bool,
-    os_version: Option<String>,
+    pub locked: Option<bool>,
+    pub label: Option<String>,
+    pub platform: Option<MachinePlatform>,
+    pub tags: Option<String>,
+    pub arch: Option<MachineArch>,
+    pub include_reserved: bool,
+    pub os_version: Option<String>,
 }
 
 pub async fn insert_machine(pool: &PgPool, machine: Machine) -> anyhow::Result<MachineEntity> {
@@ -144,20 +144,106 @@ pub async fn clean_machines(pool: &PgPool) -> anyhow::Result<(), anyhow::Error> 
     Ok(())
 }
 
-//TODO
 pub async fn fetch_machines(
     pool: &PgPool,
     filter: Option<MachineFilter>,
 ) -> anyhow::Result<Vec<MachineEntity>> {
     // the query will be adjusted depending on other params to filter out specific machines
-    query_as!(
-        MachineEntity,
+
+    let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
         r#"
-            SELECT id, name, label, arch AS "arch!: MachineArch", platform AS "platform!: MachinePlatform", ip, tags, interface, snapshot, locked, locked_changed_on, status, status_changed_on, result_server_ip, result_server_port, reserved
-            FROM machines
+            SELECT id, name, label, arch, platform AS "platform!: MachinePlatform, ip, tags, interface, snapshot, locked, locked_changed_on, status, status_changed_on,
+            result_server_ip, result_server_port, reserved
+            FROM "machines"
         "#
-    )
+    );
+
+    if let Some(filter) = filter {
+        if let Some(locked) = filter.locked {
+            query_builder.push(" AND locked = ");
+            query_builder.push_bind(locked);
+        }
+        if let Some(label) = filter.label {
+            query_builder.push(" AND label = ");
+            query_builder.push_bind(label);
+        }
+        if let Some(platform) = filter.platform {
+            query_builder.push(" AND platform = ");
+            query_builder.push_bind(platform);
+        }
+        if let Some(tags) = filter.tags {
+            query_builder.push(" AND tags @> ");
+            query_builder.push_bind(tags);
+        }
+        if let Some(arch) = filter.arch {
+            query_builder.push(" AND arch = ");
+            query_builder.push_bind(arch);
+        }
+        if let Some(os_version) = filter.os_version {
+            query_builder.push(" AND os_version = ");
+            query_builder.push_bind(os_version);
+        }
+        if !filter.include_reserved {
+            query_builder.push(" AND reserved = false");
+        }
+    }
+
+    let query = query_builder.build_query_as::<MachineEntity>()
     .fetch_all(pool)
     .await
-    .context("failed to fetch machines")
+    .context("failed to fetch machines");
+
+    query
+}
+
+pub async fn fetch_machine(
+    pool: &PgPool,
+    filter: Option<MachineFilter>,
+) -> anyhow::Result<Option<MachineEntity>> {
+    // the query will be adjusted depending on other params to filter out specific machines
+
+    let mut query_builder: QueryBuilder<Postgres> = QueryBuilder::new(
+        r#"
+            SELECT id, name, label, arch, platform, ip, tags, interface, snapshot, locked, locked_changed_on, status, status_changed_on,
+            result_server_ip, result_server_port, reserved
+            FROM "machines" WHERE 1 = 1
+        "#
+    );
+
+    if let Some(filter) = filter {
+        if let Some(locked) = filter.locked {
+            query_builder.push(" AND locked = ");
+            query_builder.push_bind(locked);
+        }
+        if let Some(label) = filter.label {
+            query_builder.push(" AND label = ");
+            query_builder.push_bind(label);
+        }
+        if let Some(platform) = filter.platform {
+            query_builder.push(" AND platform = ");
+            query_builder.push_bind(platform);
+        }
+        if let Some(tags) = filter.tags {
+            query_builder.push(" AND tags @> ");
+            query_builder.push_bind(tags);
+        }
+        if let Some(arch) = filter.arch {
+            query_builder.push(" AND arch = ");
+            query_builder.push_bind(arch);
+        }
+        if let Some(os_version) = filter.os_version {
+            query_builder.push(" AND os_version = ");
+            query_builder.push_bind(os_version);
+        }
+        if !filter.include_reserved {
+            query_builder.push(" AND reserved = false");
+        }
+    }
+
+    let query = query_builder.build_query_as::<MachineEntity>()
+    .fetch_optional(pool)
+    .await
+    .context("failed to fetch machines");
+
+    query
 }

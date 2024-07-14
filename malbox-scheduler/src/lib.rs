@@ -12,12 +12,12 @@ pub async fn init_scheduler(db: PgPool, max_workers: usize) {
 
     let (tx, rx) = mpsc::channel::<TaskEntity>(8);
 
-    let scheduler = TaskScheduler::new(tx, db);
+    let scheduler = TaskScheduler::new(tx, db.clone());
     tokio::spawn(async move {
         scheduler.scheduler().await;
     });
 
-    let worker = TaskWorker::new(rx, max_workers);
+    let worker = TaskWorker::new(rx, db, max_workers);
     tokio::spawn(async move {
         worker.worker().await;
     });

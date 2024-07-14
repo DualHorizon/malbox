@@ -18,7 +18,7 @@ arch = "x64"
 [[machines]]
 name = "win7x64sp1"
 vmx_path = "/data/vms/win7x64sp1/win7x64sp1.vmx"
-snapshot = "Base"
+snapshot = "clean"
 platform = "windows"
 ip = "10.152.152.60"
 arch = "x64"
