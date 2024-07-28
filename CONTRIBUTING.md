@@ -11,7 +11,7 @@ We use the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v
 As for our workflow, we use the following with the following branch names :
 - hotfix : `hotfix/<hotfix name>`
 - feature : `feat/<feature name>`
-- develop : `dev/v<version number>`
+- develop : `dev/<version number>`
 
 ![Git workflow](assets/git-workflow.png)
 
