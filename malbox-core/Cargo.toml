@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 abi_stable = "0.11.3"
+anyhow.workspace = true
+malbox-module-common = { path = "../malbox-module-common" }

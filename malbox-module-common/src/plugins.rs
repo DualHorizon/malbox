@@ -1,14 +1,19 @@
+use crate::util::{AnalysisResult, MayPanic};
+use crate::RResult;
+use crate::Value;
 use abi_stable::{
-    declare_root_module_statics,
-    library::RootModule,
-    package_version_strings, sabi_trait,
-    sabi_types::VersionStrings,
-    std_types::{RBox, ROption, RResult::ROk, RStr, RString, RVec},
+    sabi_trait,
+    std_types::{RBox, RHashMap, ROption, RStr, RString, RVec},
     StableAbi,
 };
 
-use crate::util::MayPanic;
-use crate::RResult;
+#[repr(C)]
+#[derive(StableAbi, Clone)]
+pub struct PluginConfig {
+    pub name: RString,
+    pub enabled: bool,
+    pub settings: RHashMap<RString, Value>,
+}
 
 #[repr(C)]
 #[derive(StableAbi)]
@@ -27,6 +32,23 @@ pub struct PluginInfo {
 }
 
 #[repr(C)]
+#[derive(StableAbi, Clone)]
+pub struct PluginState {
+    pub name: RString,
+    pub status: PluginStatus,
+    pub result: ROption<AnalysisResult>,
+}
+
+#[repr(C)]
+#[derive(StableAbi, Clone, PartialEq)]
+pub enum PluginStatus {
+    NotStarted,
+    Running,
+    Completed,
+    Failed,
+}
+
+#[repr(C)]
 #[derive(StableAbi)]
 pub struct PluginContext {
     pub field: u8,
@@ -35,7 +57,7 @@ pub struct PluginContext {
 #[sabi_trait]
 pub trait RawPlugin: Send {
     fn get_info(&self) -> PluginInfo;
-    fn initialize(&mut self, ctf: &PluginContext) -> MayPanic<RResult<()>>;
-    fn execute(&self, data: RVec<u8>) -> MayPanic<RResult<RVec<u8>>>;
+    fn initialize(&mut self, ctx: &PluginContext) -> MayPanic<RResult<()>>;
+    fn execute(&self, data: RVec<u8>) -> MayPanic<RResult<AnalysisResult>>;
     fn cleanup(&mut self) -> MayPanic<()>;
 }

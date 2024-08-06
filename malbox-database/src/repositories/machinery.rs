@@ -3,7 +3,7 @@ use malbox_config::machinery::{
     MachineArch as MachineArchConfig, MachinePlatform as MachinePlatformConfig,
 };
 use serde::{Deserialize, Serialize};
-use sqlx::{query, query_as, FromRow, PgPool, QueryBuilder, Postgres};
+use sqlx::{query, query_as, FromRow, PgPool, Postgres, QueryBuilder};
 use time::PrimitiveDateTime;
 
 #[derive(sqlx::Type, Debug, Serialize, Deserialize, Default)]
@@ -155,7 +155,7 @@ pub async fn fetch_machines(
             SELECT id, name, label, arch, platform AS "platform!: MachinePlatform, ip, tags, interface, snapshot, locked, locked_changed_on, status, status_changed_on,
             result_server_ip, result_server_port, reserved
             FROM "machines"
-        "#
+        "#,
     );
 
     if let Some(filter) = filter {
@@ -188,10 +188,11 @@ pub async fn fetch_machines(
         }
     }
 
-    let query = query_builder.build_query_as::<MachineEntity>()
-    .fetch_all(pool)
-    .await
-    .context("failed to fetch machines");
+    let query = query_builder
+        .build_query_as::<MachineEntity>()
+        .fetch_all(pool)
+        .await
+        .context("failed to fetch machines");
 
     query
 }
@@ -207,7 +208,7 @@ pub async fn fetch_machine(
             SELECT id, name, label, arch, platform, ip, tags, interface, snapshot, locked, locked_changed_on, status, status_changed_on,
             result_server_ip, result_server_port, reserved
             FROM "machines" WHERE 1 = 1
-        "#
+        "#,
     );
 
     if let Some(filter) = filter {
@@ -240,10 +241,11 @@ pub async fn fetch_machine(
         }
     }
 
-    let query = query_builder.build_query_as::<MachineEntity>()
-    .fetch_optional(pool)
-    .await
-    .context("failed to fetch machines");
+    let query = query_builder
+        .build_query_as::<MachineEntity>()
+        .fetch_optional(pool)
+        .await
+        .context("failed to fetch machines");
 
     query
 }

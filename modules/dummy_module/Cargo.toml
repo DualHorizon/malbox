@@ -12,3 +12,4 @@ name = "dummy_module"
 [dependencies]
 abi_stable = { default-features = false }
 malbox-module-common = { version = "0.1.0", path = "../../malbox-module-common" }
+serde.workspace = true

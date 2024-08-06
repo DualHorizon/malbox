@@ -15,7 +15,7 @@ use modules::RawModule_TO;
 use plugins::RawPlugin_TO;
 
 #[repr(C)]
-#[derive(StableAbi)]
+#[derive(StableAbi, Clone)]
 pub enum Value {
     String(RString),
     Integer(i32),
