@@ -28,8 +28,7 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + S
 #[derive(StableAbi)]
 #[sabi(kind(Prefix))]
 pub struct ModuleMod {
-    pub new_module: extern "C" fn(config: ROption<Value>) -> RawModule_TO<'static, RBox<()>>,
-    pub new_plugin: extern "C" fn(config: ROption<Value>) -> RawPlugin_TO<'static, RBox<()>>,
+    pub new: extern "C" fn(config: ROption<Value>) -> RawModule_TO<'static, RBox<()>>,
 }
 
 impl RootModule for ModuleMod_Ref {
@@ -37,4 +36,19 @@ impl RootModule for ModuleMod_Ref {
     const NAME: &'static str = "module";
     const VERSION_STRINGS: VersionStrings = package_version_strings!();
     declare_root_module_statics! {ModuleMod_Ref}
+}
+
+// note: it may be better to not implement plugins as RootModule(s) maybe we could propagate the plugin libs through the modules RootModule
+#[repr(C)]
+#[derive(StableAbi)]
+#[sabi(kind(Prefix))]
+pub struct PluginMod {
+    pub new: extern "C" fn(config: ROption<Value>) -> RawPlugin_TO<'static, RBox<()>>,
+}
+
+impl RootModule for PluginMod_Ref {
+    const BASE_NAME: &'static str = "plugin";
+    const NAME: &'static str = "plugin";
+    const VERSION_STRINGS: VersionStrings = package_version_strings!();
+    declare_root_module_statics! {PluginMod_Ref}
 }

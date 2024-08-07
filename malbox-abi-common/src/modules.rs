@@ -10,7 +10,6 @@ use abi_stable::{
 #[repr(C)]
 #[derive(StableAbi, Clone)]
 pub enum ModuleType {
-    MachineryModule,
     AnalysisModule,
 }
 
@@ -20,7 +19,7 @@ pub struct ModuleConfig {
     pub name: RString,
     pub version: RString,
     pub module_type: ModuleType,
-    pub plugins: RHashMap<RString, PluginConfig>,
+    pub plugins: RVec<PluginConfig>,
     pub plugin_order: RVec<RString>,
 }
 

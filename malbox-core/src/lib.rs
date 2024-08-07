@@ -1,16 +1,17 @@
 use abi_stable::{library::lib_header_from_path, std_types::ROption};
 use anyhow::anyhow;
-use malbox_module_common::{ModuleMod_Ref, Value};
+use malbox_abi_common::{ModuleMod_Ref, Value};
 use std::path::Path;
 
 mod modules;
 use modules::Module;
 
 pub async fn load_module(path: &Path, config: Option<Value>) -> anyhow::Result<Module> {
+    tracing::info!("Loading module: dummy_module");
     let module_lib = lib_header_from_path(path)?.init_root_module::<ModuleMod_Ref>()?;
 
     let new_module = module_lib
-        .new_module()
+        .new()
         .ok_or_else(|| anyhow!("method new_module not found"))?;
 
     let r_config = match config {

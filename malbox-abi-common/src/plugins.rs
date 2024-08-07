@@ -7,6 +7,7 @@ use abi_stable::{
     StableAbi,
 };
 
+// most of those structs should use RStr instead of RString.. will fix later
 #[repr(C)]
 #[derive(StableAbi, Clone)]
 pub struct PluginConfig {

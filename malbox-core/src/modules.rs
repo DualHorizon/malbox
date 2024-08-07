@@ -1,16 +1,21 @@
-use abi_stable::std_types::{
-    RBox, RCowStr, RHashMap, ROption,
-    RResult::{RErr, ROk},
-    RString, RVec, Tuple2,
+use abi_stable::{
+    library::lib_header_from_path,
+    rvec,
+    std_types::{
+        RBox, RCowStr, RHashMap, ROption,
+        RResult::{RErr, ROk},
+        RString, RVec, Tuple2,
+    },
 };
 use anyhow::anyhow;
-use malbox_module_common::{
+use malbox_abi_common::{
     modules::{ModuleConfig, ModuleContext, ModuleState, RawModule_TO},
     plugins::{PluginState, PluginStatus, RawPlugin_TO},
     util::{AnalysisResult, MayPanic},
-    Result,
+    PluginMod_Ref, Result,
 };
-use std::collections::HashMap;
+use std::path::Path;
+use std::{collections::HashMap, os::linux::raw};
 
 pub struct Module {
     raw_module: RawModule_TO<'static, RBox<()>>,
@@ -25,22 +30,27 @@ impl Module {
         let mut plugins = HashMap::new();
         let mut plugin_states = RHashMap::new();
 
-        for Tuple2(plugin_name, plugin_config) in config.plugins.iter() {
+        for plugin_config in config.plugins.iter() {
             if plugin_config.enabled {
-                match Self::load_plugin(plugin_name) {
+                match Self::load_plugin(&plugin_config.name) {
                     Ok(plugin) => {
-                        plugins.insert(plugin_name.to_string().into(), plugin);
+                        plugins.insert(plugin_config.name.to_string().into(), plugin);
                         plugin_states.insert(
-                            plugin_name.clone(),
+                            plugin_config.name.clone(),
                             PluginState {
-                                name: plugin_name.clone(),
+                                name: plugin_config.name.clone(),
                                 status: PluginStatus::NotStarted,
                                 result: ROption::RNone,
                             },
                         );
                     }
                     Err(e) => {
-                        return Err(anyhow!("Failed to load plugin {}: {:?}", plugin_name, e).into())
+                        return Err(anyhow!(
+                            "Failed to load plugin {}: {:?}",
+                            plugin_config.name,
+                            e
+                        )
+                        .into())
                     }
                 }
             }
@@ -59,9 +69,19 @@ impl Module {
     }
 
     fn load_plugin(name: &RString) -> Result<RawPlugin_TO<'static, RBox<()>>> {
-        // Implement plugin loading logic here
-        // This is just a placeholder implementation
-        Err(anyhow!("Plugin loading not implemented for {}", name).into())
+        tracing::info!("Loading plugin: {}", name);
+
+        let plugin_path_str = format!("./plugins/{name}/target/debug/lib{name}.so");
+
+        let plugin_path = Path::new(&plugin_path_str);
+
+        let plugin_lib = lib_header_from_path(plugin_path)?.init_root_module::<PluginMod_Ref>()?;
+
+        let new_plugin = plugin_lib
+            .new()
+            .ok_or_else(|| anyhow!("method new not found"))?;
+
+        Ok(new_plugin(ROption::RNone))
     }
 
     pub async fn start(&mut self, ctx: &ModuleContext) -> Result<()> {
@@ -76,7 +96,7 @@ impl Module {
         Ok(())
     }
 
-    pub async fn execute_plugins(&mut self, data: RVec<u8>) -> Result<Vec<AnalysisResult>> {
+    pub async fn execute_plugins(&mut self, data: Vec<u8>) -> Result<Vec<AnalysisResult>> {
         let mut results = Vec::new();
 
         for plugin_name in &self.config.plugin_order {
@@ -85,7 +105,7 @@ impl Module {
 
             plugin_state.status = PluginStatus::Running;
 
-            match plugin.execute(data.clone()).unwrap() {
+            match plugin.execute(data.clone().into()).unwrap() {
                 ROk(result) => {
                     plugin_state.status = PluginStatus::Completed;
                     plugin_state.result = ROption::RSome(result.clone());
