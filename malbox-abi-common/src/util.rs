@@ -4,14 +4,14 @@ use abi_stable::{
     package_version_strings, sabi_trait,
     sabi_types::VersionStrings,
     std_types::{
-        RBox, RBoxError, RHashMap, ROption,
+        RArc, RBox, RBoxError, RHashMap, ROption,
         RResult::{RErr, ROk},
         RStr, RString, RVec,
     },
     StableAbi,
 };
 
-use crate::RResult;
+use crate::{RResult, Value};
 use serde_json::Value as JsonValue;
 use std::fmt;
 

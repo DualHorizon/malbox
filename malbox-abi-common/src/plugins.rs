@@ -52,7 +52,7 @@ pub enum PluginStatus {
 #[repr(C)]
 #[derive(StableAbi)]
 pub struct PluginContext {
-    pub field: u8,
+    pub shared: RHashMap<RString, Value>,
 }
 
 #[sabi_trait]

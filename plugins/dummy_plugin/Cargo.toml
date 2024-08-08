@@ -14,4 +14,5 @@ crate-type = ["cdylib"]
 [dependencies]
 abi_stable = { default-features = false }
 malbox-abi-common.path = "../../malbox-abi-common"
+microvmi = { version = "0.3.14", features = ["kvm"] }
 serde = "1.0.204"

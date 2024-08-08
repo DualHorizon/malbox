@@ -1,11 +1,13 @@
 use crate::plugins::{PluginConfig, PluginState, RawPlugin_TO};
 use crate::util::MayPanic;
-use crate::RResult;
+use crate::{RResult, Value};
 use abi_stable::{
     sabi_trait,
     std_types::{RBox, RCowStr, RHashMap, RStr, RString, RVec},
     StableAbi,
 };
+
+use std::sync::{Arc, Mutex};
 
 #[repr(C)]
 #[derive(StableAbi, Clone)]
@@ -34,8 +36,7 @@ pub struct ModuleState {
 #[repr(C)]
 #[derive(StableAbi, Clone)]
 pub struct ModuleContext {
-    pub execution_id: u32,
-    pub input_data: RVec<u8>,
+    pub shared: RHashMap<RString, Value>,
 }
 #[sabi_trait]
 pub trait RawModule: Send {
