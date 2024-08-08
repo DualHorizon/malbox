@@ -12,6 +12,7 @@ malbox-config = { path = "../malbox-config" }
 malbox-scheduler = { path = "../malbox-scheduler" }
 malbox-tracing = { path = "../malbox-tracing" }
 malbox-machinery = { path = "../malbox-machinery" }
+malbox-core = { path = "../malbox-core" }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }

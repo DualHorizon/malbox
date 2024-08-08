@@ -6,11 +6,11 @@ use tokio::sync::{
 };
 
 use malbox_database::repositories::{
-    machinery::{MachineFilter, fetch_machine},
+    machinery::{fetch_machine, MachineFilter},
     tasks::{fetch_pending_tasks, TaskEntity},
 };
 
-use malbox_machinery::machinery::kvm::start_machine;
+use malbox_machinery::machinery::kvm::{shutdown_machine, start_machine};
 
 pub struct TaskScheduler {
     tx: Sender<TaskEntity>,
@@ -70,7 +70,7 @@ impl TaskWorker {
 
         while let Some(task) = self.rx.recv().await {
             let permit = self.semaphore.clone().acquire_owned().await.unwrap();
-        
+
             let db = self.db.clone();
 
             tokio::spawn(async move {
@@ -78,11 +78,16 @@ impl TaskWorker {
 
                 tracing::info!("[WORKER] Checking for free machine...");
 
-                let free_machine = fetch_machine(&db, Some(MachineFilter {
-                    locked: Some(false),
-                    platform: Some(MachinePlatform::Linux),
-                    ..MachineFilter::default()
-                })).await.unwrap();
+                let free_machine = fetch_machine(
+                    &db,
+                    Some(MachineFilter {
+                        locked: Some(false),
+                        platform: Some(MachinePlatform::Linux),
+                        ..MachineFilter::default()
+                    }),
+                )
+                .await
+                .unwrap();
 
                 if free_machine.is_none() {
                     tracing::info!("[WORKER] No free machine found, waiting...");
@@ -90,15 +95,15 @@ impl TaskWorker {
 
                 if let Some(free_machine) = free_machine {
                     if free_machine.snapshot.is_none() {
-                        start_machine(free_machine.name, None).await.unwrap();
+                        start_machine(&free_machine.name, None).await.unwrap();
                     } else {
-                        start_machine(free_machine.name, free_machine.snapshot).await.unwrap();
+                        start_machine(&free_machine.name, free_machine.snapshot)
+                            .await
+                            .unwrap();
                     }
+
+                    shutdown_machine(&free_machine.name).await.unwrap();
                 }
-                
-
-                
-
 
                 tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
                 tracing::info!("[WORKER] completed task: {:#?}", task.id);
