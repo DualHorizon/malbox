@@ -16,6 +16,7 @@ use time::PrimitiveDateTime;
 use crate::http;
 use crate::http::AppState;
 use crate::http::Result;
+use http::error::Error;
 
 use malbox_database::repositories::samples::{insert_sample, Sample};
 use malbox_database::repositories::tasks::{insert_task, StatusType, Task};
@@ -115,8 +116,10 @@ async fn tasks_create_file(
     let created_sample = insert_sample(&state.pool, sample_entity)
         .await
         .map_err(|e| {
-            tracing::error!("Failed to insert or fetch existing sample: {:#?}", e);
-            http::error::Error::from(e)
+            Error::Internal(anyhow::anyhow!(
+                "Failed to insert or fetch existing sample: {}",
+                e
+            ))
         })?;
 
     let now = OffsetDateTime::now_utc();
@@ -144,10 +147,9 @@ async fn tasks_create_file(
         sample_id: created_sample.id,
     };
 
-    let created_task = insert_task(&state.pool, task_entity).await.map_err(|e| {
-        tracing::error!("Failed to insert task: {:#?}", e);
-        http::error::Error::from(e)
-    })?;
+    let created_task = insert_task(&state.pool, task_entity)
+        .await
+        .map_err(|e| Error::Internal(anyhow::anyhow!("Failed to insert task: {}", e)))?;
 
     tracing::debug!("{:#?}", created_task);
 
