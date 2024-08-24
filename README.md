@@ -29,7 +29,7 @@ Malbox is fully open-source, modular, and community-oriented, making it an excel
 
 **v0.2.0**
 - [ ] Refactor plugin/module system, create a rustc driver instead of using stable_abi
-- TBD
+- [ ] Implement more complex plugins and cover as much as possible for detection (agent-less analysis)
 
 ---
 
