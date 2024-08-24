@@ -1,4 +1,4 @@
-![Banner 29](https://github.com/user-attachments/assets/9b6369cf-e2ed-402c-b954-a7373de06562)
+![Banner 29](assets/mabox-banner-blue.png)
 
 # Malbox - Malware in a Box
 Malbox is an advanced sandboxing solution designed for static and dynamic malware analysis. 
