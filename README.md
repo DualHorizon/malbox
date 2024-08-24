@@ -6,7 +6,7 @@ The project aims to provide a comprehensive, self-hosted, fast, and user-friendl
 Malbox is fully open-source, modular, and community-oriented, making it an excellent resource for cybersecurity researchers, analysts, and developers interested in understanding the behavior of malicious software.
 
 ## Features
-- Modern Analysis: Quickly analyze malware samples with efficient and bleeding-edge sandboxing techniques.
+- Modern Analysis: Quickly analyze malware samples with efficient and modern techniques.
 - Static and Dynamic Analysis: Supports both static (file-based) and dynamic (runtime) analysis of malware.
 - Modular Architecture: Easily extend and customize the platform with additional modules and plugins.
 - User-Friendly Interface: Interact with the platform using a straightforward, intuitive interface.
