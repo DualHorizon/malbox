@@ -34,4 +34,4 @@ Malbox is fully open-source, modular, and community-oriented, making it an excel
 ---
 
 
-![image](https://github.com/shard77/malbox/assets/malbox-panel-showcase.png)
+![image](assets/malbox-panel-showcase.png)
