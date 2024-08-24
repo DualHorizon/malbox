@@ -6,7 +6,7 @@ The project aims to provide a comprehensive, self-hosted, fast, and user-friendl
 Malbox is fully open-source, modular, and community-oriented, making it an excellent resource for cybersecurity researchers, analysts, and developers interested in understanding the behavior of malicious software.
 
 ## Features
-- Proper Analysis: Quickly analyze malware samples with efficient and bleeding-edge sandboxing techniques.
+- Modern Analysis: Quickly analyze malware samples with efficient and bleeding-edge sandboxing techniques.
 - Static and Dynamic Analysis: Supports both static (file-based) and dynamic (runtime) analysis of malware.
 - Modular Architecture: Easily extend and customize the platform with additional modules and plugins.
 - User-Friendly Interface: Interact with the platform using a straightforward, intuitive interface.
@@ -16,20 +16,20 @@ Malbox is fully open-source, modular, and community-oriented, making it an excel
 ## Roadmap
 
 **v0.1.0**
-- [x] Integrate PostgreSQL
-- [x] Basic back-end structure and logic
+- [x] Integrate DB management (PostgreSQL)
+- [x] Basic back-end structure
 - [x] Task/submission management
-- [ ] Integrate different hypervisors support (VMWare, VirtualBox, QEMU, KVM, Xen)
-- [ ] Analyzers
-- [ ] Conduct basic statical analysis
-- [ ] Conduct basic dynamic analysis
+- [x] Plugin/Module system with stable_abi
+- [ ] Modular machinery management via plugins
+- [ ] Modular task scheduling via plugins
+- [ ] Modular storage via plugins
+- [ ] Create basic analysis plugins
 - [ ] Configuration options (machines, submissions, file persistence, etc..) 
-- [ ] Plugin & module support
-- [ ] Extend analysis functionalities
-- [ ] Modularize analysis settings
+- [ ] Create more REST API endpoints for diverse things
 
 **v0.2.0**
-TBD
+- [ ] Refactor plugin/module system, create a rustc driver instead of using stable_abi
+- TBD
 
 ---
 
