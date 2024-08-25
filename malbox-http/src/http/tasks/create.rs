@@ -1,51 +1,57 @@
-use axum::extract::DefaultBodyLimit;
+use anyhow::Context;
+use axum::body::Bytes;
 use axum::{
-    extract::State,
-    routing::{get, post},
+    extract::{DefaultBodyLimit, State},
+    routing::post,
     Json, Router,
 };
 use axum_macros::debug_handler;
-use axum_typed_multipart::{FieldData, TryFromMultipart, TypedMultipart};
+use axum_typed_multipart::{FieldData, TryFromField, TryFromMultipart, TypedMultipart};
 use magic::cookie::DatabasePaths;
 use malbox_hashing::*;
-use std::io::Read;
-use tempfile::NamedTempFile;
-use time::OffsetDateTime;
-use time::PrimitiveDateTime;
+use tempfile::Builder;
+use time::{OffsetDateTime, PrimitiveDateTime};
 
-use crate::http;
-use crate::http::AppState;
-use crate::http::Result;
-
-use malbox_database::repositories::samples::{insert_sample, Sample};
-use malbox_database::repositories::tasks::{insert_task, StatusType, Task};
+use crate::http::{error::Error, AppState, Result};
+use malbox_database::repositories::{
+    samples::{insert_sample, Sample, SampleEntity},
+    tasks::{insert_task, StatusType, Task, TaskEntity},
+};
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/v1/tasks/create/file", post(tasks_create_file))
-        .layer(DefaultBodyLimit::max(10 * 1000 * 100000)) // NOTE: this should be modified, temporary
+        .route("/v1/tasks/create/file", post(create_task_from_file))
+        .layer(DefaultBodyLimit::max(1024 * 1024 * 10000000))
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
-struct TaskBody<T> {
-    task: T,
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-struct NewTask {
+#[derive(serde::Serialize)]
+struct TaskResponse {
     task_id: i64,
+}
+
+#[derive(Debug)]
+struct FileInfo {
+    name: String,
+    size: i64,
+    file_type: String,
+    md5: String,
+    sha1: String,
+    sha256: String,
+    sha512: String,
+    crc32: String,
+    ssdeep: String,
 }
 
 #[derive(TryFromMultipart)]
 struct CreateTaskRequest {
     #[form_data(limit = "unlimited")]
-    file: FieldData<NamedTempFile>,
+    file: FieldData<Bytes>,
     package: Option<String>,
     module: Option<String>,
     timeout: Option<i64>,
     priority: Option<i64>,
     options: Option<String>,
-    machine: Option<String>,
+    machine: Option<String>, // needs to be checked via typed struct or conditions instead of String
     platform: Option<String>,
     tags: Option<String>,
     custom: Option<String>,
@@ -56,104 +62,117 @@ struct CreateTaskRequest {
 }
 
 #[debug_handler]
-async fn tasks_create_file(
+async fn create_task_from_file(
     State(state): State<AppState>,
-    TypedMultipart(multipart): TypedMultipart<CreateTaskRequest>,
-) -> Result<Json<TaskBody<NewTask>>, http::error::Error> {
-    let file_name = multipart
-        .file
+    TypedMultipart(request): TypedMultipart<CreateTaskRequest>,
+) -> Result<Json<TaskResponse>> {
+    write_file(&request.file).context("Failed to read file content")?;
+
+    let file_info = get_file_info(&request.file).context("Failed to get file information")?;
+
+    let sample = create_sample(&state, &file_info)
+        .await
+        .context("Failed to create sample")?;
+    let task = create_task(&state, &request, &file_info, sample.id)
+        .await
+        .context("Failed to create task")?;
+
+    Ok(Json(TaskResponse { task_id: task.id }))
+}
+
+// NOTE: This is temporary, file storage should be handled by the malbox_storage
+// crate (new plugin system needed in order to do the crate implementation)
+fn write_file(file: &FieldData<Bytes>) -> anyhow::Result<()> {
+    let file_name = file
         .metadata
         .file_name
-        .unwrap_or(String::from("data.bin"));
+        .clone()
+        .unwrap_or_else(|| "data.bin".to_string());
 
-    let file_path = std::env::temp_dir().join(&file_name);
+    Builder::new().prefix(&file_name).keep(true).tempfile()?;
 
-    let temp_file = multipart.file.contents.persist(&file_path);
+    Ok(())
+}
 
-    // NOTE: there's probably a better way to do this
-    let mut file_handle = temp_file.unwrap();
-
-    let mut file_contents: Vec<u8> = Vec::new();
-    file_handle.read_to_end(&mut file_contents).unwrap();
-
-    let _file_size = file_contents.len() as i64;
-    // very slow
-    let md5_hash = get_md5(&mut file_contents);
-    let sha1_hash = get_sha1(&mut file_contents);
-    let sha256_hash = get_sha256(&mut file_contents);
-    let sha512_hash = get_sha512(&mut file_contents);
-    let crc32_hash = get_crc32(&mut file_contents);
-    let ssdeep_hash = get_ssdeep(&mut file_contents);
-
-    tracing::debug!("md5: {:#?}", md5_hash);
-    tracing::debug!("sha256: {:#?}", sha256_hash);
-    tracing::debug!("sha512: {:#?}", sha512_hash);
-    tracing::debug!("crc32: {:#?}", crc32_hash);
-    tracing::debug!("ssdeep: {:#?}", ssdeep_hash);
-
-    let _file_type = {
-        let cookie = magic::Cookie::open(magic::cookie::Flags::default()).unwrap();
+fn get_file_info(file: &FieldData<Bytes>) -> anyhow::Result<FileInfo> {
+    let file_type = {
+        let cookie = magic::Cookie::open(magic::cookie::Flags::default())
+            .context("Failed to open magic cookie")?;
         let cookie = cookie.load(&DatabasePaths::default()).unwrap();
-        cookie.buffer(&file_contents).unwrap()
+        cookie
+            .buffer(&file.contents)
+            .context("Failed to analyze file type")?
     };
 
-    tracing::debug!("file type: {_file_type}");
-    tracing::debug!("file name: {file_name}");
-    tracing::debug!("file size: {_file_size}");
+    Ok(FileInfo {
+        name: file
+            .metadata
+            .file_name
+            .as_deref()
+            .unwrap_or("data.bin")
+            .to_string(),
+        size: file.contents.len() as i64,
+        file_type,
+        md5: get_md5(&mut file.contents.to_vec()),
+        sha1: get_sha1(&mut file.contents.to_vec()),
+        sha256: get_sha256(&mut file.contents.to_vec()),
+        sha512: get_sha512(&mut file.contents.to_vec()),
+        crc32: get_crc32(&mut file.contents.to_vec()),
+        ssdeep: get_ssdeep(&mut file.contents.to_vec()),
+    })
+}
 
-    let sample_entity = Sample {
-        file_size: _file_size,
-        file_type: _file_type,
-        md5: md5_hash,
-        crc32: crc32_hash,
-        sha1: sha1_hash,
-        sha256: sha256_hash,
-        sha512: sha512_hash,
-        ssdeep: ssdeep_hash,
+async fn create_sample(state: &AppState, file_info: &FileInfo) -> Result<SampleEntity> {
+    let sample = Sample {
+        file_size: file_info.size,
+        file_type: file_info.file_type.clone(),
+        md5: file_info.md5.clone(),
+        crc32: file_info.crc32.clone(),
+        sha1: file_info.sha1.clone(),
+        sha256: file_info.sha256.clone(),
+        sha512: file_info.sha512.clone(),
+        ssdeep: file_info.ssdeep.clone(),
     };
 
-    let created_sample = insert_sample(&state.pool, sample_entity)
+    insert_sample(&state.pool, sample)
         .await
-        .map_err(|e| {
-            tracing::error!("Failed to insert or fetch existing sample: {:#?}", e);
-            http::error::Error::from(e)
-        })?;
+        .map_err(Error::from)
+}
 
-    let now = OffsetDateTime::now_utc();
-    let current_primitive_datetime = PrimitiveDateTime::new(now.date(), now.time());
+async fn create_task(
+    state: &AppState,
+    request: &CreateTaskRequest,
+    file_info: &FileInfo,
+    sample_id: i64,
+) -> Result<TaskEntity> {
+    let utc_now = OffsetDateTime::now_utc();
+    let current_primitive_datetime = PrimitiveDateTime::new(utc_now.date(), utc_now.time());
 
-    let task_entity = Task {
-        target: file_path.into_os_string().into_string().unwrap(),
-        module: multipart.module.unwrap_or("file_analysis".to_string()),
-        timeout: multipart.timeout.unwrap_or(1),
-        priority: multipart.priority.unwrap_or(1),
-        custom: multipart.custom,
-        machine: multipart.machine,
-        package: multipart.package,
-        options: multipart.options,
-        platform: multipart.platform,
-        unique: multipart.unique,
-        tags: multipart.tags,
-        owner: multipart.owner,
-        memory: multipart.memory.unwrap_or(false),
-        enforce_timeout: multipart.enforce_timeout.unwrap_or(false),
+    let task = Task {
+        target: file_info.name.to_string(),
+        module: request
+            .module
+            .as_deref()
+            .unwrap_or("file_analysis")
+            .to_string(),
+        timeout: request.timeout.unwrap_or(1),
+        priority: request.priority.unwrap_or(1),
+        custom: request.custom.clone(),
+        machine: request.machine.clone(),
+        package: request.package.clone(),
+        options: request.options.clone(),
+        platform: request.platform.clone(),
+        unique: request.unique,
+        tags: request.tags.clone(),
+        owner: request.owner.clone(),
+        memory: request.memory.unwrap_or(false),
+        enforce_timeout: request.enforce_timeout.unwrap_or(false),
         added_on: current_primitive_datetime,
         started_on: None,
         completed_on: None,
         status: StatusType::Pending,
-        sample_id: created_sample.id,
+        sample_id,
     };
 
-    let created_task = insert_task(&state.pool, task_entity).await.map_err(|e| {
-        tracing::error!("Failed to insert task: {:#?}", e);
-        http::error::Error::from(e)
-    })?;
-
-    tracing::debug!("{:#?}", created_task);
-
-    Ok(Json(TaskBody {
-        task: NewTask {
-            task_id: created_task.id,
-        },
-    }))
+    insert_task(&state.pool, task).await.map_err(Error::from)
 }

@@ -18,7 +18,7 @@ reserved = false
 [[machines]]
 name = "malbox-debian"
 label = "malbox2"
-snapshot = "clean"
+#snapshot = "test"
 platform = "linux"
 ip = "10.152.152.60"
 arch = "x64"

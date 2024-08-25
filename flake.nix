@@ -56,7 +56,7 @@
                     languages.perl = {
                       enable = true;
                     };
-                    packages = with pkgs; [ sqlx-cli openssl cargo-watch file libGL glib flex bison dtc zlib pixman python311Packages.sphinx python311Packages.sphinx-rtd-theme python311Packages.ninja libvirt];
+                    packages = with pkgs; [ sqlx-cli openssl cargo-watch file libGL glib flex bison dtc zlib pixman python311Packages.sphinx python311Packages.sphinx-rtd-theme python311Packages.ninja libvirt file];
                   }
                 ];
               };

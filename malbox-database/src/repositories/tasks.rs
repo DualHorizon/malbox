@@ -131,4 +131,3 @@ pub async fn fetch_pending_tasks(pool: &PgPool) -> anyhow::Result<Vec<TaskEntity
     .await
     .context("failed to fetch pending tasks")
 }
-

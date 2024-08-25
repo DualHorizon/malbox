@@ -1,6 +1,7 @@
 use anyhow::Context;
 use sqlx::{postgres::PgDatabaseError, query_as, FromRow, PgPool};
 
+#[derive(Debug)]
 pub struct Sample {
     pub file_size: i64,
     pub file_type: String,
