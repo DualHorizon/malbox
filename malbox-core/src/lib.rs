@@ -1,25 +1,21 @@
-use abi_stable::{library::lib_header_from_path, std_types::ROption};
 use anyhow::anyhow;
-use malbox_abi_common::{ModuleMod_Ref, Value};
+use libloading::Library;
+use malbox_abi_common::{AnalysisPluginDyn, Plugin};
+use stabby::libloading::StabbyLibrary;
 use std::path::Path;
 
-mod modules;
-use modules::Module;
+pub fn load_plugin(path: &Path) -> anyhow::Result<()> {
+    unsafe {
+        let lib = Library::new(path).map_err(|e| anyhow!("Failed to load library: {}", e))?;
 
-pub async fn load_module(path: &Path, config: Option<Value>) -> anyhow::Result<Module> {
-    tracing::info!("Loading module: dummy_module");
-    let module_lib = lib_header_from_path(path)?.init_root_module::<ModuleMod_Ref>()?;
+        let init_plugin = lib
+            .get_stabbied::<extern "C" fn() -> stabby::result::Result<Plugin, stabby::string::String>>(b"init_plugin")
+            .map_err(|e| anyhow!("Failed to get init_plugin symbol: {}", e))?;
 
-    let new_module = module_lib
-        .new()
-        .ok_or_else(|| anyhow!("method new_module not found"))?;
+        let plugin = init_plugin().unwrap(); // needs to be handled properly, maybe implement
+                                             // map_err on init_plugin
+        todo!()
+    }
 
-    let r_config = match config {
-        Some(v) => ROption::RSome(v),
-        None => ROption::RNone,
-    };
-
-    let raw_module = new_module(r_config);
-
-    Ok(Module::new(raw_module).unwrap())
+    Ok(())
 }

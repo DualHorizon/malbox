@@ -1,54 +1,32 @@
-use abi_stable::{
-    declare_root_module_statics,
-    library::RootModule,
-    package_version_strings, sabi_trait,
-    sabi_types::VersionStrings,
-    std_types::{RBox, RBoxError, ROption, RStr, RString, RVec},
-    StableAbi,
-};
+use stabby::string::String;
 
-pub mod modules;
-pub mod plugins;
-pub mod util;
-
-use modules::RawModule_TO;
-use plugins::RawPlugin_TO;
-
-#[repr(C)]
-#[derive(StableAbi, Clone)]
-pub enum Value {
-    String(RString),
-    Integer(i32),
+#[stabby::stabby]
+#[repr(u8)]
+pub enum PluginType {
+    Analysis,
+    Scheduling,
+    Storage,
+    Machinery,
 }
 
-pub type RResult<T> = abi_stable::std_types::RResult<T, RBoxError>;
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
-
-#[repr(C)]
-#[derive(StableAbi)]
-#[sabi(kind(Prefix))]
-pub struct ModuleMod {
-    pub new: extern "C" fn(config: ROption<Value>) -> RawModule_TO<'static, RBox<()>>,
+#[stabby::stabby]
+#[repr(u8)]
+pub enum PluginStatus {
+    NotStarted,
+    Running,
+    Stopped,
 }
 
-impl RootModule for ModuleMod_Ref {
-    const BASE_NAME: &'static str = "module";
-    const NAME: &'static str = "module";
-    const VERSION_STRINGS: VersionStrings = package_version_strings!();
-    declare_root_module_statics! {ModuleMod_Ref}
+#[stabby::stabby]
+pub struct PluginInfo {
+    pub name: String,
+    pub version: String,
+    pub _type: PluginType,
 }
 
-// note: it may be better to not implement plugins as RootModule(s) maybe we could propagate the plugin libs through the modules RootModule
-#[repr(C)]
-#[derive(StableAbi)]
-#[sabi(kind(Prefix))]
-pub struct PluginMod {
-    pub new: extern "C" fn(config: ROption<Value>) -> RawPlugin_TO<'static, RBox<()>>,
+#[stabby::stabby(checked)]
+pub trait AnalysisPlugin {
+    extern "C" fn get_info(&self) -> PluginInfo;
 }
 
-impl RootModule for PluginMod_Ref {
-    const BASE_NAME: &'static str = "plugin";
-    const NAME: &'static str = "plugin";
-    const VERSION_STRINGS: VersionStrings = package_version_strings!();
-    declare_root_module_statics! {PluginMod_Ref}
-}
+pub type Plugin = stabby::dynptr!(stabby::boxed::Box<dyn AnalysisPlugin>);
