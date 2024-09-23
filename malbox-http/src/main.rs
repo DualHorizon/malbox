@@ -16,7 +16,7 @@ async fn main() -> anyhow::Result<()> {
 
     manager.load_plugin(Path::new(
         "./plugins/dummy_plugin/target/debug/libdummy_plugin.so",
-    ));
+    )).unwrap();
 
     manager.execute_plugin_analysis("DummyPlugin").unwrap();
 

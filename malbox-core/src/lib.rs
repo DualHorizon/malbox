@@ -25,8 +25,9 @@ impl PluginManager {
             .with_context(|| format!("Failed to load library from path: {:?}", path))?;
 
         let init_plugin = unsafe {
-    lib.get_stabbied::<extern "C" fn() -> stabby::result::Result<Plugin, stabby::string::String>>(b"init_plugin")
-}.map_err(|e| anyhow!("Failed to get init_plugin symbol: {}", e))?;
+            lib.get_stabbied::<extern "C" fn() -> stabby::result::Result<Plugin, stabby::string::String>>(b"init_plugin")
+        }.map_err(|e| anyhow!("Failed to get init_plugin symbol: {}", e))?;
+
         let plugin = init_plugin().unwrap();
 
         let info = plugin.get_info();
@@ -54,6 +55,8 @@ impl PluginManager {
         }
 
         self.plugins.insert(plugin_name, (lib, plugin));
+
+        tracing::info!("{:#?}", self.plugins.keys());
         Ok(())
     }
 
@@ -76,10 +79,7 @@ impl PluginManager {
         self.plugins.get(name).map(|(_, plugin)| plugin)
     }
 
-    pub fn execute_plugin_analysis(
-        &self,
-        plugin_name: &str,
-    ) -> Result<AnalysisResult> {
+    pub fn execute_plugin_analysis(&self, plugin_name: &str) -> Result<AnalysisResult> {
         let plugin = self
             .get_plugin(plugin_name)
             .ok_or_else(|| anyhow!("Plugin {} not found", plugin_name))?;

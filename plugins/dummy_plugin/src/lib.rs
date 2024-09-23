@@ -4,8 +4,7 @@ use stabby::result::Result as StabbyResult;
 use stabby::string::String as StabbyString;
 use stabby::vec::Vec as StabbyVec;
 
-#[derive(Default)]
-#[plugin("DummyPlugin", Analysis, "DependencyPlugin1", "DependencyPlugin2")]
+#[plugin(Analysis)]
 pub struct DummyPlugin {
     analysis_count: u32,
 }

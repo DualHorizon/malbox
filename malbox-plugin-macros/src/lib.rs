@@ -1,20 +1,17 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, TokenStreamExt};
+use quote::quote;
 use syn::{
     parse::Parse, parse_macro_input, punctuated::Punctuated, DeriveInput, Ident, LitStr, Token,
 };
 
 struct PluginAttr {
-    name: LitStr,
     plugin_type: Ident,
     dependencies: Punctuated<LitStr, Token![,]>,
 }
 
 impl Parse for PluginAttr {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let name = input.parse()?;
-        input.parse::<Token![,]>()?;
         let plugin_type = input.parse()?;
         let dependencies = if input.peek(Token![,]) {
             input.parse::<Token![,]>()?;
@@ -23,7 +20,6 @@ impl Parse for PluginAttr {
             Punctuated::new()
         };
         Ok(PluginAttr {
-            name,
             plugin_type,
             dependencies,
         })
@@ -39,19 +35,19 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
     let attr = parse_macro_input!(attr as PluginAttr);
 
     let name = &input.ident;
-    let plugin_name = &attr.name;
     let plugin_type = &attr.plugin_type;
     let dependencies = &attr.dependencies;
 
     let dependency_vec = generate_dependency_vec(dependencies);
 
     let expanded = quote! {
+        #[derive(Default)]
         #input
 
         impl malbox_abi_common::AnalysisPlugin for #name {
             extern "C" fn get_info(&self) -> malbox_abi_common::PluginInfo {
                 malbox_abi_common::PluginInfo {
-                    name: #plugin_name.into(),
+                    name: stringify!(#name).into(),
                     version: env!("CARGO_PKG_VERSION").into(),
                     _type: malbox_abi_common::PluginType::#plugin_type,
                     dependencies: #dependency_vec,
