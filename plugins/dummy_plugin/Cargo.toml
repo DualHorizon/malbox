@@ -13,5 +13,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 malbox-abi-common.path = "../../malbox-abi-common"
+malbox-plugin-macros.path = "../../malbox-plugin-macros"
 serde = "1.0.204"
 stabby = "36.1.1"

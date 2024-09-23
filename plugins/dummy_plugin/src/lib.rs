@@ -1,19 +1,24 @@
-use malbox_abi_common::{AnalysisPlugin, Plugin, PluginInfo, PluginType};
-use stabby::{result::Result, string::String};
+use malbox_abi_common::{AnalysisResult, PluginType};
+use malbox_plugin_macros::{analysis, plugin};
+use stabby::result::Result as StabbyResult;
+use stabby::string::String as StabbyString;
+use stabby::vec::Vec as StabbyVec;
 
-struct MyPlugin;
-
-impl AnalysisPlugin for MyPlugin {
-    extern "C" fn get_info(&self) -> PluginInfo {
-        PluginInfo {
-            name: "hi".into(),
-            _type: PluginType::Analysis,
-            version: "1.1.1".into(),
-        }
-    }
+#[derive(Default)]
+#[plugin("DummyPlugin", Analysis, "DependencyPlugin1", "DependencyPlugin2")]
+pub struct DummyPlugin {
+    analysis_count: u32,
 }
 
-#[stabby::export]
-pub extern "C" fn init_plugin() -> Result<Plugin, String> {
-    Result::Ok(stabby::boxed::Box::new(MyPlugin).into())
+impl DummyPlugin {
+    #[analysis]
+    fn analyze(&self) -> StabbyResult<AnalysisResult, StabbyString> {
+        println!("DummyPlugin is performing analysis...");
+
+        let result = AnalysisResult { score: 0.75 };
+
+        println!("Analysis complete. Score: {}", result.score);
+
+        StabbyResult::Ok(result)
+    }
 }

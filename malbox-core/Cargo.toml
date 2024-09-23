@@ -9,5 +9,6 @@ edition = "2021"
 anyhow.workspace = true
 libloading = "0.8.5"
 malbox-abi-common.path = "../malbox-abi-common"
+petgraph = "0.6.5"
 stabby = { workspace = true, features = ["libloading"] }
 tracing.workspace = true
