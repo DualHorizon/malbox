@@ -1,8 +1,11 @@
+use std::collections::HashSet;
+
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
-    parse::Parse, parse_macro_input, punctuated::Punctuated, DeriveInput, Ident, LitStr, Token,
+    parse::Parse, parse_macro_input, punctuated::Punctuated, DeriveInput, Ident, ItemImpl, LitStr,
+    Token,
 };
 
 struct PluginAttr {
@@ -36,9 +39,14 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let name = &input.ident;
     let plugin_type = &attr.plugin_type;
-    let dependencies = &attr.dependencies;
 
+    let impl_block = find_impl_block(&input);
+
+    // let dependencies = find_dependencies(impl_block);
+
+    let dependencies = &attr.dependencies;
     let dependency_vec = generate_dependency_vec(dependencies);
+    //
 
     let expanded = quote! {
         #[derive(Default)]
@@ -50,7 +58,7 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
                     name: stringify!(#name).into(),
                     version: env!("CARGO_PKG_VERSION").into(),
                     _type: malbox_abi_common::PluginType::#plugin_type,
-                    dependencies: #dependency_vec,
+                    dependencies: #dependency_vec
                 }
             }
 
@@ -77,6 +85,15 @@ pub fn plugin(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
+
+fn find_impl_block(derive_input: &DeriveInput) -> Option<&ItemImpl> {
+    dbg!("{:#?}", derive_input);
+    None
+}
+fn find_dependencies(impl_block: Option<&ItemImpl>) -> HashSet<String> {
+    todo!()
+}
+
 fn generate_dependency_vec(dependencies: &Punctuated<LitStr, Token![,]>) -> TokenStream2 {
     if dependencies.is_empty() {
         quote! { stabby::vec::Vec::new() }

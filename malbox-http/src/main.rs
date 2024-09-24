@@ -1,5 +1,5 @@
 use malbox_config::load_config;
-use malbox_core::PluginManager;
+use malbox_core::plugins::PluginManager;
 use malbox_database::{init_database, init_machines};
 use malbox_scheduler::init_scheduler;
 use malbox_tracing::init_tracing;
