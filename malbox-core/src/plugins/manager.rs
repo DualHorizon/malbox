@@ -1,4 +1,3 @@
-
 use anyhow::{anyhow, Context, Result};
 use libloading::Library;
 use malbox_abi_common::{AnalysisPluginDyn, AnalysisResult, Plugin, PluginInfo};
@@ -85,8 +84,31 @@ impl PluginManager {
             .get_plugin(plugin_name)
             .ok_or_else(|| anyhow!("Plugin {} not found", plugin_name))?;
 
-        Ok(plugin.analyze().unwrap()) // handle error correctly, note that there's no map_err
-                                      // implem
+        let dependencies = self.get_plugin_dependencies(plugin_name)?;
+
+        Ok(plugin.analyze(&dependencies)) // handle error correctly, note that there's no map_err
+                                          // implem
+    }
+
+    fn get_plugin_dependencies(&self, plugin_name: &str) -> Result<Vec<&Plugin>> {
+        let mut dependencies = Vec::new();
+        let info = self
+            .get_plugin(plugin_name)
+            .ok_or_else(|| anyhow!("Plugin {} not found", plugin_name))?
+            .get_info();
+
+        for dep in info.dependencies.iter() {
+            let dep_plugin = self.get_plugin(&dep.name.to_string()).ok_or_else(|| {
+                anyhow!(
+                    "Dependency {} not found for plugin {}",
+                    dep.name,
+                    plugin_name
+                )
+            })?;
+            dependencies.push(dep_plugin.clone())
+        }
+
+        Ok(dependencies)
     }
 
     pub fn get_load_order(&self) -> Result<Vec<String>> {
