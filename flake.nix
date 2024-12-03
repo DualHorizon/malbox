@@ -56,7 +56,16 @@
                     languages.perl = {
                       enable = true;
                     };
-                    packages = with pkgs; [ sqlx-cli openssl cargo-watch file libGL glib flex bison dtc zlib pixman python311Packages.sphinx python311Packages.sphinx-rtd-theme python311Packages.ninja libvirt file];
+                    packages = with pkgs; [ sqlx-cli openssl cargo-watch file libGL glib flex bison dtc zlib pixman python311Packages.sphinx python311Packages.sphinx-rtd-theme python311Packages.ninja libvirt file llvm_18 libllvm clang_18];
+                  enterShell = ''
+                    export LIBCLANG_PATH="${pkgs.libclang.lib}/lib"
+                    export BINDGEN_EXTRA_CLANG_ARGS="$(${pkgs.llvm_18}/bin/llvm-config --cxxflags)"
+                    export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [
+                      pkgs.llvm_18
+                      pkgs.clang_18
+                      pkgs.libclang.lib
+                    ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+                  '';
                   }
                 ];
               };
