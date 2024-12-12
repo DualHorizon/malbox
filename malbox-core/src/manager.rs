@@ -1,39 +1,46 @@
-pub mod state;
-
 use super::communication::PluginCommunication;
 use super::plugin::PluginRequirements;
+use super::registry::PluginRegistry;
 use iceoryx2::prelude::*;
 use state::PluginState;
+use std::sync::Arc;
 use std::time::Duration;
+
+pub mod state;
 
 pub struct PluginManager {
     node: Node<ipc::Service>,
     state: PluginState,
     communication: PluginCommunication,
+    registry: Arc<PluginRegistry>,
 }
 
 impl PluginManager {
-    pub fn new() -> Result<Self, anyhow::Error> {
+    pub fn new(registry: Arc<PluginRegistry>) -> Result<Self, anyhow::Error> {
         let node = NodeBuilder::new().create()?;
 
         Ok(Self {
             communication: PluginCommunication::new(&node)?,
             state: PluginState::new(),
             node,
+            registry,
         })
     }
 
-    // TODO: replace `id` with an actual ID, not a string.
-    // We should consider adding checks here. Or in the latters.
-    pub fn register_plugin(&mut self, id: String, requirements: PluginRequirements) {
+    pub fn register_plugin(
+        &mut self,
+        id: String,
+        requirements: PluginRequirements,
+    ) -> Result<(), anyhow::Error> {
+        self.registry.verify_plugin(&id)?;
         self.state.add_plugin(id, requirements);
+        Ok(())
     }
 
     pub fn run(&mut self) -> Result<(), anyhow::Error> {
         while let NodeEvent::Tick = self.node.wait(Duration::from_millis(100)) {
             self.process_cycle()?;
         }
-
         Ok(())
     }
 
@@ -52,7 +59,6 @@ impl PluginManager {
             self.communication.send_start_signal(plugin)?;
             self.state.mark_as_running(id);
         }
-
         Ok(())
     }
 }

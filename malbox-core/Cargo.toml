@@ -9,3 +9,4 @@ edition = "2021"
 anyhow.workspace = true
 tracing.workspace = true
 iceoryx2.workspace = true
+serde.workspace = true

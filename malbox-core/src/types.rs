@@ -1,12 +1,14 @@
+use serde::Deserialize;
 use std::collections::HashSet;
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+// NOTE: Most of the String params here should be replaced
+// with proper, specific values, this is TBD
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Deserialize)]
 pub enum PluginType {
     Storage,
-    Network,
-    Scheduler,
     Analysis,
-    Monitor,
+    Machinery,
 }
 
 #[derive(Debug, Clone)]

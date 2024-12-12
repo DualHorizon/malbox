@@ -31,7 +31,7 @@ pub struct PluginRuntime<P: Plugin> {
 }
 
 impl<P: Plugin> PluginRuntime<P> {
-    pub fn new(plugin: P) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(plugin: P) -> Result<Self, anyhow::Error> {
         let node = NodeBuilder::new().create()?;
         let communication = PluginCommunication::new(&node)?;
 
@@ -41,7 +41,7 @@ impl<P: Plugin> PluginRuntime<P> {
         })
     }
 
-    pub fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn run(&mut self) -> Result<(), anyhow::Error> {
         // Initialize
         self.plugin.init()?;
         self.communication.notify_event(PluginEvent::Started(
@@ -72,6 +72,7 @@ impl<P: Plugin> PluginRuntime<P> {
     }
 }
 
+// NOTE: temporary, needs to be moved, just put it here as a reminder
 #[macro_export]
 macro_rules! declare_plugin {
     ($plugin:ty) => {

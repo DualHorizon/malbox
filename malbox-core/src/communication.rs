@@ -3,12 +3,17 @@ use super::{
     plugin::PluginRequirements,
     types::{PluginEvent, PluginType},
 };
+
 use iceoryx2::port::{
-    listener::Listener, notifier::Notifier, publisher::Publisher, subscriber::Subscriber,
+    listener::Listener,
+    notifier::Notifier,
+    publisher::Publisher,
+    subscriber::Subscriber,
 };
 use iceoryx2::prelude::*;
-use std::{collections::HashMap, time::Duration};
+use std::{collections::{HashMap, HashSet}, time::Duration};
 
+// TODO: TBD
 #[derive(Debug, Clone)]
 pub struct PluginMessage {
     pub plugin_id: String,
@@ -23,16 +28,14 @@ pub struct PluginCommunication {
 }
 
 impl PluginCommunication {
-    pub fn new(node: &Node<ipc::Service>) -> Result<Self, anyhow::Error> {
+    pub fn new(node: &Node<ipc::Service>) -> anyhow::Result<Self> {
         let mut publishers = HashMap::new();
         let mut subscribers = HashMap::new();
 
         for plugin_type in [
             PluginType::Storage,
-            PluginType::Network,
-            PluginType::Scheduler,
             PluginType::Analysis,
-            PluginType::Monitor,
+            PluginType::Machinery,
         ]
         .iter()
         {
@@ -59,7 +62,7 @@ impl PluginCommunication {
         })
     }
 
-    pub fn send_start_signal(&self, plugin: &PluginRequirements) -> Result<(), anyhow::Error> {
+    pub fn send_start_signal(&self. plugin: &PluginRequirements) -> anyhow::Result<()> {
         if let Some(publisher) = self.publishers.get(&plugin.plugin_type) {
             let message = PluginMessage {
                 plugin_id: "start".into(),
@@ -72,17 +75,20 @@ impl PluginCommunication {
         Ok(())
     }
 
-    pub fn process_messages(&mut self, state: &mut PluginState) -> Result<(), anyhow::Error> {
+    pub fn process_messages(&mut self, state: &mut PluginState) -> anyhow::Result<()> {
         for (_, subscriber) in &self.subscribers {
             while let Some(_data) = subscriber.receive()? {
                 todo!()
             }
         }
 
-        while let Ok(Some(event_id)) = self.event_listener.timed_wait_one(Duration::from_millis(0))
-        {
+        while let Ok(Some(event_id)) = self.event_listener.timed_wait_one(Duration::from_millis(0)) {
             let event = match event_id.as_value() {
-                1 => Some(PluginEvent::Started("plugin-id".to_string())),
+                1 => Some(PluginEvent::Ready {
+                    id: "plugin-id".to_string(),
+                    plugin_type: PluginType::Analysis,
+                    required_plugins: HashSet::new(),
+                }),
                 2 => Some(PluginEvent::Completed("plugin-id".to_string())),
                 _ => None,
             };
