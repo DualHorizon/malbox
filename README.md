@@ -21,6 +21,7 @@ Malbox is fully open-source, modular, and community-oriented, making it an excel
   - [ ] Modularize analysis workflow using plugins
   - [ ] Modularize storage management using plugins
   - [ ] Modularize machinery provisioning using plugins
+- [ ] Proper plugin scheduler / task management
 - [ ] Develop plugins for machinery provisioning
   - [ ] Vagrant
   - [ ] VMWare ESXi
