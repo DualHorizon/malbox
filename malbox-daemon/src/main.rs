@@ -1,9 +1,8 @@
 use malbox_config::load_config;
 use malbox_database::{init_database, init_machines};
+use malbox_http::http;
 use malbox_scheduler::init_scheduler;
 use malbox_tracing::init_tracing;
-
-mod http;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
