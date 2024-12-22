@@ -16,21 +16,27 @@ Malbox is fully open-source, modular, and community-oriented, making it an excel
 ## Roadmap
 
 **v0.1.0**
-- [x] Integrate DB management (PostgreSQL)
 - [x] Basic back-end structure
-- [x] Task/submission management
-- [x] Plugin/Module system with stable_abi
-- [ ] Modular machinery management via plugins
-- [ ] Modular task scheduling via plugins
-- [ ] Modular storage via plugins
-- [ ] Create basic analysis plugins
+- [x] Plugin system with shared memory IPC (via [iceoryx2](https://docs.rs/iceoryx2/latest/iceoryx2/))
+  - [ ] Modularize analysis workflow using plugins
+  - [ ] Modularize storage management using plugins
+  - [ ] Modularize machinery provisioning using plugins
+- [ ] Proper plugin scheduler / task management
+- [ ] Develop plugins for machinery provisioning
+  - [ ] Vagrant
+  - [ ] VMWare ESXi
+  - [ ] KVM/libvirt
+  - [ ] Hyper-V
+- [ ] Develop plugins for storage management
+  - [ ] Amazon S3
+  - [ ] On premise
+- [ ] Develop plugins for static/dynamic analysis
 - [ ] Configuration options (machines, submissions, file persistence, etc..) 
-- [ ] Create more REST API endpoints for diverse things
+- [ ] Create diverse Rest API endpoints (monitoring, analysis, etc..)
 
 **v0.2.0**
-- [ ] Refactor plugin/module system, create a rustc driver instead of using stable_abi
 - [ ] Implement more complex plugins and cover as much as possible for detection (agent-less analysis)
-
+- TBD!
 ---
 
 
