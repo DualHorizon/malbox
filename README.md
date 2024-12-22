@@ -19,11 +19,9 @@ Malbox is fully open-source, modular, and community-oriented, making it an excel
 - [x] Basic back-end structure
 - [x] Plugin system with shared memory IPC (via [iceoryx2](https://docs.rs/iceoryx2/latest/iceoryx2/))
   - [ ] Modularize analysis workflow using plugins
-  - [ ] Modularize storage management using plugins
-  - [ ] Modularize machinery provisioning using plugins
 - [ ] Proper plugin scheduler / task management
-- [ ] Develop plugins for machinery provisioning
-  - [ ] Vagrant
+- [ ] Develop components for machinery provisioning
+  - [ ] Terraform/Ansible
   - [ ] VMWare ESXi
   - [ ] KVM/libvirt
   - [ ] Hyper-V
