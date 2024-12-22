@@ -20,11 +20,9 @@ pub struct PluginRegistry {
 
 impl PluginRegistry {
     pub fn new(config_path: PathBuf) -> anyhow::Result<Self> {
-        // let config = std::fs::read_to_string(config_path)?;
-        // let plugins: HashMap<String, PluginInfo> = serde_json::from_str(&config)?;
-        // Ok(Self { plugins })
-
-        todo!()
+        let config = std::fs::read_to_string(config_path)?;
+        let plugins: HashMap<String, PluginInfo> = serde_json::from_str(&config)?;
+        Ok(Self { plugins })
     }
 
     pub fn get_plugin(&self, id: &str) -> Option<&PluginInfo> {

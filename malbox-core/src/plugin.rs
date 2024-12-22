@@ -1,7 +1,8 @@
 use crate::communication::PluginCommunication;
+use crate::types::{ExecutionMode, PluginEvent, PluginType};
+use anyhow::Result;
+use iceoryx2::node::NodeBuilder;
 use std::collections::HashSet;
-
-use super::types::{ExecutionMode, PluginType};
 
 #[derive(Debug, Clone)]
 pub struct PluginRequirements {
@@ -14,13 +15,13 @@ pub struct PluginRequirements {
 pub trait Plugin: Send {
     fn requirements(&self) -> PluginRequirements;
 
-    fn init(&mut self) -> Result<(), anyhow::Error> {
+    fn init(&mut self) -> Result<()> {
         Ok(())
     }
 
-    fn process(&mut self, data: &[u8]) -> Result<Vec<u8>, anyhow::Error>;
+    fn process(&mut self, data: &[u8]) -> Result<Vec<u8>>;
 
-    fn shutdown(&mut self) -> Result<(), anyhow::Error> {
+    fn shutdown(&mut self) -> Result<()> {
         Ok(())
     }
 }
@@ -31,9 +32,10 @@ pub struct PluginRuntime<P: Plugin> {
 }
 
 impl<P: Plugin> PluginRuntime<P> {
-    pub fn new(plugin: P) -> Result<Self, anyhow::Error> {
+    pub fn new(plugin: P, id: String) -> Result<Self> {
         let node = NodeBuilder::new().create()?;
-        let communication = PluginCommunication::new(&node)?;
+        let requirements = plugin.requirements();
+        let communication = PluginCommunication::new(&node, requirements.plugin_type.clone(), id)?;
 
         Ok(Self {
             plugin,
@@ -41,20 +43,30 @@ impl<P: Plugin> PluginRuntime<P> {
         })
     }
 
-    pub fn run(&mut self) -> Result<(), anyhow::Error> {
-        // Initialize
+    pub fn run(&mut self) -> Result<()> {
+        // Initialize and prepare resources
         self.plugin.init()?;
-        self.communication.notify_event(PluginEvent::Started(
-            self.plugin.requirements().plugin_type.to_string(),
-        ))?;
 
-        // Main loop
-        while let Some(data) = self.communication.receive_data()? {
-            match self.plugin.process(&data) {
-                Ok(result) => self.communication.send_data(&result)?,
+        // Announce resources ready
+        self.communication
+            .notify_event(PluginEvent::ResourceReady {
+                id: self.communication.plugin_id.clone(),
+                plugin_type: self.communication.plugin_type.clone(),
+            })?;
+
+        // Main processing loop
+        while let Some(sample) = self.communication.receive_data()? {
+            // Announce processing started
+            self.communication
+                .notify_event(PluginEvent::Started(self.communication.plugin_id.clone()))?;
+
+            match self.plugin.process(sample.payload().data.as_slice()) {
+                Ok(result) => {
+                    self.communication.send_result(result)?;
+                }
                 Err(e) => {
                     self.communication.notify_event(PluginEvent::Failed(
-                        self.plugin.requirements().plugin_type.to_string(),
+                        self.communication.plugin_id.clone(),
                         e.to_string(),
                     ))?;
                     return Err(e);
@@ -62,23 +74,24 @@ impl<P: Plugin> PluginRuntime<P> {
             }
         }
 
-        // Cleanup
+        // Clean shutdown
         self.plugin.shutdown()?;
-        self.communication.notify_event(PluginEvent::Completed(
-            self.plugin.requirements().plugin_type.to_string(),
-        ))?;
+        self.communication
+            .notify_event(PluginEvent::Shutdown(self.communication.plugin_id.clone()))?;
 
         Ok(())
     }
 }
 
-// NOTE: temporary, needs to be moved, just put it here as a reminder
 #[macro_export]
 macro_rules! declare_plugin {
     ($plugin:ty) => {
-        fn main() -> Result<(), Box<dyn std::error::Error>> {
+        fn main() -> anyhow::Result<()> {
             let plugin = <$plugin>::default();
-            let mut runtime = $crate::plugin::PluginRuntime::new(plugin)?;
+            let mut runtime = $crate::plugin::PluginRuntime::new(
+                plugin,
+                "plugin-id".to_string(), // Should be unique per plugin instance
+            )?;
             runtime.run()
         }
     };

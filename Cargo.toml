@@ -9,7 +9,7 @@ members = [
     "malbox-storage",
     "malbox-tracing",
     "malbox-machinery",
-    "malbox-core",
+    "malbox-core", "plugins/example-plugin",
 ]
 
 [workspace.dependencies]

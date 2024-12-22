@@ -1,12 +1,11 @@
-use crate::{
-    plugin::PluginRequirements,
-    types::{ExecutionMode, PluginEvent, PluginType},
-};
-use std::collections::HashMap;
+use crate::plugin::PluginRequirements;
+use crate::types::{ExecutionMode, PluginEvent, PluginType};
+use std::collections::{HashMap, HashSet};
 
 pub struct PluginState {
     plugins: HashMap<String, PluginRequirements>,
     running: HashMap<String, PluginType>,
+    resource_ready: HashSet<String>,
 }
 
 impl PluginState {
@@ -14,6 +13,7 @@ impl PluginState {
         Self {
             plugins: HashMap::new(),
             running: HashMap::new(),
+            resource_ready: HashSet::new(),
         }
     }
 
@@ -32,9 +32,25 @@ impl PluginState {
         }
     }
 
+    pub fn handle_event(&mut self, event: PluginEvent) {
+        match event {
+            PluginEvent::ResourceReady { id, .. } => {
+                self.resource_ready.insert(id);
+            }
+            PluginEvent::Started(id) => {
+                self.mark_as_running(&id);
+            }
+            PluginEvent::Failed(id, _) | PluginEvent::Shutdown(id) => {
+                self.running.remove(&id);
+                self.resource_ready.remove(&id);
+            }
+        }
+    }
+
     pub fn get_next_plugins(&self) -> Vec<String> {
         let mut runnable = Vec::new();
 
+        // First check exclusive plugins
         if let Some((id, _)) = self
             .plugins
             .iter()
@@ -47,6 +63,7 @@ impl PluginState {
             };
         }
 
+        // Then handle other plugins
         for (id, req) in &self.plugins {
             if !self.running.contains_key(id) && self.can_start_plugin(id) {
                 match &req.execution_mode {
@@ -68,6 +85,12 @@ impl PluginState {
             None => return false,
         };
 
+        // Check if plugin is resource ready
+        if !self.resource_ready.contains(id) {
+            return false;
+        }
+
+        // Check dependencies
         if !plugin
             .required_plugins
             .iter()
@@ -76,38 +99,29 @@ impl PluginState {
             return false;
         }
 
+        // Check incompatible plugins
         if plugin
             .incompatible_plugins
             .iter()
-            .all(|incomp_id| self.running.contains_key(incomp_id))
+            .any(|incomp_id| self.running.contains_key(incomp_id))
         {
             return false;
         }
 
+        // Check execution mode
         match &plugin.execution_mode {
             ExecutionMode::Exclusive => self.running.is_empty(),
             ExecutionMode::Sequential => true,
-            ExecutionMode::Parallel(group) => {
-                self.running.iter()
-                    .all(|(_, p_type)| {
-                        self.plugins.iter()
-                            .find(|(_, req)| req.plugin_type == *p_type)
-                            .map_or(false, |(_, req)| {
-                                matches!(&req.execution_mode, ExecutionMode::Parallel(other_group) if other_group == group)
-                            })
+            ExecutionMode::Parallel(group) => self.running.iter().all(|(_, p_type)| {
+                self.plugins
+                    .iter()
+                    .find(|(_, req)| req.plugin_type == *p_type)
+                    .map_or(false, |(_, req)| {
+                        matches!(&req.execution_mode,
+                                    ExecutionMode::Parallel(other_group) if other_group == group)
                     })
-            },
+            }),
             ExecutionMode::Unrestricted => true,
-        }
-    }
-
-    pub fn handle_event(&mut self, event: PluginEvent) {
-        match event {
-            PluginEvent::Started(id) => self.mark_as_running(&id),
-            PluginEvent::Completed(id) | PluginEvent::Failed(id, _) => {
-                self.running.remove(&id);
-            }
-            PluginEvent::ResourceReady(_) => {}
         }
     }
 }
