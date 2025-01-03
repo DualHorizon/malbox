@@ -14,3 +14,17 @@ Cargo.lock
 *.pdb
 .devenv
 .vscode
+
+# devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv*
+
+# Nix build outputs
+result
+result-*
+
+# pre-commit
+.pre-commit-config.yaml
