@@ -35,7 +35,10 @@ jobs:
         run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
 
       - name: Run migrations
-        run: sqlx migrate run
+        run: |
+          cd malbox-database
+          sqlx migrate run
+          cd ..
 
       - name: Update dependencies
         run: cargo update --verbose
