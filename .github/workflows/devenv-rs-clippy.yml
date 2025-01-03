@@ -1,0 +1,22 @@
+name: devenv - rust clippy
+on:
+  push:
+    branches: ["main", "dev/*"]
+  pull_request:
+    branches: ["main", "dev/*"]
+
+jobs:
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v26
+      - uses: cachix/cachix-action@v14
+        with:
+          name: devenv
+      - name: Install devenv.sh
+        run: nix profile install nixpkgs#devenv
+
+      - name: Run clippy
+        shell: devenv shell bash -- -e {0}
+        run: lint
