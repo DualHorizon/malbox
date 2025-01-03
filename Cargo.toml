@@ -10,7 +10,6 @@ members = [
     "malbox-tracing",
     "malbox-machinery",
     "malbox-core",
-    "plugins/example-plugin",
     "malbox-daemon",
 ]
 
@@ -22,4 +21,4 @@ anyhow = { version = "1.0.82" }
 chrono = { version = "0.4.38", features = ["serde"] }
 time = { version = "0.3.36" }
 tracing = { version = "0.1.40" }
-iceoryx2 = { version =  "0.4.1" }
+iceoryx2 = { version = "0.4.1" }

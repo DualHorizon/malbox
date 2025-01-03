@@ -71,6 +71,7 @@
     check.exec = "cargo check";
     test.exec = "cargo test";
     build.exec = "cargo build";
+    run.exec = "cargo run";
     docs.exec = ''
       echo "Building documentation..."
       cargo doc --no-deps
