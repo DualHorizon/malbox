@@ -3,6 +3,7 @@ pub mod state;
 use crate::communication::MasterCommunication;
 use crate::plugin::PluginRequirements;
 use crate::registry::PluginRegistry;
+use iceoryx2::node::NodeWaitFailure;
 use iceoryx2::prelude::*;
 use state::PluginState;
 use std::sync::Arc;
@@ -37,10 +38,19 @@ impl PluginManager {
     }
 
     pub fn run(&mut self) -> anyhow::Result<()> {
-        while let NodeEvent::Tick = self.node.wait(Duration::from_millis(100)) {
-            self.process_cycle()?;
+        loop {
+            match self.node.wait(Duration::from_millis(100)) {
+                Ok(()) => {
+                    self.process_cycle()?;
+                }
+                Err(NodeWaitFailure::Interrupt) => {
+                    todo!();
+                }
+                Err(NodeWaitFailure::TerminationRequest) => {
+                    todo!();
+                }
+            }
         }
-        Ok(())
     }
 
     fn process_cycle(&mut self) -> anyhow::Result<()> {

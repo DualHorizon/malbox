@@ -15,10 +15,16 @@ members = [
 
 [workspace.dependencies]
 tokio = { version = "1.37.0", features = ["full"] }
-sqlx = { version = "0.8.0" }
+sqlx = { version = "0.8.3", features = [
+    "runtime-tokio",
+    "tls-native-tls",
+    "postgres",
+    "uuid",
+    "time",
+] }
 serde = { version = "1.0.199", features = ["derive"] }
 anyhow = { version = "1.0.82" }
 chrono = { version = "0.4.38", features = ["serde"] }
 time = { version = "0.3.36" }
 tracing = { version = "0.1.40" }
-iceoryx2 = { version = "0.4.1" }
+iceoryx2 = { version = "0.5.0" }

@@ -12,4 +12,4 @@ tracing = { workspace = true }
 anyhow = { workspace = true }
 memfd-exec = "0.2.1"
 # qemu = { version = "9.0.0-v0" }
-virt = { version = "0.3.1", features = ["qemu"] }
+virt = { version = "0.4.1", features = ["qemu"] }
