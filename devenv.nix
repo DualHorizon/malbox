@@ -63,6 +63,7 @@
     check.exec = "cargo check";
     test.exec = "cargo test";
     build.exec = "cargo build";
+    clean.exec = "cargo clean";
     run.exec = "cargo run";
     docs.exec = ''
       echo "Building documentation..."
