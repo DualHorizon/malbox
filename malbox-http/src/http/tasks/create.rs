@@ -118,7 +118,7 @@ fn get_file_info(file: &FieldData<Bytes>) -> anyhow::Result<FileInfo> {
         sha256: get_sha256(&mut file.contents.to_vec()),
         sha512: get_sha512(&mut file.contents.to_vec()),
         crc32: get_crc32(&mut file.contents.to_vec()),
-        ssdeep: get_ssdeep(&mut file.contents.to_vec()),
+        ssdeep: "not-available".to_string(),
     })
 }
 
@@ -131,7 +131,7 @@ async fn create_sample(state: &AppState, file_info: &FileInfo) -> Result<SampleE
         sha1: file_info.sha1.clone(),
         sha256: file_info.sha256.clone(),
         sha512: file_info.sha512.clone(),
-        ssdeep: file_info.ssdeep.clone(),
+        ssdeep: "not-available".to_string(),
     };
 
     insert_sample(&state.pool, sample)

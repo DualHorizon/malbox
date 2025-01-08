@@ -55,6 +55,7 @@ pub fn get_crc32(buf: &mut [u8]) -> String {
     format!("{:x}", result)
 }
 
-pub fn get_ssdeep(buf: &mut [u8]) -> String {
-    ssdeep::hash(buf).unwrap()
-}
+// NOTE: temporarly removing ssdeep crate because of build issues..
+// pub fn get_ssdeep(buf: &mut [u8]) -> String {
+//    ssdeep::hash(buf).unwrap()
+// }
