@@ -4,8 +4,7 @@ use malbox_http::http;
 use malbox_scheduler::init_scheduler;
 use malbox_tracing::init_tracing;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+pub async fn run() -> anyhow::Result<()> {
     let config = load_config().await;
 
     init_tracing(&config.malbox.debug.rust_log);
