@@ -4,25 +4,40 @@ use clap::{Parser, Subcommand};
 #[command(version, about, long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    modules: Modules,
+    module: Modules,
 }
 
 #[derive(Subcommand, Debug)]
 enum Modules {
-    #[command(subcommand)]
-    Builder,
-    Daemon,
+    Builder {
+        #[command(subcommand)]
+        command: BuilderCommands,
+    },
+    Daemon {
+        #[command(subcommand)]
+        command: DaemonCommands,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum BuilderCommands {
+    Pack,
+    Init,
+}
+
+#[derive(Subcommand, Debug)]
+enum DaemonCommands {
+    Start,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
-    match &cli.modules {
-        Modules::Builder { .. } => {
-            println!("yup this is the builder");
-            Ok(())
-        }
-        Modules::Daemon { .. } => malbox_daemon::run().await,
+    match &cli.module {
+        Modules::Builder { .. } => Ok(()),
+        Modules::Daemon { command } => match command {
+            DaemonCommands::Start { .. } => malbox_daemon::run().await,
+        },
     }
 }
