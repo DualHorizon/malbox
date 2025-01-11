@@ -2,12 +2,37 @@
 host = "127.0.0.1"
 port = 5000
 
-[postgres]
-database_url = "postgresql://postgres:password@localhost/malbox_db"
+[database]
+url = "postgresql://postgres:password@localhost/malbox_db"
 port = 5432
 
 [debug]
 rust_log = "malbox=debug"
 
-[machinery]
-type = "kvm"
+[templates]
+# NOTE: Optional, default will be in configuration_root/templates
+base_path = "./templates" 
+
+[infrastructure]
+# NOTE: "kvm", "virtualbox" etc.. no defaults
+provider = "vmware" 
+# NOTE: "prod", default will be "prod"
+environment = "dev"
+
+[analysis]
+timeout = 300
+max_vms = 10
+# NOTE: A default profile to choose if malbox couldn't find out the platform/profile to use
+default_profile = "default/linux" 
+
+[analysis.windows]
+default_profile = "default/windows"
+# NOTE: You can override max_vms and timeout with:
+# timeout = 150
+# max_vms = 3
+
+[analysis.linux]
+default_profile = "default/linux"
+# NOTE: You can override max_vms and timeout with:
+# timeout = 150
+# max_vms = 3
