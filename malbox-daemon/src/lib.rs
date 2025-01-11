@@ -5,13 +5,13 @@ use malbox_scheduler::init_scheduler;
 use malbox_tracing::init_tracing;
 
 pub async fn run() -> anyhow::Result<()> {
-    let config = load_config().await;
+    let config = load_config().await.unwrap();
 
     init_tracing(&config.malbox.debug.rust_log);
 
-    let db = init_database(&config.malbox.postgres).await;
+    let db = init_database(&config.malbox.database).await;
 
-    init_machines(&db, &config.machinery).await;
+    init_machines(&db, &config.machinery).await.unwrap();
 
     init_scheduler(db.clone(), 1).await;
 

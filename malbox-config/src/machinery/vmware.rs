@@ -1,36 +1,37 @@
-use super::{CommonHypervisor, CommonMachine, HypervisorConfig};
+use super::{MachineConfig, MachineProvider};
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct VmwareConfig {
-    pub vmware: Vmware,
+    pub vcenter: VCenterConfig,
+    pub network: NetworkConfig,
+    pub storage: StorageConfig,
     pub machines: Vec<MachineConfig>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct Vmware {
-    pub mode: String,
-    pub vmrun_path: String,
-    #[serde(flatten)]
-    pub common: CommonHypervisor,
+#[derive(Debug, Clone, Deserialize)]
+pub struct VCenterConfig {
+    pub server: String,
+    pub username: String,
+    pub password: String,
+    pub datacenter: String,
+    pub cluster: String,
+    pub resource_pool: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct MachineConfig {
-    pub vmx_path: String,
-    #[serde(flatten)]
-    pub common: CommonMachine,
+#[derive(Debug, Clone, Deserialize)]
+pub struct NetworkConfig {
+    pub name: String,
+    pub interface: String,
 }
 
-impl HypervisorConfig for VmwareConfig {
-    fn get_common_machine(&self) -> Vec<&CommonMachine> {
-        let mut vec = Vec::new();
-        for machine in &self.machines {
-            vec.push(&machine.common)
-        }
-        vec
-    }
-    fn get_common_hypervisor(&self) -> &CommonHypervisor {
-        &self.vmware.common
+#[derive(Debug, Clone, Deserialize)]
+pub struct StorageConfig {
+    pub path: String,
+}
+
+impl MachineProvider for VmwareConfig {
+    fn get_machines(&self) -> &Vec<MachineConfig> {
+        &self.machines
     }
 }

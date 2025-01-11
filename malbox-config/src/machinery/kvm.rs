@@ -1,35 +1,28 @@
-use super::{CommonHypervisor, CommonMachine, HypervisorConfig};
+use super::{MachineConfig, MachineProvider};
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct KvmConfig {
-    pub kvm: Kvm,
+    pub uri: String,
+    pub network: NetworkConfig,
+    pub storage: StorageConfig,
     pub machines: Vec<MachineConfig>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct Kvm {
-    pub dsn: String,
-    #[serde(flatten)]
-    pub common: CommonHypervisor,
+#[derive(Debug, Clone, Deserialize)]
+pub struct NetworkConfig {
+    pub name: String,
+    pub interface: String,
+    pub address_range: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct MachineConfig {
-    pub label: String,
-    #[serde(flatten)]
-    pub common: CommonMachine,
+#[derive(Debug, Clone, Deserialize)]
+pub struct StorageConfig {
+    pub path: String,
 }
 
-impl HypervisorConfig for KvmConfig {
-    fn get_common_machine(&self) -> Vec<&CommonMachine> {
-        let mut vec = Vec::new();
-        for machine in &self.machines {
-            vec.push(&machine.common)
-        }
-        vec
-    }
-    fn get_common_hypervisor(&self) -> &CommonHypervisor {
-        &self.kvm.common
+impl MachineProvider for KvmConfig {
+    fn get_machines(&self) -> &Vec<MachineConfig> {
+        &self.machines
     }
 }

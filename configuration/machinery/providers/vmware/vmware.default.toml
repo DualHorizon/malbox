@@ -1,0 +1,34 @@
+type = "vmware"
+
+[vcenter]
+server = "vcenter.local"
+username = "administrator@vsphere.local"
+password = "password"
+datacenter = "Datacenter"
+cluster = "Cluster"
+
+[network]
+name = "VM Network"
+interface = "vmxnet3"
+
+[storage]
+path = "/vmfs/volumes/datastore1"
+
+[[machines]]
+name = "win10-analysis"
+platform = "windows"
+arch = "x64"
+ip = "192.168.1.100"
+snapshot = "clean"
+interface = "VM Network"
+result_server = { ip = "192.168.1.200", port = "2042" }
+tags = "windows, analysis"
+reserved = false
+
+[[machines]]
+name = "ubuntu-analysis"
+platform = "linux"
+arch = "x64"
+ip = "192.168.1.101"
+interface = "VM Network"
+tags = "linux, analysis"

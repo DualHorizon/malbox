@@ -1,0 +1,8 @@
+name = "javascript-analysis"
+description = "Custom JavaScript Analysis Profile"
+platform = "windows"
+timeout = 600
+max_vms = 2
+
+[analysis_options]
+screenshot_interval = "30"

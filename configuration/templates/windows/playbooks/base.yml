@@ -1,0 +1,33 @@
+---
+- hosts: all
+  roles:
+    - common
+    - windows_analyzer
+  vars:
+    analysis_tools:
+      - name: procmon
+        version: "3.92"
+      - name: pestudio
+        version: "9.53"
+
+  tasks:
+    - name: Install analysis tools
+      win_chocolatey:
+        name: "{{ item.name }}"
+        version: "{{ item.version }}"
+        state: present
+      loop: "{{ analysis_tools }}"
+
+    - name: Configure network isolation
+      win_firewall_rule:
+        name: "Block all outbound"
+        direction: out
+        action: block
+        enabled: yes
+
+    - name: Setup monitoring services
+      win_service:
+        name: "analysis_monitor"
+        path: "C:\\Program Files\\Analyzer\\monitor.exe"
+        start_mode: auto
+        state: started

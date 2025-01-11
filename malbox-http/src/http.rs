@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use malbox_config::malbox::MalboxConfig;
+use malbox_config::config::MalboxConfig;
 use malbox_database::PgPool;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;

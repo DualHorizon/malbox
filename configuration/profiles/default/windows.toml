@@ -1,0 +1,8 @@
+name = "windows-default"
+description = "Default Windows Analysis Profile"
+platform = "windows"
+timeout = 300
+max_vms = 5
+
+[analysis_options]
+screenshot_interval = "30"
