@@ -51,6 +51,7 @@
     libllvm
     clang_18
     glibc
+    packer
   ];
 
   processes = {

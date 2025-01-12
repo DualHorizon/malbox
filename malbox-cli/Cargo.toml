@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 malbox-daemon = { path = "../malbox-daemon" }
+malbox-builder = { path = "../malbox-builder" }
+malbox-config = { path = "../malbox-config" }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 clap = { version = "4.5.26", features = ["derive"] }
