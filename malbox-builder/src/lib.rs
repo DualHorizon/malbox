@@ -4,6 +4,15 @@ use std::path::{Path, PathBuf};
 use tokio::process::Command;
 use tracing::{error, info};
 
+#[cfg(feature = "python-support")]
+mod python_support;
+#[cfg(feature = "python-support")]
+pub use python_support::*;
+#[cfg(feature = "node-support")]
+mod node_support_napi;
+#[cfg(feature = "node-support")]
+pub use node_support_napi::*;
+
 pub mod error;
 
 // NOTE: !!! This implementation is not finished yet !!!

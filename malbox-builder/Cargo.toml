@@ -8,3 +8,10 @@ anyhow = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 malbox-config = { path = "../malbox-config" }
+pyo3 = { version = "0.23.4", features = ["extension-module"] } # Python
+napi = { version = "2.10" }                                  # Node.js (N-API)
+neon = "1.0.0"                                                # Node.js (Neon)
+
+[features]
+python-support = ["pyo3"]
+node-support = ["napi", "neon"]
