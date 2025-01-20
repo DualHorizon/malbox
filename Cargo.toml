@@ -10,11 +10,13 @@ members = [
     "malbox-tracing",
     "malbox-machinery",
     "malbox-core",
-    "malbox-daemon", "malbox-cli", "malbox-builder",
+    "malbox-daemon",
+    "malbox-cli",
+    "malbox-infra",
 ]
 
 [workspace.dependencies]
-tokio = { version = "1.37.0", features = ["full"] }
+tokio = { version = "1.37.0", features = ["full", "fs"] }
 sqlx = { version = "0.8.3", features = [
     "runtime-tokio",
     "tls-native-tls",
@@ -29,3 +31,5 @@ chrono = { version = "0.4.38", features = ["serde"] }
 time = { version = "0.3.36" }
 tracing = { version = "0.1.40" }
 iceoryx2 = { version = "0.5.0" }
+bon = "3.3.2"
+color-eyre = "0.6.3"

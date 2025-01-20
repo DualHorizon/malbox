@@ -1,0 +1,15 @@
+[package]
+name = "malbox-infra"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+malbox-config = { path = "../malbox-config" }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+bon = { workspace = true }
+serde_yaml = "0.9.34"
+toml = "0.8.19"

@@ -1,21 +1,19 @@
 use clap::Parser;
-mod modules;
-use modules::{builder, daemon, Modules};
+use color_eyre::Result;
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Cli {
-    #[command(subcommand)]
-    module: Modules,
-}
+mod commands;
+mod error;
+mod types;
+mod utils;
+
+use commands::{Cli, Command};
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
+    color_eyre::install()?;
     let cli = Cli::parse();
     let config = malbox_config::load_config().await?;
-
-    match &cli.module {
-        Modules::Builder { command } => builder::handle_command(command, config).await,
-        Modules::Daemon { command } => daemon::handle_command(command).await,
-    }
+    cli.execute(&config)
+        .await
+        .map_err(|e| color_eyre::eyre::eyre!("{}", e))
 }

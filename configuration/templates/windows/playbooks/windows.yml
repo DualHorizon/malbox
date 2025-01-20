@@ -1,0 +1,10 @@
+---
+- name: Configure Windows Sandbox
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Ensure Analysis Tools Directory exists
+      win_file:
+        path: C:\Tools
+        state: directory

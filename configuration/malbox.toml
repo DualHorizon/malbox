@@ -27,6 +27,7 @@ default_profile = "default/linux"
 
 [analysis.windows]
 default_profile = "default/windows"
+
 # NOTE: You can override max_vms and timeout with:
 # timeout = 150
 # max_vms = 3
