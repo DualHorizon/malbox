@@ -1,3 +1,18 @@
+use crate::{commands::Command, error::Result, utils::progress::Progress};
+use bon::Builder;
+use clap::Parser;
+use malbox_config::Config;
+
+#[derive(Parser, Builder)]
+pub struct ValidateArgs {
+    #[arg(short, long)]
+    pub components: Option<Vec<String>>,
+
+    #[arg(short, long)]
+    #[builder(default = false)]
+    pub fix: bool,
+}
+
 impl Command for ValidateArgs {
     async fn execute(self, config: &Config) -> Result<()> {
         let progress = Progress::new();

@@ -1,40 +1,41 @@
-use crate::error::ConfigError;
+use crate::error::StorageError;
 use bon::Builder;
 use directories::ProjectDirs;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Builder)]
+#[derive(Debug, Clone, Builder, Serialize, Deserialize)]
 pub struct Paths {
     pub config_dir: PathBuf,
     pub cache_dir: PathBuf,
     pub data_dir: PathBuf,
     pub state_dir: PathBuf,
-    #[builder(default = "self.config_dir.join(\"templates\")")]
+    #[builder(default = "self.config_dir.join(\"templates\")".into())]
     pub templates_dir: PathBuf,
-    #[builder(default = "self.config_dir.join(\"terraform\")")]
+    #[builder(default = "self.config_dir.join(\"terraform\")".into())]
     pub terraform_dir: PathBuf,
-    #[builder(default = "self.config_dir.join(\"packer\")")]
+    #[builder(default = "self.config_dir.join(\"packer\")".into())]
     pub packer_dir: PathBuf,
-    #[builder(default = "self.config_dir.join(\"ansible\")")]
+    #[builder(default = "self.config_dir.join(\"ansible\")".into())]
     pub ansible_dir: PathBuf,
-    #[builder(default = "self.cache_dir.join(\"images\")")]
+    #[builder(default = "self.cache_dir.join(\"images\")".into())]
     pub images_dir: PathBuf,
 }
 
 impl Paths {
-    pub fn new() -> Result<Self, Error> {
+    pub fn new() -> Result<Self, StorageError> {
         let proj_dirs = ProjectDirs::from("org", "malbox", "malbox")
-            .ok_or_else(|| ConfigError::Xdg("Failed to determine XDG directories".into()))?;
+            .ok_or_else(|| StorageError::Xdg("Failed to determine XDG directories".into()))?;
 
         Ok(Self::builder()
             .config_dir(proj_dirs.config_dir().to_path_buf())
             .cache_dir(proj_dirs.cache_dir().to_path_buf())
             .data_dir(proj_dirs.data_dir().to_path_buf())
-            .state_dir(proj_dirs.state_dir().to_path_buf())
+            .state_dir(proj_dirs.state_dir().unwrap().to_path_buf())
             .build())
     }
 
-    pub async fn ensure_dirs_exist(&self) -> Result<(), ConfigError> {
+    pub async fn ensure_dirs_exist(&self) -> Result<(), StorageError> {
         for dir in [
             &self.config_dir,
             &self.cache_dir,

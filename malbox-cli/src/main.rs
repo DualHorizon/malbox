@@ -1,5 +1,6 @@
 use clap::Parser;
 use color_eyre::Result;
+use malbox_tracing::init_tracing;
 
 mod commands;
 mod error;
@@ -11,8 +12,13 @@ use commands::{Cli, Command};
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
-    let cli = Cli::parse();
+
     let config = malbox_config::load_config().await?;
+
+    init_tracing("info");
+
+    let cli = Cli::parse();
+
     cli.execute(&config)
         .await
         .map_err(|e| color_eyre::eyre::eyre!("{}", e))

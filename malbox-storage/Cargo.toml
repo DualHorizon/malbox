@@ -8,4 +8,6 @@ edition = "2021"
 [dependencies]
 bon = { workspace = true }
 tokio = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
 directories = "6.0.0"

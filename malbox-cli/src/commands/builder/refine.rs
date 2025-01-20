@@ -1,5 +1,5 @@
 use crate::utils::validation;
-use crate::{commands::Command, error::Result, utils::Progress};
+use crate::{commands::Command, error::Result, utils::progress::Progress};
 use clap::Parser;
 use malbox_config::Config;
 
@@ -19,7 +19,7 @@ pub struct RefineArgs {
 
 impl Command for RefineArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let builder = malbox_infrastructure::Builder::new(config.clone());
+        let builder = malbox_infra::Builder::new(config.clone());
 
         Progress::new()
             .run(
@@ -29,7 +29,7 @@ impl Command for RefineArgs {
                 ),
                 async {
                     builder
-                        .refine(malbox_infrastructure::RefineConfig {
+                        .refine(malbox_infra::RefineConfig {
                             base: self.base,
                             name: self.name,
                             playbook: self.playbook,
@@ -37,7 +37,7 @@ impl Command for RefineArgs {
                             variables: self.variables.into_iter().collect(),
                         })
                         .await
-                        .map_err(|e| crate::error::Error::Infrastructure(e.to_string()))
+                        .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
                 },
             )
             .await

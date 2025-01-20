@@ -1,4 +1,4 @@
-use crate::{commands::Command, error::Result, types::PlatformType, utils::Progress};
+use crate::{commands::Command, error::Result, types::PlatformType, utils::progress::Progress};
 use clap::Parser;
 use malbox_config::Config;
 use std::path::PathBuf;
@@ -26,7 +26,7 @@ impl Command for BuildArgs {
         Progress::new()
             .run("Building base image...", async {
                 builder
-                    .build(malbox_infrastructure::BuilderConfig {
+                    .build(malbox_infra::BuilderConfig {
                         platform: self.platform.into(),
                         name: self.name,
                         iso: self.iso,
@@ -35,7 +35,7 @@ impl Command for BuildArgs {
                         variables: self.variables.into_iter().collect(),
                     })
                     .await
-                    .map_err(|e| crate::error::Error::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
             })
             .await
     }

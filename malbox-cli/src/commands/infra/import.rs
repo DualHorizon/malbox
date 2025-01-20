@@ -1,4 +1,4 @@
-use crate::{commands::Command, error::Result, utils::Progress};
+use crate::{commands::Command, error::Result, utils::progress::Progress};
 use clap::Parser;
 use malbox_config::Config;
 

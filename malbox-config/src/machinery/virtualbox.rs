@@ -9,13 +9,13 @@ pub struct VirtualBoxConfig {
     pub network: VboxNetwork,
     pub storage: StorageConfig,
     pub machines: Vec<MachineConfig>,
-    #[builder(default = "4")]
+    #[builder(default = 4)]
     pub cpus: u32,
-    #[builder(default = "8192")]
+    #[builder(default = 8192)]
     pub memory: u32,
-    #[builder(default = "128")]
+    #[builder(default = 128)]
     pub vram: u32,
-    #[builder(default = "false")]
+    #[builder(default = false)]
     pub headless: bool,
 }
 
@@ -23,9 +23,8 @@ pub struct VirtualBoxConfig {
 pub struct VboxNetwork {
     pub name: String,
     pub interface: String,
-    #[builder(default = "\"hostonly\"")]
+    #[builder(default = "\"hostonly\"".to_string())]
     pub mode: String,
-    #[builder(default)]
     pub bridge: Option<String>,
     #[builder(default)]
     pub ip_ranges: Vec<String>,
@@ -34,11 +33,11 @@ pub struct VboxNetwork {
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct StorageConfig {
     pub path: PathBuf,
-    #[builder(default = "DiskFormat::Vdi")]
+    #[builder(default = DiskFormat::Vdi)]
     pub format: DiskFormat,
-    #[builder(default = "100")]
+    #[builder(default = 100)]
     pub default_size_gb: u32,
-    #[builder(default = "StorageController::Sata")]
+    #[builder(default = StorageController::Sata)]
     pub controller: StorageController,
 }
 

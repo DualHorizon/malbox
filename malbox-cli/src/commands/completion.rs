@@ -1,6 +1,7 @@
-use crate::{commands::Command as CliCommand, error::Result, Config};
-use clap::{Command, CommandFactory, Parser, ValueEnum};
+use crate::{commands::Command as CliCommand, error::Result};
+use clap::{CommandFactory, Parser};
 use clap_complete::Shell;
+use malbox_config::Config;
 
 #[derive(Parser)]
 pub struct CompletionCommand {
@@ -14,12 +15,4 @@ impl CliCommand for CompletionCommand {
         clap_complete::generate(self.shell, &mut cmd, "malbox", &mut std::io::stdout());
         Ok(())
     }
-}
-
-#[derive(Subcommand)]
-pub enum Commands {
-    Builder(builder::BuilderCommand),
-    Infra(infra::InfraCommand),
-    Config(config::ConfigCommand),
-    Completion(completion::CompletionCommand),
 }

@@ -1,5 +1,5 @@
+use crate::impl_display_fromstr;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 
 mod macros;
 
@@ -35,7 +35,6 @@ pub enum Environment {
     Development,
     Staging,
     Production,
-    Custom(String),
 }
 
 impl_display_fromstr!(Environment,

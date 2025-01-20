@@ -5,7 +5,7 @@ CREATE TABLE "machines" (
     arch machine_arch NOT NULL,
     platform machine_platform NOT NULL,
     ip character varying(255) NOT NULL,
-    tags character varying(255),
+    tags character varying[],
     interface character varying(255),
     snapshot character varying(255),
     locked boolean NOT NULL,

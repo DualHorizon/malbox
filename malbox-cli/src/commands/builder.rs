@@ -11,7 +11,7 @@ mod template;
 pub use build::BuildArgs;
 pub use init::InitArgs;
 pub use refine::RefineArgs;
-pub use template::{TemplateCommand, TemplateCommands};
+pub use template::TemplateCommand;
 
 #[derive(Parser)]
 pub struct BuilderCommand {

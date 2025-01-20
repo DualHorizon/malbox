@@ -2,10 +2,11 @@ use crate::{
     commands::Command,
     error::Result,
     types::{OutputFormat, PlatformType},
-    utils::Progress,
+    utils::progress::Progress,
 };
 use clap::{Parser, Subcommand};
 use malbox_config::Config;
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -75,14 +76,14 @@ impl Command for TemplateCommand {
 
 impl Command for ListArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let manager = malbox_infrastructure::TemplateManager::new(config.clone());
+        let manager = malbox_infra::TemplateManager::new(config.clone());
 
         Progress::new()
             .run("Fetching templates...", async {
                 let templates = manager
                     .list(self.platform.map(Into::into))
                     .await
-                    .map_err(|e| crate::error::Error::Infrastructure(e.to_string()))?;
+                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))?;
 
                 match self.format {
                     OutputFormat::Json => {
@@ -118,12 +119,12 @@ impl Command for ListArgs {
 
 impl Command for CreateArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let manager = malbox_infrastructure::TemplateManager::new(config.clone());
+        let manager = malbox_infra::TemplateManager::new(config.clone());
 
         Progress::new()
             .run(&format!("Creating template '{}'...", self.name), async {
                 manager
-                    .create(malbox_infrastructure::Template {
+                    .create(malbox_infra::Template {
                         name: self.name,
                         platform: self.platform.into(),
                         description: self.description,
@@ -132,7 +133,7 @@ impl Command for CreateArgs {
                         playbooks: Vec::new(),
                     })
                     .await
-                    .map_err(|e| crate::error::Error::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
             })
             .await
     }
@@ -140,14 +141,14 @@ impl Command for CreateArgs {
 
 impl Command for ExportArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let manager = malbox_infrastructure::TemplateManager::new(config.clone());
+        let manager = malbox_infra::TemplateManager::new(config.clone());
 
         Progress::new()
             .run(&format!("Exporting template '{}'...", self.name), async {
                 manager
                     .export(&self.name, self.output)
                     .await
-                    .map_err(|e| crate::error::Error::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
             })
             .await
     }
@@ -155,14 +156,14 @@ impl Command for ExportArgs {
 
 impl Command for ImportArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let manager = malbox_infrastructure::TemplateManager::new(config.clone());
+        let manager = malbox_infra::TemplateManager::new(config.clone());
 
         Progress::new()
             .run("Importing template...", async {
                 manager
                     .import(self.file, self.name, self.force)
                     .await
-                    .map_err(|e| crate::error::Error::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
             })
             .await
     }

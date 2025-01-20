@@ -8,6 +8,10 @@ pub enum Error {
     Infrastructure(String),
     #[error("Template error: {0}")]
     Template(String),
+    #[error("Playbook error: {0}")]
+    Playbook(String),
+    #[error("Playbook YAML error: {0}")]
+    PlaybookYaml(#[from] serde_yaml::Error),
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Resource not found: {0}")]

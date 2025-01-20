@@ -1,7 +1,7 @@
 use anyhow::Context;
-use malbox_config::machinery::{
-    MachineArch as MachineArchConfig, MachinePlatform as MachinePlatformConfig,
-};
+use bon::Builder;
+use malbox_config::machinery::MachineArch as MachineArchConfig;
+use malbox_config::types::Platform as MachinePlatformConfig;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as, FromRow, PgPool, Postgres, QueryBuilder};
 use time::PrimitiveDateTime;
@@ -36,28 +36,31 @@ impl From<MachinePlatformConfig> for MachinePlatform {
     fn from(value: MachinePlatformConfig) -> Self {
         match value {
             MachinePlatformConfig::Linux => MachinePlatform::Linux,
-            MachinePlatformConfig::MacOs => MachinePlatform::MacOs,
             MachinePlatformConfig::Windows => MachinePlatform::Windows,
         }
     }
 }
 
-#[derive(Default)]
+#[derive(Builder, Default)]
 pub struct Machine {
     pub name: String,
     pub label: String,
+    #[builder(default = MachineArch::X64)]
     pub arch: MachineArch,
+    #[builder(default = MachinePlatform::Windows)]
     pub platform: MachinePlatform,
     pub ip: String,
-    pub tags: Option<String>,
+    pub tags: Option<Vec<String>>,
     pub interface: Option<String>,
     pub snapshot: Option<String>,
+    #[builder(default = false)]
     pub locked: bool,
     pub locked_changed_on: Option<PrimitiveDateTime>,
     pub status: Option<String>,
     pub status_changed_on: Option<PrimitiveDateTime>,
     pub result_server_ip: Option<String>,
     pub result_server_port: Option<String>,
+    #[builder(default = false)]
     pub reserved: bool,
 }
 
@@ -69,7 +72,7 @@ pub struct MachineEntity {
     pub arch: MachineArch,
     pub platform: MachinePlatform,
     pub ip: String,
-    pub tags: Option<String>,
+    pub tags: Option<Vec<String>>,
     pub interface: Option<String>,
     pub snapshot: Option<String>,
     pub locked: bool,
@@ -81,13 +84,14 @@ pub struct MachineEntity {
     pub reserved: bool,
 }
 
-#[derive(Default)]
+#[derive(Builder, Default)]
 pub struct MachineFilter {
     pub locked: Option<bool>,
     pub label: Option<String>,
     pub platform: Option<MachinePlatform>,
     pub tags: Option<String>,
     pub arch: Option<MachineArch>,
+    #[builder(default = false)]
     pub include_reserved: bool,
     pub os_version: Option<String>,
 }
@@ -97,7 +101,7 @@ pub async fn insert_machine(pool: &PgPool, machine: Machine) -> anyhow::Result<M
         MachineEntity,
         r#"
         INSERT into "machines" (name, label, arch, platform, ip, tags, interface, snapshot, locked, locked_changed_on, status, status_changed_on, result_server_ip, result_server_port, reserved)
-        values ($1::varchar, $2::varchar, $3::machine_arch, $4::machine_platform, $5::varchar, $6::varchar, $7::varchar,
+        values ($1::varchar, $2::varchar, $3::machine_arch, $4::machine_platform, $5::varchar, $6::varchar[], $7::varchar,
             $8::varchar, $9::boolean, $10::timestamp, $11::varchar, $12::timestamp, $13::varchar, $14::varchar, $15::bool)
         returning id, name, label, arch AS "arch!: MachineArch", platform AS "platform!: MachinePlatform", ip, tags, interface, snapshot, locked, locked_changed_on, status, status_changed_on, result_server_ip, result_server_port, reserved
         "#,
@@ -106,7 +110,7 @@ pub async fn insert_machine(pool: &PgPool, machine: Machine) -> anyhow::Result<M
         machine.arch as MachineArch,
         machine.platform as MachinePlatform,
         machine.ip,
-        machine.tags,
+        machine.tags.as_deref(),
         machine.interface,
         machine.snapshot,
         machine.locked,

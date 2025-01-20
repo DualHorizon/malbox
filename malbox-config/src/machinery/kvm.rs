@@ -9,11 +9,11 @@ pub struct KvmConfig {
     pub network: KvmNetwork,
     pub storage: StorageConfig,
     pub machines: Vec<MachineConfig>,
-    #[builder(default = "4")]
+    #[builder(default = 4)]
     pub cpus: u32,
-    #[builder(default = "8192")]
+    #[builder(default = 8192)]
     pub memory: u32,
-    #[builder(default = "128")]
+    #[builder(default = 128)]
     pub video_memory: u32,
 }
 
@@ -22,20 +22,19 @@ pub struct KvmNetwork {
     pub name: String,
     pub interface: String,
     pub address_range: String,
-    #[builder(default = "None")]
     pub bridge: Option<String>,
-    #[builder(default = "false")]
+    #[builder(default = false)]
     pub nat_enabled: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct StorageConfig {
     pub path: PathBuf,
-    #[builder(default = "StorageType::Raw")]
+    #[builder(default = StorageType::Raw)]
     pub storage_type: StorageType,
-    #[builder(default = "100")]
+    #[builder(default = 100)]
     pub default_size_gb: u32,
-    #[builder(default = "\"virtio\"")]
+    #[builder(default = "\"virtio\"".to_string())]
     pub bus: String,
 }
 

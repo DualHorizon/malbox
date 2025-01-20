@@ -32,6 +32,7 @@
   };
 
   packages = with pkgs; [
+    nixd
     sqlx-cli
     openssl
     cargo-watch

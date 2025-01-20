@@ -1,4 +1,4 @@
-use malbox_storage::Paths;
+use malbox_storage::paths::Paths;
 use std::path::PathBuf;
 use tokio::sync::OnceCell;
 use tracing::info;
@@ -6,7 +6,6 @@ use tracing::info;
 pub mod core;
 pub mod error;
 pub mod machinery;
-pub mod paths;
 pub mod profiles;
 pub mod templates;
 pub mod types;

@@ -1,7 +1,8 @@
 use clap::Parser;
 use dialoguer::Confirm;
 use malbox_config::Config;
-use malbox_config::Config;
+
+use crate::{commands::Command, error::Result, utils::progress::Progress};
 
 #[derive(Parser)]
 pub struct DestroyArgs {
@@ -18,7 +19,6 @@ impl Command for DestroyArgs {
         if !self.auto_approve {
             if !Confirm::new()
                 .with_prompt("Do you really want to destroy this infrastructure?")
-                .with_help_message("This action cannot be undone")
                 .interact()?
             {
                 return Ok(());

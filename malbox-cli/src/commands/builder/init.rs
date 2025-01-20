@@ -1,4 +1,4 @@
-use crate::{commands::Command, error::Result, utils::Progress};
+use crate::{commands::Command, error::Result, utils::progress::Progress};
 use clap::Parser;
 use malbox_config::Config;
 use std::path::PathBuf;
@@ -13,14 +13,14 @@ pub struct InitArgs {
 
 impl Command for InitArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let builder = malbox_infrastructure::Builder::new(config.clone());
+        let builder = malbox_infra::Builder::new(config.clone());
 
         Progress::new()
             .run("Initializing builder environment...", async {
                 builder
                     .init(self.working_dir, self.force)
                     .await
-                    .map_err(|e| crate::error::Error::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
             })
             .await
     }

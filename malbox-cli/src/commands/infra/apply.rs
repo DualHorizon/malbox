@@ -1,7 +1,7 @@
 use crate::{
     commands::Command,
     error::Result,
-    utils::{validation::parse_key_val, Progress},
+    utils::{progress::Progress, validation::parse_key_val},
 };
 use clap::Parser;
 use dialoguer::Confirm;

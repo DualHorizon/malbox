@@ -1,16 +1,15 @@
 use crate::commands::Command;
 use crate::error::Result;
 use clap::{Parser, Subcommand};
-use malbox_ansible::PlaybookManager;
 use malbox_config::Config;
 
 mod playbook;
 mod validate;
 mod vars;
 
-pub use playbook::{PlaybookCommand, PlaybookCommands};
+pub use playbook::PlaybookCommand;
 pub use validate::ValidateArgs;
-pub use vars::{VarsCommand, VarsCommands};
+pub use vars::VarsCommand;
 
 #[derive(Parser)]
 pub struct ConfigCommand {

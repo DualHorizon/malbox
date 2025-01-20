@@ -25,9 +25,9 @@ pub struct GeneralConfig {
     pub provider: Provider,
     #[serde(default = "default_log_level")]
     pub log_level: LogLevel,
-    #[builder(default = "false")]
+    #[builder(default = false)]
     pub debug: bool,
-    #[builder(default = "4")]
+    #[builder(default = 4)]
     pub worker_threads: usize,
 }
 
@@ -35,13 +35,13 @@ pub struct GeneralConfig {
 pub struct HttpConfig {
     pub host: String,
     pub port: u16,
-    #[builder(default = "false")]
+    #[builder(default = false)]
     pub tls_enabled: bool,
     pub cert_path: Option<String>,
     pub key_path: Option<String>,
     #[builder(default)]
     pub cors_origins: Vec<String>,
-    #[builder(default = "100 * 1024 * 1024")]
+    #[builder(default = 100 * 1024 * 1024)]
     pub max_upload_size: usize,
 }
 
@@ -53,9 +53,9 @@ pub struct DatabaseConfig {
     pub password: Option<String>,
     pub password_env: Option<String>,
     pub database: String,
-    #[builder(default = "10")]
+    #[builder(default = 10)]
     pub max_connections: u32,
-    #[builder(default = "true")]
+    #[builder(default = true)]
     pub ssl_enabled: bool,
 }
 

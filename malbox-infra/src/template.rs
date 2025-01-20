@@ -1,10 +1,6 @@
 use crate::{types::Platform, types::Template, Error, Result};
-use malbox_config::Config;
-use serde_yaml;
 use std::{collections::HashMap, fs, path::PathBuf};
-use tokio::fs as tokio_fs;
 use toml;
-use tracing::{info, warn};
 
 pub struct TemplateManager {
     config: malbox_config::Config,

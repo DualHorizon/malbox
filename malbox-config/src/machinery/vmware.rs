@@ -19,7 +19,7 @@ pub struct VCenterConfig {
     pub datacenter: String,
     pub cluster: String,
     pub resource_pool: Option<String>,
-    #[builder(default = "false")]
+    #[builder(default = false)]
     pub insecure_ssl: bool,
 }
 
@@ -27,20 +27,19 @@ pub struct VCenterConfig {
 pub struct NetworkConfig {
     pub name: String,
     pub interface: String,
-    #[builder(default)]
     pub vlan: Option<u16>,
-    #[builder(default = "false")]
+    #[builder(default = false)]
     pub promiscuous: bool,
-    #[builder(default = "\"vmxnet3\"")]
+    #[builder(default = "\"vmxnet3\"".to_string())]
     pub adapter_type: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct StorageConfig {
     pub datastore: String,
-    #[builder(default = "100")]
+    #[builder(default = 100)]
     pub default_size_gb: u32,
-    #[builder(default = "DiskFormat::Vmdk")]
+    #[builder(default = DiskFormat::Vmdk)]
     pub format: DiskFormat,
 }
 
