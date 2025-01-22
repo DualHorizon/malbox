@@ -36,10 +36,12 @@ jobs:
         run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
 
       - name: Run migrations
+        env:
+          DATABASE_URL: postgres://postgres:password@localhost:5432/malbox_db
         run: |
           cd malbox-database
           sqlx migrate run
-          cd ..
+
       - name: Update dependencies
         run: cargo update --verbose
 
