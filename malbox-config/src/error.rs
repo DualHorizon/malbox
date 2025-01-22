@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use malbox_storage::error::StorageError;
 use thiserror::Error;
 
