@@ -10,7 +10,7 @@ macro_rules! impl_display_fromstr {
         }
 
         impl std::str::FromStr for $type {
-            type Err = crate::ConfigError;
+            type Err = $crate::ConfigError;
 
             fn from_str(s: &str) -> Result<Self, Self::Err> {
                 match s.to_lowercase().as_str() {
