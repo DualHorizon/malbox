@@ -24,6 +24,7 @@ sqlx = { version = "0.8.3", features = [
     "uuid",
     "time",
 ] }
+virt = "0.4.1"
 serde = { version = "1.0.199", features = ["derive"] }
 anyhow = { version = "1.0.82" }
 thiserror = "2.0.9"
