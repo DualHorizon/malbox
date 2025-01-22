@@ -7,7 +7,7 @@ use crate::{
     LogLevel,
     Paths,
 };
-
+use crate::Provider;
 use bon::Builder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
