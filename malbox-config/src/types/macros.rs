@@ -15,7 +15,7 @@ macro_rules! impl_display_fromstr {
             fn from_str(s: &str) -> Result<Self, Self::Err> {
                 match s.to_lowercase().as_str() {
                     $( $str => Ok(Self::$variant), )+
-                    _ => Err(crate::ConfigError::InvalidValue {
+                    _ => Err($crate::ConfigError::InvalidValue {
                         field: stringify!($type).to_string(),
                         message: format!("Invalid value: {}", s),
                     }),
