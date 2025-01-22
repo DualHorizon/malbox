@@ -78,3 +78,26 @@ impl Plugin for PythonPlugin {
         Ok(result)
     }
 }
+
+/*#[test]
+fn test_python_plugin_runtime_with_real_plugin() {
+    let py_plugin = PythonPlugin::new("example_plugin").unwrap();
+    let mut runtime = PluginRuntime::new(py_plugin, "python-plugin-id".to_string()).unwrap();
+
+    runtime.communication = PluginCommunication::mock(vec![b"test".to_vec()]);
+
+    let result = runtime.run();
+    assert!(result.is_ok());
+}
+#[test]
+fn test_node_plugin_runtime_with_real_plugin() {
+    // Load the Node.js plugin
+    let node_plugin = NodePlugin::new("./example_plugin.js").unwrap();
+    let mut runtime = PluginRuntime::new(node_plugin, "node-plugin-id".to_string()).unwrap();
+
+    // Provide test input
+    runtime.communication = PluginCommunication::mock(vec![b"hello from Rust".to_vec()]);
+
+    let result = runtime.run();
+    assert!(result.is_ok());
+}*/
