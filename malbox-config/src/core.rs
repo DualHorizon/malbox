@@ -1,7 +1,13 @@
+#[allow(unused_imports)]
 use crate::{
-    machinery::MachineryConfig, profiles::ProfileConfig, ConfigError, Environment, LogLevel, Paths,
-    Provider,
+    machinery::MachineryConfig,
+    profiles::ProfileConfig,
+    ConfigError,
+    Environment,
+    LogLevel,
+    Paths,
 };
+
 use bon::Builder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
