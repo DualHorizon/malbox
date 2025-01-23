@@ -20,7 +20,7 @@ impl Command for InitArgs {
                 builder
                     .init(self.working_dir, self.force)
                     .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e))
             })
             .await
     }

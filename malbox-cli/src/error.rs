@@ -7,13 +7,19 @@ pub enum CliError {
     #[error("Builder error: {0}")]
     Builder(String),
     #[error("Infrastructure error: {0}")]
-    Infrastructure(String),
+    Infrastructure(#[from] malbox_infra::Error),
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Command failed: {0}")]
     CommandFailed(String),
+    #[error("Serde JSON error: {0}")]
+    SerdeJson(#[from] serde_json::Error),
+    #[error("Serde YAML error: {0}")]
+    SerdeYaml(#[from] serde_yaml::Error),
+    #[error("Dialoguer error: {0}")]
+    Dialoguer(#[from] dialoguer::Error),
 }
 
 pub type Result<T> = std::result::Result<T, CliError>;

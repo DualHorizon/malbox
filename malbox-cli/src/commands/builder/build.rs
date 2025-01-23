@@ -35,7 +35,7 @@ impl Command for BuildArgs {
                         variables: self.variables.into_iter().collect(),
                     })
                     .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e))
             })
             .await
     }

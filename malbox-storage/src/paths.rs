@@ -4,8 +4,17 @@ use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+// NOTE:
+// This needs to be rewritten, Paths is a configuration interface,
+// found in malbox.toml. This shouldn't be here.
+// We should make a Builder that takes Path from malbox-config
+// initialization instead.
+
 #[derive(Debug, Clone, Builder, Serialize, Deserialize)]
 pub struct Paths {
+    // This is config_dir is useless, and doesn't make any sense.
+    // It would either be ~/.config/malbox/malbox.toml or /etc/malbox/malbox.toml
+    // The user can also manually pass its config location via malbox-cli.
     pub config_dir: PathBuf,
     pub cache_dir: PathBuf,
     pub data_dir: PathBuf,

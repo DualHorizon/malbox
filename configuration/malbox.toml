@@ -3,7 +3,7 @@ host = "127.0.0.1"
 port = 5000
 
 [database]
-url = "postgresql://postgres:password@localhost/malbox_db"
+host = "postgresql://postgres:password@localhost/malbox_db"
 port = 5432
 
 [debug]
@@ -37,3 +37,82 @@ default_profile = "default/linux"
 # NOTE: You can override max_vms and timeout with:
 # timeout = 150
 # max_vms = 3
+
+[paths]
+config_dir = "/home/shard/.config/malbox/"
+cache_dir = "/home/shard/Downloads/malbox"
+data_dir = "/home/shard/Downloads/malbox/data_dir/"
+state_dir = "/home/shard/Downloads/malbox/state_dir/"
+templates_dir = "/home/shard/.config/malbox/templates/"
+terraform_dir = "/home/shard/.config/malbox/terraform/"
+packer_dir = "/home/shard/.config/malbox/packer/"
+ansible_dir = "/home/shard/.config/malbox/ansible/"
+images_dir = "/home/shard/.config/malbox/images/"
+
+[general]
+environment = "development"
+provider = "kvm"
+debug = true
+worker_threads = 4
+
+[machinery.provider]
+name = "test"
+type = "kvm"
+uri = "test"
+cpus = 4
+memory = 32
+video_memory = 32
+
+[machinery.provider.network]
+name = "testnet"
+interface = "wlo1"
+address_range = "10.10.10.0"
+bridge = ""
+nat_enabled = false
+
+[machinery.provider.storage]
+path = "/home/shard/Downloads/malbox/"
+storage_type = "Raw"
+default_size_gb = 32
+bus = "virtio"
+
+[[machinery.provider.machines]]
+name = "test"
+platform = "windows"
+arch = "X64"
+ip = "10.10.10.1"
+reserved = true
+cpus = 4
+memory = 4096
+
+[machinery.terraform]
+state_dir = "/home/shard/Downloads/malbox/state_dir/"
+variables = { var1 = "test", var2 = "test" }
+backend_config = { test = "test" }
+
+
+[profiles.defaults.default_profile]
+name = "default"
+description = "test"
+platform = "windows"
+timeout = 300
+max_vms = 32
+analysis_options = { test = "test" }
+network_isolated = true
+environment_vars = { test = "test" }
+
+[[profiles.defaults.default_profile.tools]]
+name = "x64dbg"
+version = "10.0.0"
+env_vars = { test = "test" }
+source = { type = "url", url = "https://example.com/tool", checksum = "abc123" }
+
+
+
+[profiles.defaults.default_profile.result_server]
+ip = "182.19.23.22"
+port = 3248
+protocol = "https"
+
+
+

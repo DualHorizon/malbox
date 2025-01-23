@@ -8,7 +8,7 @@ use tokio::fs;
 pub struct ProfileConfig {
     #[builder(default)]
     pub defaults: HashMap<String, Profile>,
-    #[builder(default)]
+    #[serde(default)]
     pub custom: HashMap<String, Profile>,
 }
 

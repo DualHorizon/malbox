@@ -1,4 +1,9 @@
-use crate::{commands::Command, error::Result, types::OutputFormat, utils::progress::Progress};
+use crate::{
+    commands::Command,
+    error::{CliError, Result},
+    types::OutputFormat,
+    utils::progress::Progress,
+};
 use bon::Builder;
 use clap::{Parser, Subcommand};
 use malbox_config::Config;
@@ -95,11 +100,12 @@ impl Command for ListArgs {
             .run("Fetching playbooks...", async {
                 let playbooks = playbook_manager.list_playbooks().await?;
                 match self.format {
+                    // IMPORTANT: tofix
                     OutputFormat::Json => {
-                        println!("{}", serde_json::to_string_pretty(&playbooks)?);
+                        println!("{:?}", serde_json::to_string_pretty(&playbooks).unwrap());
                     }
                     OutputFormat::Yaml => {
-                        println!("{}", serde_yaml::to_string(&playbooks)?);
+                        println!("{:?}", serde_yaml::to_string(&playbooks).unwrap());
                     }
                     OutputFormat::Text => {
                         println!("Available playbooks:");
@@ -134,6 +140,7 @@ impl Command for CreateArgs {
                 playbook_manager
                     .create_playbook(&self.name, &self.description, &self.roles)
                     .await
+                    .map_err(|e| crate::error::CliError::Infrastructure(e))
             })
             .await
     }
@@ -150,6 +157,7 @@ impl Command for EditArgs {
                     playbook_manager
                         .edit_playbook(&self.name, self.editor.as_deref())
                         .await
+                        .map_err(|e| crate::error::CliError::Infrastructure(e))
                 },
             )
             .await
@@ -171,6 +179,7 @@ impl Command for ApplyArgs {
                     playbook_manager
                         .apply_playbook(&self.name, &self.targets, self.check, &self.variables)
                         .await
+                        .map_err(|e| crate::error::CliError::Infrastructure(e))
                 },
             )
             .await
@@ -191,6 +200,7 @@ impl Command for TestArgs {
                     playbook_manager
                         .test_playbook(&self.name, &self.environment)
                         .await
+                        .map_err(|e| crate::error::CliError::Infrastructure(e))
                 },
             )
             .await

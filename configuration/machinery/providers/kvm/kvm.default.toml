@@ -1,29 +1,28 @@
-[kvm]
-interface = "virbr0"
-dsn = "qemu:///system"
+type = "kvm"
+uri = "test"
+cpus = 2
+memory = 32
+video_memory = 32
+
+[network]
+name = "testnet"
+interface = "wlo1"
+address_range = "10.10.10.0"
+bridge = ""
+nat_enabled = false
+
+[storage]
+path = "/home/shard/Downloads/malbox/"
+storage_type = "Raw"
+default_size_gb = 32
+bus = "virtio"
 
 [[machines]]
-name = "malbox-kvm"
-label = "malbox1"
-snapshot = "Base"
-platform = "Windows"
-ip = "10.152.152.55"
-arch = "x64"
-# tags = []
-# interface = ""
-# result_server_ip = ""
-# result_server_port = ""
-reserved = false
+name = "test"
+platform = "windows"
+arch = "X64"
+ip = "10.10.10.1"
+reserved = true
+cpus = 4
+memory = 4096
 
-[[machines]]
-name = "malbox-debian"
-label = "malbox2"
-#snapshot = "test"
-platform = "linux"
-ip = "10.152.152.60"
-arch = "x64"
-# tags = []
-# interface = ""
-# result_server_ip = ""
-# result_server_port = ""
-# reserved = true

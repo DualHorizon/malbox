@@ -83,7 +83,7 @@ impl Command for ListArgs {
                 let templates = manager
                     .list(self.platform.map(Into::into))
                     .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))?;
+                    .map_err(|e| crate::error::CliError::Infrastructure(e))?;
 
                 match self.format {
                     OutputFormat::Json => {
@@ -133,7 +133,7 @@ impl Command for CreateArgs {
                         playbooks: Vec::new(),
                     })
                     .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e))
             })
             .await
     }
@@ -148,7 +148,7 @@ impl Command for ExportArgs {
                 manager
                     .export(&self.name, self.output)
                     .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e))
             })
             .await
     }
@@ -163,7 +163,7 @@ impl Command for ImportArgs {
                 manager
                     .import(self.file, self.name, self.force)
                     .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e.to_string()))
+                    .map_err(|e| crate::error::CliError::Infrastructure(e))
             })
             .await
     }
