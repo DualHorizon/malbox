@@ -106,7 +106,10 @@ graph TD
 
 ### Plugin Marketplace
 
-Access 50+ verified plugins from our [Marketplace](https://marketplace.malbox.io):
+Access 50+ verified plugins from our [Marketplace](https://marketplace.malbox.io) or at your self-hosted Malbox instance:
+
+![Plugin Marketplace](https://github.com/user-attachments/assets/56ea97a7-4e84-4cba-a02a-17932a27c8a6)
+
 
 #### Official Plugins
 [![PE Analysis](https://img.shields.io/badge/PE%20Analysis-1.2.0-blue?style=flat-square&logo=windows)](https://marketplace.malbox.io/plugins/pe-analysis)
@@ -142,6 +145,8 @@ All plugins undergo security review and verification before being listed in the 
   - Memory inspection
   - Behavioral analysis
   - Custom scripting support
+
+![Analysis Result](https://github.com/user-attachments/assets/a0d7d3d5-c4b0-4079-8264-8fc617205ae8)
 
 ### Security Features
 
