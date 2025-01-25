@@ -240,7 +240,7 @@ We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for deve
 
 ## License
 
-Licensed under MIT - © 2024 Malbox Contributors
+Licensed under GNU General Public License (GPL) - © 2024 Malbox Contributors
 
 ---
 
