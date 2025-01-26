@@ -3,14 +3,14 @@
 <div align="center">
 
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![License](https://img.shields.io/github/license/your-username/malbox?style=for-the-badge)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/your-username/malbox?style=for-the-badge)](https://github.com/your-username/malbox/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/your-username/malbox/rust.yml?style=for-the-badge)](https://github.com/your-username/malbox/actions)
-[![Coverage](https://codecov.io/gh/your-username/malbox/branch/main/graph/badge.svg?token=123)](https://codecov.io/gh/your-username/malbox)
+[![License](https://img.shields.io/github/license/DualHorizon/malbox?style=for-the-badge)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/DualHorizon/malbox?style=for-the-badge)](https://github.com/DualHorizon/malbox/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status//malbox/rust.yml?style=for-the-badge)](https://github.com/DualHorizon/malbox/actions)
+[![Coverage](https://codecov.io/gh/DualHorizon/malbox/branch/main/graph/badge.svg?token=123)](https://codecov.io/gh/DualHorizon/malbox)
 [![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/your-invite)
 [![Plugins](https://img.shields.io/badge/plugins-50%2B-blue?style=for-the-badge)](https://marketplace.malbox.io)
 
-[Documentation](docs) • [Installation](docs/installation.md) • [API Reference](docs/api) • [Plugin Marketplace](https://marketplace.malbox.io) • [Discord](https://discord.gg/your-invite)
+[Documentation](docs) • [Installation](docs/installation.md) • [API Reference](docs/api) • [Plugin Marketplace](https://marketplace.mal.box) • [Discord](https://discord.gg/XWBdpQ5bMp)
 
 </div>
 
@@ -18,21 +18,23 @@
 
 ## Overview
 
-Malbox is an enterprise-grade malware analysis platform built in Rust. Its plugin-driven architecture enables security teams to extend and customize analysis capabilities while maintaining high performance and security.
+Malbox is an enterprise-grade malware analysis platform built in Rust. Its plugin-driven architecture enables security teams and malware analysis enthousiasts to extend and customize analysis capabilities while maintaining high performance and stability.
 
 ![Dashboard](assets/malbox-panel-showcase.png)
 
 ### Why Malbox?
 
-- **Plugin Architecture**: Extend functionality through our marketplace of verified plugins
-- **High Performance**: 50+ concurrent analyses using Rust and efficient IPC
-- **Secure**: Built-in process isolation and containment
-- **Self-Hosted**: Complete control over your infrastructure
-- **Enterprise Ready**: Role-based access control and audit logging
+- **Plugin Architecture**: Extend functionality through plugins, which can be written in Rust, Javascript and Python.
+- **High Performance**: Malbox is using [iceoryx2](https://docs.rs/iceoryx2/latest/iceoryx2/), a shared memory IPC (Inter-Process-Communication) library, allowing zero-copy and lock-free inter-process communication.
+- **Completely Free and Self-Hostable**: Complete control over your infrastructure
+- **Large Ecosystem**: Thanks to Malbox's built-in marketplace, you can easily install and go through official and verified plugins, not rebuild or restart required, hot-reloading all the way!
+- **Cloud or on-premise**: Malbox supports cloud providers and on-premise for machinery and storage.
+- **Easy deployment**: User-friendly and no-overhead setup of the platform, ready to use within a few minutes.
 
 ## Plugin Ecosystem
 
 At the core of Malbox is its extensible plugin system, powered by high-performance IPC using iceoryx2. Plugins maintain process isolation while enabling seamless integration of new capabilities.
+Each plugin has metadata, and can be qualified for specific categories, plugins can be grouped together in different analysis profiles, which are also available through the marketplace.
 
 ```mermaid
 graph TD
@@ -52,9 +54,6 @@ graph TD
 
 ### Plugin Types
 
-<details>
-<summary><b>Analysis Plugins</b></summary>
-
 - **Static Analysis**
   - PE/ELF/MachO analysis
   - YARA pattern matching
@@ -71,42 +70,14 @@ graph TD
   - Behavioral tracking
   - Anti-VM detection mitigation
 
-</details>
+- **Unpacking**
 
-<details>
-<summary><b>Storage Plugins</b></summary>
-
-- **Local Storage**
-  - File system storage
-  - Sample management
-  - Result caching
-
-- **Cloud Storage**
-  - Amazon S3
-  - Azure Blob Storage
-  - Google Cloud Storage
-  - MinIO compatible systems
-
-</details>
-
-<details>
-<summary><b>Infrastructure Plugins</b></summary>
-
-- **Virtualization**
-  - KVM/QEMU integration
-  - VMware ESXi support
-  - VirtualBox management
-  
-- **Containerization**
-  - Docker support
-  - Kubernetes integration
-  - Custom providers
-
-</details>
+> [!WARNING]  
+> Plugin categories aren't defined yet, this is just a rough idea of what they could be. Stay tuned for updates!
 
 ### Plugin Marketplace
 
-Access 50+ verified plugins from our [Marketplace](https://marketplace.malbox.io) or at your self-hosted Malbox instance:
+Access 50+ verified and official plugins from our [Marketplace](https://marketplace.malbox.io) or at your self-hosted Malbox instance:
 
 ![Plugin Marketplace](https://github.com/user-attachments/assets/56ea97a7-4e84-4cba-a02a-17932a27c8a6)
 
@@ -122,11 +93,15 @@ Access 50+ verified plugins from our [Marketplace](https://marketplace.malbox.io
 [![ML Classifier](https://img.shields.io/badge/ML%20Classifier-1.5.0-green?style=flat-square)](https://marketplace.malbox.io/plugins/ml-classifier)
 [![Report Generator](https://img.shields.io/badge/Report%20Generator-2.2.1-green?style=flat-square)](https://marketplace.malbox.io/plugins/report-gen)
 
-All plugins undergo security review and verification before being listed in the marketplace. [Submit your plugin](docs/plugins/publishing.md)
+> [!IMPORTANT]  
+> All plugins undergo security review and verification before being listed in the marketplace. [Submit your plugin](docs/plugins/publishing.md)
 
 ## Features
 
 ### Analysis Capabilities
+
+Analysis capabilities depend on the plugins installed, hence, the capabilities will continue to grow as the project lives.
+For good measure, you can find a couple of functionalities that are already available through our plugins.
 
 - **File Type Support**
   - Windows Executables (PE32, PE32+)
@@ -148,23 +123,14 @@ All plugins undergo security review and verification before being listed in the 
 
 ![Analysis Result](https://github.com/user-attachments/assets/a0d7d3d5-c4b0-4079-8264-8fc617205ae8)
 
-### Security Features
-
-- Process-level sandboxing
-- Network traffic isolation
-- Memory protection
-- Role-based access control
-- Comprehensive audit logging
-- Sample quarantine system
 
 ### Enterprise Features
 
-- Multi-user support
+- Multi-user support with RBAC
 - Team management
-- API access
+- API access and monitoring
 - Custom reporting
 - Integration capabilities
-- SLA support
 
 ## Technology Stack
 
@@ -197,12 +163,11 @@ All plugins undergo security review and verification before being listed in the 
 ### Prerequisites
 - Rust 1.81.0+
 - PostgreSQL 13+
-- One of: KVM, VMware, or Hyper-V
-- 8GB RAM, 4 cores minimum
+- One of: KVM, VMware, or VirtualBox
 
 ```bash
 # Install
-git clone https://github.com/your-username/malbox.git
+git clone https://github.com/DualHorizon/malbox.git
 cd malbox
 
 # Configure
@@ -223,20 +188,21 @@ Detailed setup instructions available in our [Installation Guide](docs/installat
 docker pull malbox/malbox:latest
 
 # Start with docker-compose
-wget https://raw.githubusercontent.com/your-username/malbox/main/docker-compose.yml
+wget https://raw.githubusercontent.com/DualHorizon/malbox/main/docker-compose.yml
 docker-compose up -d
 ```
 
 ## Support & Community
 
 - [Documentation](https://docs.malbox.io)
-- [GitHub Issues](https://github.com/your-username/malbox/issues)
+- [GitHub Issues](https://github.com/DualHorizon/malbox/issues)
 - [Discord Community](https://discord.gg/your-invite)
 - [Enterprise Support](https://malbox.io/enterprise)
 
 ## Contributing
 
 We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for development setup and guidelines.
+Also, feel free to submit issues, Malbox's development is still in an early stage and contains a lot of rough edges!
 
 ## License
 
@@ -248,8 +214,8 @@ Licensed under GNU General Public License (GPL) - © 2024 Malbox Contributors
 
 **[⬆ Back to Top](#top)** • Made with ❤️ by the Malbox Team
 
-<a href="https://star-history.com/#your-username/malbox">
-  <img src="https://api.star-history.com/svg?repos=your-username/malbox&type=Date" alt="Star History Chart" />
+<a href="https://star-history.com/#DualHorizon/malbox">
+  <img src="https://api.star-history.com/svg?repos=DualHorizon/malbox&type=Date" alt="Star History Chart" />
 </a>
 
 </div>
