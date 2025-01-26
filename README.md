@@ -28,8 +28,8 @@ Malbox is an enterprise-grade malware analysis platform built in Rust. Its plugi
 - **High Performance**: Malbox is using [iceoryx2](https://docs.rs/iceoryx2/latest/iceoryx2/), a shared memory IPC (Inter-Process-Communication) library, allowing zero-copy and lock-free inter-process communication.
 - **Completely Free and Self-Hostable**: Complete control over your infrastructure
 - **Large Ecosystem**: Thanks to Malbox's built-in marketplace, you can easily install and go through official and verified plugins, not rebuild or restart required, hot-reloading all the way!
-- **Cloud or on-premise**: Malbox supports cloud providers and on-premise for machinery and storage.
-- **Easy deployment**: User-friendly and no-overhead setup of the platform, ready to use within a few minutes.
+- **Cloud or On-Premise**: Malbox supports cloud providers and on-premise for machinery and storage.
+- **Easy Deployment**: User-friendly and no-overhead setup of the platform, ready to use within a few minutes.
 
 ## Plugin Ecosystem
 
