@@ -134,10 +134,6 @@ For good measure, you can find a couple of functionalities that are already avai
 
 ## Technology Stack
 
-<p align="center">
-  <img src="https://github-readme-tech-stack.vercel.app/api/cards?title=Malbox+Core+Technologies&align=center&titleAlign=center&lineCount=2&line1=rust%2CRust+Core%2C6b1919%3Btokio%2CAsync+Runtime%2C7c5af5%3Bpostgresql%2CDatabase%2C346891%3B&line2=iceoryx2%2CIPC%2C844FBA%3Baxum%2CAPI%2CF25F2E%3Bastro%2CFrontend%2C61DAFB%3B" alt="Tech Stack" />
-</p>
-
 | Component | Technology | Details |
 |-----------|------------|----------|
 | Core | ![Rust](https://img.shields.io/badge/rust-1.81.0-orange.svg) | Safe, high-performance execution |
