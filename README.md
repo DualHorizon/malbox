@@ -1,4 +1,6 @@
-![Banner](assets/malbox-banner-blue.png)
+![Dashboard-Text](https://github.com/user-attachments/assets/6afdd6ec-09d4-4d73-a3c6-6f1ed6db427d)
+
+
 
 <div align="center">
 
@@ -26,7 +28,7 @@
 
 Malbox is an enterprise-grade malware analysis platform built in Rust. Its plugin-driven architecture enables security teams and malware analysis enthousiasts to extend and customize analysis capabilities while maintaining high performance and stability.
 
-![Dashboard](assets/malbox-panel-showcase.png)
+![image](https://github.com/user-attachments/assets/071b8371-6536-4ff6-ba70-1127ad86f9a6)
 
 ### Why Malbox?
 
@@ -83,10 +85,9 @@ graph TD
 
 ### Plugin Marketplace
 
-Access 50+ verified and official plugins from our [Marketplace](https://marketplace.malbox.io) or at your self-hosted Malbox instance:
+Access 50+ verified and official plugins from our [Marketplace](https://marketplace.mal.box) or at your self-hosted Malbox instance:
 
-![Plugin Marketplace](https://github.com/user-attachments/assets/56ea97a7-4e84-4cba-a02a-17932a27c8a6)
-
+![Plugin Marketplace](https://github.com/user-attachments/assets/f0c2c099-1093-4d9c-a4d9-30adac8da4c9)
 
 #### Official Plugins
 [![PE Analysis](https://img.shields.io/badge/PE%20Analysis-1.2.0-blue?style=flat-square&logo=windows)](https://marketplace.malbox.io/plugins/pe-analysis)
@@ -127,8 +128,7 @@ For good measure, you can find a couple of functionalities that are already avai
   - Behavioral analysis
   - Custom scripting support
 
-![Analysis Result](https://github.com/user-attachments/assets/a0d7d3d5-c4b0-4079-8264-8fc617205ae8)
-
+![Analysis Result Popup](https://github.com/user-attachments/assets/1d25d9fc-291c-4cea-80bc-6c10e5ccff27)
 
 ### Enterprise Features
 
