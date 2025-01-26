@@ -16,6 +16,12 @@
 
 ---
 
+
+> [!IMPORTANT]  
+> Malbox is still in a very early stage of development, currently, the platform as is isn't ready to be utilizied.
+> The estimated release version to achieve something functional and stable is `v0.4.0`. 
+
+
 ## Overview
 
 Malbox is an enterprise-grade malware analysis platform built in Rust. Its plugin-driven architecture enables security teams and malware analysis enthousiasts to extend and customize analysis capabilities while maintaining high performance and stability.
