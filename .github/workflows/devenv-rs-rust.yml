@@ -32,6 +32,15 @@ jobs:
           dpkg -l | grep libvirt
           ldconfig -p | grep libvirt
 
+      - name: Wait for database
+        run: |
+          echo "Waiting for database to be ready..."
+          for i in {1..10}; do
+            pg_isready -h localhost -p 5432 && break
+            echo "Database not ready, waiting..."
+            sleep 2
+          done
+
       - name: Install sqlx-cli
         run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
 
