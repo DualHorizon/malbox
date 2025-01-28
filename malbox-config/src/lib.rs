@@ -1,5 +1,5 @@
 use malbox_storage::paths::Paths;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tokio::sync::OnceCell;
 use tracing::info;
 
@@ -43,7 +43,8 @@ async fn load_config_internal() -> Result<Config, ConfigError> {
 
     config.paths = xdg_config;
     config.paths.ensure_dirs_exist().await?;
-    load_provider_config(&mut config).await?;
+    tracing::debug!("Paths: {:#?}, {:#?}", config.paths, config_path);
+    load_provider_config(config_path.as_path(), &mut config).await?;
 
     Ok(config)
 }
@@ -66,7 +67,7 @@ fn find_system_config() -> Option<PathBuf> {
     }
 }
 
-async fn load_provider_config(config: &mut Config) -> Result<(), ConfigError> {
+async fn load_provider_config(config_path: &Path, config: &mut Config) -> Result<(), ConfigError> {
     let provider_type = config.general.provider.to_string();
     let provider_config =
         machinery::MachineryConfig::load(&config.paths.config_dir, &provider_type).await?;

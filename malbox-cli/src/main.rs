@@ -11,11 +11,13 @@ use commands::{Cli, Command};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    init_tracing("debug");
+
     color_eyre::install()?;
 
     let config = malbox_config::load_config().await?;
 
-    init_tracing(&config.general.log_level.to_string());
+    // init_tracing(&config.general.log_level.to_string());
 
     let cli = Cli::parse();
 

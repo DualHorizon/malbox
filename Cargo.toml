@@ -34,3 +34,4 @@ tracing = { version = "0.1.40" }
 iceoryx2 = { version = "0.5.0" }
 bon = "3.3.2"
 color-eyre = "0.6.3"
+serde-inline-default = "0.2.3"

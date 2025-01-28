@@ -10,4 +10,5 @@ bon = { workspace = true }
 tokio = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
+serde-inline-default = { workspace = true }
 directories = "6.0.0"

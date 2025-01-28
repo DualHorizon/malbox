@@ -32,12 +32,12 @@ where
 
         let level = match *event.metadata().level() {
             tracing::Level::ERROR => Red.bold().paint("ERROR"),
-            tracing::Level::WARN => Yellow.bold().paint("WARN "),
-            tracing::Level::INFO => Green.bold().paint("INFO "),
+            tracing::Level::WARN => Yellow.bold().paint("WARN"),
+            tracing::Level::INFO => Green.bold().paint("INFO"),
             tracing::Level::DEBUG => Blue.bold().paint("DEBUG"),
             tracing::Level::TRACE => Style::new().dimmed().paint("TRACE"),
         };
-        write!(writer, "{}", level)?;
+        write!(writer, "{} ", level)?;
 
         write!(writer, "{} ", Cyan.paint(event.metadata().target()))?;
 

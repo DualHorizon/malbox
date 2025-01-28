@@ -2,6 +2,7 @@ use crate::error::StorageError;
 use bon::Builder;
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
+use serde_inline_default::serde_inline_default;
 use std::path::PathBuf;
 
 // NOTE:
@@ -10,11 +11,13 @@ use std::path::PathBuf;
 // We should make a Builder that takes Path from malbox-config
 // initialization instead.
 
+#[serde_inline_default]
 #[derive(Debug, Clone, Builder, Serialize, Deserialize)]
 pub struct Paths {
     // This is config_dir is useless, and doesn't make any sense.
     // It would either be ~/.config/malbox/malbox.toml or /etc/malbox/malbox.toml
     // The user can also manually pass its config location via malbox-cli.
+    #[serde_inline_default(PathBuf::from("~/.config/malbox/"))]
     pub config_dir: PathBuf,
     pub cache_dir: PathBuf,
     pub data_dir: PathBuf,

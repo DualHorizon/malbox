@@ -8,6 +8,8 @@ pub enum CliError {
     Builder(String),
     #[error("Infrastructure error: {0}")]
     Infrastructure(#[from] malbox_infra::Error),
+    #[error("Deamon error: {0}")]
+    Daemon(#[from] malbox_daemon::DaemonError),
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
     #[error("IO error: {0}")]
