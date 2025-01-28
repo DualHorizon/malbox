@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
 
     let config = malbox_config::load_config().await?;
 
-    init_tracing("info");
+    init_tracing(&config.general.log_level.to_string());
 
     let cli = Cli::parse();
 

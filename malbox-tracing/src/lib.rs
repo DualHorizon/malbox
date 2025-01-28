@@ -1,42 +1,65 @@
-use std::collections::HashMap;
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::layer::SubscriberExt;
+use ansi_term::Colour::{Blue, Cyan, Green, Red, Yellow};
+use ansi_term::Style;
+use std::fmt;
+use tracing_subscriber::{
+    fmt::{
+        format::Writer,
+        time::{FormatTime, SystemTime},
+        FormatEvent, FormatFields, Layer,
+    },
+    layer::SubscriberExt,
+    registry::LookupSpan,
+    util::SubscriberInitExt,
+    EnvFilter,
+};
 
-fn parse_log_filters(log_filters: &str) -> HashMap<String, tracing::Level> {
-    let mut log_levels = HashMap::new();
+struct CustomFormatter;
 
-    for filter in log_filters.split(',') {
-        let parts: Vec<&str> = filter.split('=').collect();
-        if parts.len() == 2 {
-            let module = parts[0].trim().to_string();
-            let level_str = parts[1].trim().to_lowercase();
-            let level = match level_str.as_str() {
-                "trace" => tracing::Level::TRACE,
-                "debug" => tracing::Level::DEBUG,
-                "info" => tracing::Level::INFO,
-                "warn" => tracing::Level::WARN,
-                "error" => tracing::Level::ERROR,
-                _ => continue,
-            };
-            log_levels.insert(module, level);
+impl<S, N> FormatEvent<S, N> for CustomFormatter
+where
+    S: tracing::Subscriber + for<'lookup> LookupSpan<'lookup>,
+    N: for<'writer> FormatFields<'writer> + 'static,
+{
+    fn format_event(
+        &self,
+        ctx: &tracing_subscriber::fmt::FmtContext<'_, S, N>,
+        mut writer: Writer<'_>,
+        event: &tracing::Event<'_>,
+    ) -> fmt::Result {
+        let timer = SystemTime::default();
+        timer.format_time(&mut writer)?;
+        write!(writer, " ")?;
+
+        let level = match *event.metadata().level() {
+            tracing::Level::ERROR => Red.bold().paint("ERROR"),
+            tracing::Level::WARN => Yellow.bold().paint("WARN "),
+            tracing::Level::INFO => Green.bold().paint("INFO "),
+            tracing::Level::DEBUG => Blue.bold().paint("DEBUG"),
+            tracing::Level::TRACE => Style::new().dimmed().paint("TRACE"),
+        };
+        write!(writer, "{}", level)?;
+
+        write!(writer, "{} ", Cyan.paint(event.metadata().target()))?;
+
+        if let (Some(file), Some(line)) = (event.metadata().file(), event.metadata().line()) {
+            write!(writer, "{} ", Yellow.paint(format!("{}:{}", file, line)))?;
         }
-    }
 
-    log_levels
+        ctx.field_format().format_fields(writer.by_ref(), event)?;
+        writeln!(writer)
+    }
 }
 
-pub fn init_tracing(log_filter: &str) {
-    let log_levels = parse_log_filters(log_filter);
+pub fn init_tracing(log_level: &str) {
+    let fmt_layer = Layer::default()
+        .event_format(CustomFormatter)
+        .with_ansi(true);
 
-    let subscriber = tracing_subscriber::Registry::default()
-        .with(tracing_subscriber::fmt::layer())
-        .with(
-            tracing_subscriber::filter::Targets::new().with_targets(
-                log_levels
-                    .into_iter()
-                    .map(|(module, level)| (module, LevelFilter::from_level(level))),
-            ),
-        );
+    let env_filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new(format!("malbox={}", log_level)));
 
-    tracing::subscriber::set_global_default(subscriber).expect("Failed to set global subscriber");
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(fmt_layer)
+        .init();
 }
