@@ -39,7 +39,7 @@ default_profile = "default/linux"
 # max_vms = 3
 
 [paths]
-config_dir = "/home/shard/.config/malbox/"
+# config_dir = "/home/shard/.config/malbox/"
 cache_dir = "/home/shard/Downloads/malbox"
 data_dir = "/home/shard/Downloads/malbox/data_dir/"
 state_dir = "/home/shard/Downloads/malbox/state_dir/"

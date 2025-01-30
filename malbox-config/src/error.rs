@@ -1,4 +1,4 @@
-use malbox_storage::error::StorageError;
+use std::path::PathBuf;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -24,8 +24,11 @@ pub enum ConfigError {
     #[error("Template {0} not found")]
     TemplateNotFound(String),
 
-    #[error("Storage error: {0}")]
-    Storage(#[from] StorageError),
+    #[error("Path error: {message} for {path}")]
+    PathError { message: String, path: PathBuf },
+
+    #[error("Io error: {0}")]
+    IoError(#[from] std::io::Error),
 
     #[error("TOML serialization error: {0}")]
     TomlSer(#[from] toml::ser::Error),
@@ -50,26 +53,8 @@ impl ConfigError {
         matches!(self, ConfigError::Parse { .. })
     }
 
-    pub fn is_storage_error(&self) -> bool {
-        matches!(self, ConfigError::Storage(_))
-    }
-
     pub fn is_provider_error(&self) -> bool {
         matches!(self, ConfigError::ProviderNotConfigured(_))
-    }
-
-    pub fn as_storage_error(&self) -> Option<&StorageError> {
-        if let ConfigError::Storage(err) = self {
-            Some(err)
-        } else {
-            None
-        }
-    }
-}
-
-impl From<std::io::Error> for ConfigError {
-    fn from(err: std::io::Error) -> Self {
-        ConfigError::Storage(StorageError::from(err))
     }
 }
 

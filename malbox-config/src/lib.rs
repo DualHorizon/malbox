@@ -1,4 +1,3 @@
-use malbox_storage::paths::Paths;
 use std::path::{Path, PathBuf};
 use tokio::sync::OnceCell;
 use tracing::info;
@@ -7,12 +6,14 @@ pub mod core;
 pub mod error;
 pub mod machinery;
 pub mod profiles;
+pub mod storage;
 pub mod templates;
 pub mod types;
 
-pub use crate::core::Config;
-pub use crate::error::ConfigError;
-pub use crate::types::*;
+pub use core::Config;
+pub use error::ConfigError;
+pub use storage::Paths;
+pub use types::*;
 
 pub static CONFIG: OnceCell<Config> = OnceCell::const_new();
 
@@ -23,9 +24,9 @@ pub async fn load_config() -> Result<&'static Config, ConfigError> {
 }
 
 async fn load_config_internal() -> Result<Config, ConfigError> {
-    let xdg_config = Paths::new()?;
+    let paths = Paths::new()?;
 
-    let config_path = if let Some(path) = find_user_config(&xdg_config) {
+    let config_path = if let Some(path) = find_user_config(&paths) {
         info!("Using user config at {}", path.display());
         path
     } else if let Some(path) = find_system_config() {
@@ -41,10 +42,12 @@ async fn load_config_internal() -> Result<Config, ConfigError> {
         error: e.to_string(),
     })?;
 
-    config.paths = xdg_config;
+    config.paths = paths;
+
     config.paths.ensure_dirs_exist().await?;
-    tracing::debug!("Paths: {:#?}, {:#?}", config.paths, config_path);
-    load_provider_config(config_path.as_path(), &mut config).await?;
+    tracing::debug!("Using paths: {:#?}", config.paths);
+
+    load_provider_config(&mut config).await?;
 
     Ok(config)
 }
@@ -67,11 +70,10 @@ fn find_system_config() -> Option<PathBuf> {
     }
 }
 
-async fn load_provider_config(config_path: &Path, config: &mut Config) -> Result<(), ConfigError> {
+async fn load_provider_config(config: &mut Config) -> Result<(), ConfigError> {
     let provider_type = config.general.provider.to_string();
     let provider_config =
         machinery::MachineryConfig::load(&config.paths.config_dir, &provider_type).await?;
-
     config.machinery = provider_config;
     Ok(())
 }

@@ -13,5 +13,6 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 bon = { workspace = true }
 tracing = { workspace = true }
+directories = "6.0.0"
 toml = "0.8.12"
 lazy_static = "1.5.0"
