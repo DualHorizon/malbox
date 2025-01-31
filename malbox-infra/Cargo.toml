@@ -13,3 +13,4 @@ thiserror = { workspace = true }
 bon = { workspace = true }
 serde_yaml = "0.9.34"
 toml = "0.8.19"
+hcl-rs = "0.18.3"

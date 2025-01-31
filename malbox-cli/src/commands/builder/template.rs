@@ -76,64 +76,15 @@ impl Command for TemplateCommand {
 
 impl Command for ListArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let manager = malbox_infra::TemplateManager::new(config.clone());
-
-        Progress::new()
-            .run("Fetching templates...", async {
-                let templates = manager
-                    .list(self.platform.map(Into::into))
-                    .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e))?;
-
-                match self.format {
-                    OutputFormat::Json => {
-                        println!("{}", serde_json::to_string_pretty(&templates)?);
-                    }
-                    OutputFormat::Yaml => {
-                        println!("{}", serde_yaml::to_string(&templates)?);
-                    }
-                    OutputFormat::Text => {
-                        println!("Available templates:");
-                        for template in templates {
-                            println!("\n{} ({:?})", template.name, template.platform);
-                            if self.detailed {
-                                println!("  Description: {}", template.description);
-                                if let Some(base) = template.base {
-                                    println!("  Base: {}", base);
-                                }
-                                if !template.playbooks.is_empty() {
-                                    println!("  Playbooks:");
-                                    for playbook in template.playbooks {
-                                        println!("    - {}", playbook);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Ok(())
-            })
-            .await
+        todo!()
     }
 }
 
 impl Command for CreateArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let manager = malbox_infra::TemplateManager::new(config.clone());
-
         Progress::new()
             .run(&format!("Creating template '{}'...", self.name), async {
-                manager
-                    .create(malbox_infra::Template {
-                        name: self.name,
-                        platform: self.platform.into(),
-                        description: self.description,
-                        base: self.base,
-                        variables: HashMap::new(),
-                        playbooks: Vec::new(),
-                    })
-                    .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e))
+                todo!()
             })
             .await
     }
@@ -141,30 +92,12 @@ impl Command for CreateArgs {
 
 impl Command for ExportArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let manager = malbox_infra::TemplateManager::new(config.clone());
-
-        Progress::new()
-            .run(&format!("Exporting template '{}'...", self.name), async {
-                manager
-                    .export(&self.name, self.output)
-                    .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e))
-            })
-            .await
+        todo!()
     }
 }
 
 impl Command for ImportArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let manager = malbox_infra::TemplateManager::new(config.clone());
-
-        Progress::new()
-            .run("Importing template...", async {
-                manager
-                    .import(self.file, self.name, self.force)
-                    .await
-                    .map_err(|e| crate::error::CliError::Infrastructure(e))
-            })
-            .await
+        todo!()
     }
 }

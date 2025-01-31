@@ -7,7 +7,6 @@ mod playbook;
 mod validate;
 mod vars;
 
-pub use playbook::PlaybookCommand;
 pub use validate::ValidateArgs;
 pub use vars::VarsCommand;
 
@@ -19,7 +18,6 @@ pub struct ConfigCommand {
 
 #[derive(Subcommand)]
 pub enum ConfigCommands {
-    Playbook(PlaybookCommand),
     Vars(VarsCommand),
     Validate(ValidateArgs),
 }
@@ -27,7 +25,6 @@ pub enum ConfigCommands {
 impl Command for ConfigCommand {
     async fn execute(self, config: &Config) -> Result<()> {
         match self.command {
-            ConfigCommands::Playbook(cmd) => cmd.execute(config).await,
             ConfigCommands::Vars(cmd) => cmd.execute(config).await,
             ConfigCommands::Validate(args) => args.execute(config).await,
         }
