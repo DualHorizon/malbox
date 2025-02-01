@@ -20,7 +20,7 @@
 
 
 > [!IMPORTANT]  
-> Malbox is still in a very early stage of development, currently, the platform as is isn't ready to be utilizied.
+> Malbox is still in a very early stage of development, currently, the platform as is isn't ready to be utilized.
 > The estimated release version to achieve something functional and stable is `v0.4.0`. 
 
 
