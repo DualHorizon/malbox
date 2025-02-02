@@ -26,6 +26,7 @@ impl BuildManager {
     }
 
     pub async fn build(&self, config: BuildConfig) -> Result<()> {
+        info!("build command test");
         let mut cmd = Command::new("packer");
         cmd.arg("build").arg("-timestamp-ui");
 
@@ -67,9 +68,12 @@ impl BuildManager {
             Platform::Linux => "linux",
         };
 
-        PathBuf::from(&self.config.templates_dir)
-            .join("templates")
-            .join(platform_str)
-            .join(format!("{}.pkr.hcl", name))
+        PathBuf::from("/home/shard/.config/malbox/templates/windows/base.pkr.hcl")
+
+        //     PathBuf::from(&self.config.templates_dir)
+        //         .join("templates")
+        //         .join(platform_str)
+        //         .join(format!("{}.pkr.hcl", name))
+        //
     }
 }

@@ -1,7 +1,9 @@
 use crate::error::{Error, Result};
+use dialoguer::theme::ColorfulTheme;
 use hcl::{Block, Body};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,10 +16,46 @@ pub struct Template {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Variable {
-    pub var_type: String,
+    pub var_type: VarType,
     pub default: Option<String>,
     pub description: Option<String>,
     pub required: bool,
+    pub enum_values: Option<Vec<String>>,
+    pub sensitive: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum VarType {
+    String,
+    Number,
+    Bool,
+    List,
+    Map,
+}
+
+impl fmt::Display for VarType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            VarType::String => write!(f, "string"),
+            VarType::Number => write!(f, "number"),
+            VarType::Bool => write!(f, "boolean"),
+            VarType::List => write!(f, "list"),
+            VarType::Map => write!(f, "map"),
+        }
+    }
+}
+
+impl From<&str> for VarType {
+    fn from(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "string" => VarType::String,
+            "number" => VarType::Number,
+            "bool" => VarType::Bool,
+            "list" => VarType::List,
+            "map" => VarType::Map,
+            _ => VarType::String,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -115,25 +153,74 @@ impl TemplateManager {
             .to_string();
 
         let mut var = Variable {
-            var_type: "string".to_string(),
+            var_type: VarType::String,
             default: None,
             description: None,
             required: true,
+            enum_values: None,
+            sensitive: false,
         };
 
         for attr in block.body().attributes() {
             match attr.key() {
-                "type" => var.var_type = attr.expr().to_string(),
+                "type" => var.var_type = attr.expr().to_string().as_str().into(),
                 "default" => {
                     var.default = Some(attr.expr().to_string());
                     var.required = false;
                 }
                 "description" => var.description = Some(attr.expr().to_string()),
+                "sensitive" => var.sensitive = attr.expr().to_string().parse().unwrap_or(false),
+                "validation" => {
+                    if let Some(enum_values) = self.parse_enum_validation(attr) {
+                        var.enum_values = Some(enum_values);
+                    }
+                }
                 _ => {}
             }
         }
 
         Ok(Some((var_name, var)))
+    }
+
+    fn parse_enum_validation(&self, attr: &hcl::Attribute) -> Option<Vec<String>> {
+        // Parse validation rules that define enum values
+        // Example: validation { condition = contains(["a", "b", "c"], var.value) }
+        None // Implementation depends on your HCL validation syntax
+    }
+
+    pub fn display_template_info(&self, template: &Template) {
+        println!("\nTemplate Information:");
+        println!("==============================");
+
+        println!("\nRequired Variables:");
+        for (name, var) in &template.variables {
+            if var.required {
+                self.display_variable(name, var);
+            }
+        }
+
+        println!("\nOptional Variables:");
+        for (name, var) in &template.variables {
+            if !var.required {
+                self.display_variable(name, var);
+            }
+        }
+    }
+
+    fn display_variable(&self, name: &str, var: &Variable) {
+        println!("{0} - type: {1:?}", name, var.var_type);
+        if let Some(desc) = &var.description {
+            println!("  Description: {}", desc);
+        }
+        if let Some(default) = &var.default {
+            println!("  Default: {}", default);
+        }
+        if var.sensitive {
+            println!("  (Sensitive value)");
+        }
+        if let Some(enum_values) = &var.enum_values {
+            println!("  Allowed values: {:?}", enum_values);
+        }
     }
 
     fn parse_source(&self, block: &Block) -> Result<Option<Source>> {
@@ -196,34 +283,42 @@ impl TemplateManager {
             .map(|(name, var)| (name.clone(), var.required, var.description.clone()))
             .collect()
     }
-}
 
-pub async fn show_template_info(template_path: PathBuf) -> Result<()> {
-    let template_manager = TemplateManager::new();
-    let template = template_manager.load(template_path.clone()).await?;
+    pub async fn prompt_for_variables(
+        &self,
+        template: &Template,
+        provided: &mut HashMap<String, String>,
+    ) -> Result<()> {
+        let missing = self.get_missing_variables(template, provided)?;
 
-    println!("Template: {:#?}", template_path.to_str().unwrap());
-    println!("\nRequired Variables:");
-    for (name, required, desc) in template_manager.get_variable_info(&template) {
-        if required {
-            println!(
-                "  {} - {}",
-                name,
-                desc.unwrap_or_else(|| "No description".to_string())
-            );
+        for var_name in missing {
+            if let Some(var) = template.variables.get(&var_name) {
+                let prompt = format!(
+                    "Enter value for '{}' ({}){}",
+                    var_name,
+                    var.var_type,
+                    if var.sensitive { " (sensitive)" } else { "" }
+                );
+
+                if let Some(enum_values) = &var.enum_values {
+                    println!("Allowed values: {:?}", enum_values);
+                }
+
+                let value: String = if var.sensitive {
+                    dialoguer::Password::with_theme(&ColorfulTheme::default())
+                        .with_prompt(&prompt)
+                        .interact()?
+                } else {
+                    dialoguer::Input::with_theme(&ColorfulTheme::default())
+                        .with_prompt(&prompt)
+                        .default(var.default.clone().unwrap_or_default())
+                        .interact()?
+                };
+
+                provided.insert(var_name, value);
+            }
         }
-    }
 
-    println!("\nOptional Variables:");
-    for (name, required, desc) in template_manager.get_variable_info(&template) {
-        if !required {
-            println!(
-                "  {} - {}",
-                name,
-                desc.unwrap_or_else(|| "No description".to_string())
-            );
-        }
+        Ok(())
     }
-
-    Ok(())
 }

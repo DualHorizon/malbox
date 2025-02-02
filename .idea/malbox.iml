@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="EMPTY_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/malbox-cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-config/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-daemon/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-database/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-hashing/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-http/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-infra/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-machinery/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-scheduler/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-storage/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/malbox-tracing/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

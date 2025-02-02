@@ -26,24 +26,17 @@ pub struct BuildArgs {
 
 impl Command for BuildArgs {
     async fn execute(self, config: &Config) -> Result<()> {
+        let path = PathBuf::from("/home/shard/.config/malbox/templates/windows/base.pkr.hcl");
+
         let template_manager = TemplateManager::new();
-        let template = template_manager
-            .load(config.paths.templates_dir.clone())
-            .await?;
+        let template = template_manager.load(path).await?;
+
+        template_manager.display_template_info(&template);
 
         let mut variables: HashMap<String, String> = self.variables.into_iter().collect();
-
-        let missing_vars = template_manager.get_missing_variables(&template, &variables)?;
-        if !missing_vars.is_empty() {
-            for var_name in missing_vars {
-                // Could use dialoguer crate here for better UX
-                println!("Required variable '{}' is missing.", var_name);
-                println!("Please enter value for {}: ", var_name);
-                let mut value = String::new();
-                std::io::stdin().read_line(&mut value)?;
-                variables.insert(var_name, value.trim().to_string());
-            }
-        }
+        template_manager
+            .prompt_for_variables(&template, &mut variables)
+            .await?;
 
         let build_config = BuildConfig {
             platform: self.platform.into(),
