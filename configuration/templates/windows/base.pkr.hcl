@@ -65,14 +65,12 @@ source "vsphere-iso" "windows_analyzer" {
   username = var.vsphere_username
   password = var.vsphere_password
   insecure_connection = true
+  shutdown_command = "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\""
 
   vm_name = "${var.vm_name}-vmware"
   guest_os_type = "windows9_64Guest"
   CPUs = var.cpu_num
   RAM = var.memory
-
-  disk_size = 61440
-  disk_thin_provisioned = true
 
   network_adapters {
     network = var.vmware_network
@@ -93,6 +91,9 @@ source "virtualbox-iso" "windows_analyzer" {
   guest_os_type = var.vbox_guest_os_type
   cpus = var.cpu_num
   memory = var.memory
+  ssh_username = "root"
+  shutdown_command = "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\""
+
 
   disk_size = 61440
 
@@ -115,6 +116,8 @@ source "qemu" "windows_analyzer" {
   cpus = var.cpu_num
   memory = var.memory
   disk_size = "61440M"
+  shutdown_command = "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\""
+
 
   iso_url = "./en_windows_10_enterprise_ltsc_2019_x64_dvd_5795bb03.iso"
   iso_checksum = "sha256:b570ddfdc4672f4629a95316563df923bd834aec657de5d4ca7c7ef9b58df2b1"
