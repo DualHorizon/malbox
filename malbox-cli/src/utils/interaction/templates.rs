@@ -1,5 +1,5 @@
 use crate::error::Result;
-use console::{style, Term};
+use console::style;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use malbox_infra::packer::templates::{Template, Variable};
 use std::collections::HashMap;
@@ -86,13 +86,13 @@ impl TemplatePrompt {
     }
 
     pub fn display_template_info(&self, template: &Template) -> Result<()> {
-        let term = Term::stdout();
-        term.clear_screen()?;
+        // maybe it would be better to display information in a table format
+        // this would probably imply adding heavier libs for terminal display
+        // or maybe we can write a little printer from scratch
 
         println!("{}", style("Template Information").cyan().bold());
         println!("{}", style("===================").cyan());
 
-        // Sources
         if !template.sources.is_empty() {
             println!("{}", style("Sources:").yellow().bold());
             for source in &template.sources {
@@ -100,7 +100,6 @@ impl TemplatePrompt {
             }
         }
 
-        // Variables
         let (required, optional): (Vec<_>, Vec<_>) =
             template.variables.iter().partition(|(_, var)| var.required);
 

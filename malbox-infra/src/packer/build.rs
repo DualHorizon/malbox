@@ -26,7 +26,6 @@ impl BuildManager {
     }
 
     pub async fn build(&self, config: BuildConfig) -> Result<()> {
-        info!("build command test");
         let mut cmd = Command::new("packer");
         cmd.arg("build").arg("-timestamp-ui");
 
