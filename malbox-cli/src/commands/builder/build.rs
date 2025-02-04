@@ -1,4 +1,9 @@
-use crate::{commands::Command, error::Result, types::PlatformType, utils::progress::Progress};
+use crate::{
+    commands::Command,
+    error::Result,
+    types::PlatformType,
+    utils::{interaction::templates::TemplatePrompt, progress::Progress},
+};
 use clap::Parser;
 use malbox_config::Config;
 use malbox_infra::packer::{
@@ -31,11 +36,12 @@ impl Command for BuildArgs {
         let template_manager = TemplateManager::new();
         let template = template_manager.load(path).await?;
 
-        template_manager.display_template_info(&template);
+        let template_prompt = TemplatePrompt::default();
+        template_prompt.display_template_info(&template)?;
 
         let mut variables: HashMap<String, String> = self.variables.into_iter().collect();
-        template_manager
-            .prompt_for_variables(&template, &mut variables)
+        template_prompt
+            .prompt_variables(&template, &mut variables)
             .await?;
 
         let build_config = BuildConfig {

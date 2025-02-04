@@ -18,8 +18,6 @@ pub enum Error {
     Io(#[from] std::io::Error),
     #[error("HCL parse error: {0}")]
     HclParse(#[from] hcl::Error),
-    #[error("Dialoguer error: {0}")]
-    Dialoguer(#[from] dialoguer::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
