@@ -12,7 +12,7 @@ pub mod types;
 
 pub use core::Config;
 pub use error::ConfigError;
-pub use storage::Paths;
+pub use storage::PathConfig;
 pub use types::*;
 
 pub static CONFIG: OnceCell<Config> = OnceCell::const_new();
@@ -24,7 +24,7 @@ pub async fn load_config() -> Result<&'static Config, ConfigError> {
 }
 
 async fn load_config_internal() -> Result<Config, ConfigError> {
-    let paths = Paths::new()?;
+    let paths = PathConfig::new()?;
 
     let config_path = if let Some(path) = find_user_config(&paths) {
         info!("Using user config at {}", path.display());
@@ -52,7 +52,7 @@ async fn load_config_internal() -> Result<Config, ConfigError> {
     Ok(config)
 }
 
-fn find_user_config(paths: &Paths) -> Option<PathBuf> {
+fn find_user_config(paths: &PathConfig) -> Option<PathBuf> {
     let user_config = paths.config_dir.join("malbox.toml");
     if user_config.exists() {
         Some(user_config)

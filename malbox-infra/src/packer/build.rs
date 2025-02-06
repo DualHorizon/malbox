@@ -17,11 +17,11 @@ pub struct BuildConfig {
 }
 
 pub struct BuildManager {
-    config: malbox_config::Paths,
+    config: malbox_config::PathConfig,
 }
 
 impl BuildManager {
-    pub fn new(config: malbox_config::Paths) -> Self {
+    pub fn new(config: malbox_config::PathConfig) -> Self {
         Self { config }
     }
 

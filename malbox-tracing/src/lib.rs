@@ -13,6 +13,13 @@ use tracing_subscriber::{
     EnvFilter,
 };
 
+// NOTE: Using a custom format here, since we might want to display further
+// information with specific formats in the future
+// Such as:
+// - Specific SQL queries
+// - HTTP request details
+// - ...
+
 struct CustomFormatter;
 
 impl<S, N> FormatEvent<S, N> for CustomFormatter
@@ -28,6 +35,7 @@ where
     ) -> fmt::Result {
         let timer = SystemTime::default();
         timer.format_time(&mut writer)?;
+
         write!(writer, " ")?;
 
         let level = match *event.metadata().level() {

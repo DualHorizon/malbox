@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Paths {
+pub struct PathConfig {
     #[serde(default = "default_config_dir")]
     pub config_dir: PathBuf,
     #[serde(default = "default_cache_dir")]
@@ -20,11 +20,12 @@ pub struct Paths {
     pub packer_dir: PathBuf,
     #[serde(default = "default_ansible_dir")]
     pub ansible_dir: PathBuf,
-    #[serde(default = "default_images_dir")]
-    pub images_dir: PathBuf,
+    #[serde(default = "default_download_dir")]
+    pub download_dir: PathBuf,
 }
 
-impl Paths {
+// NOTE: Should probably be handled somewhere else, not malbox-config
+impl PathConfig {
     pub fn new() -> Result<Self, ConfigError> {
         if let Some(proj_dirs) = directories::ProjectDirs::from("org", "malbox", "malbox") {
             Ok(Self {
@@ -36,7 +37,7 @@ impl Paths {
                 terraform_dir: proj_dirs.config_dir().join("terraform"),
                 packer_dir: proj_dirs.config_dir().join("packer"),
                 ansible_dir: proj_dirs.config_dir().join("ansible"),
-                images_dir: proj_dirs.cache_dir().join("images"),
+                download_dir: proj_dirs.config_dir().join("downloads"),
             })
         } else {
             Err(ConfigError::PathError {
@@ -56,7 +57,7 @@ impl Paths {
             &self.terraform_dir,
             &self.packer_dir,
             &self.ansible_dir,
-            &self.images_dir,
+            &self.download_dir,
         ] {
             tokio::fs::create_dir_all(dir)
                 .await
@@ -119,4 +120,8 @@ fn default_ansible_dir() -> PathBuf {
 
 fn default_images_dir() -> PathBuf {
     default_cache_dir().join("images")
+}
+
+fn default_download_dir() -> PathBuf {
+    default_config_dir().join("downloads")
 }

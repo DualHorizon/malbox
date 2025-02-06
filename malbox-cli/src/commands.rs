@@ -6,6 +6,7 @@ pub mod builder;
 pub mod completion;
 pub mod config;
 pub mod daemon;
+pub mod downloader;
 pub mod infra;
 
 #[derive(Parser)]
@@ -21,6 +22,7 @@ pub enum Commands {
     Infra(infra::InfraCommand),
     Config(config::ConfigCommand),
     Daemon(daemon::DaemonCommand),
+    Downloader(downloader::DownloaderCommand),
     Completion(completion::CompletionCommand),
 }
 
@@ -31,6 +33,7 @@ impl Command for Cli {
             Commands::Infra(cmd) => cmd.execute(config).await,
             Commands::Config(cmd) => cmd.execute(config).await,
             Commands::Daemon(cmd) => cmd.execute(config).await,
+            Commands::Downloader(cmd) => cmd.execute(config).await,
             Commands::Completion(cmd) => cmd.execute(config).await,
         }
     }

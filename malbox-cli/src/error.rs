@@ -10,6 +10,8 @@ pub enum CliError {
     Infrastructure(#[from] malbox_infra::Error),
     #[error("Deamon error: {0}")]
     Daemon(#[from] malbox_daemon::DaemonError),
+    #[error("Downloader error: {0}")]
+    Downloader(#[from] malbox_downloader::Error),
     #[error("Invalid argument: {0}")]
     InvalidArgument(String),
     #[error("IO error: {0}")]

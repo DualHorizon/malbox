@@ -1,12 +1,14 @@
 use crate::Provider;
-use crate::{machinery::MachineryConfig, profiles::ProfileConfig, Environment, LogLevel, Paths};
+use crate::{
+    machinery::MachineryConfig, profiles::ProfileConfig, Environment, LogLevel, PathConfig,
+};
 use bon::Builder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct Config {
-    pub paths: Paths,
+    pub paths: PathConfig,
     pub general: GeneralConfig,
     pub http: HttpConfig,
     pub database: DatabaseConfig,

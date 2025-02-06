@@ -8,6 +8,7 @@ malbox-daemon = { path = "../malbox-daemon" }
 malbox-config = { path = "../malbox-config" }
 malbox-infra = { path = "../malbox-infra" }
 malbox-tracing = { path = "../malbox-tracing" }
+malbox-downloader = { path = "../malbox-downloader" }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 color-eyre = { workspace = true }
@@ -16,9 +17,9 @@ serde = { workspace = true }
 bon = { workspace = true }
 tracing = { workspace = true }
 dialoguer = { workspace = true }
+indicatif = { workspace = true }
 clap = { version = "4.5.26", features = ["derive"] }
 clap_complete = "4.5.42"
 serde_yaml = "0.9.34"
 serde_json = "1.0.137"
-indicatif = "0.17.9"
 console = "0.15.10"
