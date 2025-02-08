@@ -1,24 +1,57 @@
 use crate::{
     commands::Command,
-    error::Result,
+    error::{CliError, Result},
     utils::{interaction::templates::TemplatePrompt, progress::Progress},
 };
 use clap::Parser;
 use malbox_config::Config;
-use std::collections::HashMap;
+use malbox_downloader::{DownloadRegistry, Downloader};
 use std::path::PathBuf;
 
 #[derive(Parser)]
 pub struct DownloadArgs {
     #[arg(short, long)]
-    pub name: String,
+    pub name: Option<String>,
     #[arg(short, long)]
-    pub url: String,
+    pub version: Option<String>,
+    #[arg(short, long)]
+    pub url: Option<String>,
+    #[arg(short, long)]
+    pub registry: Option<String>,
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
 }
 
 impl Command for DownloadArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        malbox_downloader::download_files("https://delivery.activated.win/f6f032ff-a234-46f0-8c5c-4dfc81173b29/en-us_windows_10_consumer_editions_version_22h2_updated_nov_2024_x64_dvd_3eeacab9.iso?t=641515f4-e797-4392-8cd5-244110e2a0dc&P1=1738868818&P2=601&P3=2&P4=8CPr9wp5SyNCn9JWiXXdc%2Br9i%2BAwmEQp50%2FZC4ixNFQ%3D", "/home/shard/Downloads/testfiledl.iso").await?;
+        let registry_path = config.paths.download_dir.join("download_registry.json");
+        let registry = DownloadRegistry::load(registry_path.clone()).await?;
+        let downloader = Downloader::builder().show_progress(true).build();
+
+        if let Some(url) = self.url {
+            // Should be done in downloader, based on the actualy file name.
+            // Since it may not be in the URL.
+            let output = self.output.unwrap_or_else(|| {
+                config
+                    .paths
+                    .download_dir
+                    .join(url.split("/").last().unwrap_or("download.iso"))
+            });
+            downloader.download(&url, output).await?;
+            return Ok(());
+        }
+
+        let name = self.name.as_deref().ok_or_else(|| {
+            CliError::InvalidArgument("Either --name or --url most be provided".to_string())
+        })?;
+
+        let source = registry.get_source(name, self.version.as_deref())?;
+        let filename = format!("{}-{}.iso", source.name, source.version);
+        let output = self
+            .output
+            .unwrap_or_else(|| config.paths.download_dir.join(filename));
+
+        downloader.download(&source.url, output).await?;
 
         Ok(())
     }
