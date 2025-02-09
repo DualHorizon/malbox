@@ -5,9 +5,11 @@ use malbox_config::Config;
 
 mod add_source;
 mod download;
+mod list_sources;
 
 pub use add_source::AddSourceArgs;
 pub use download::DownloadArgs;
+pub use list_sources::ListSourcesArgs;
 
 #[derive(Parser)]
 pub struct DownloaderCommand {
@@ -19,6 +21,7 @@ pub struct DownloaderCommand {
 pub enum DownloaderCommands {
     Download(DownloadArgs),
     AddSource(AddSourceArgs),
+    ListSources(ListSourcesArgs),
 }
 
 impl Command for DownloaderCommand {
@@ -26,6 +29,7 @@ impl Command for DownloaderCommand {
         match self.command {
             DownloaderCommands::Download(args) => args.execute(config).await,
             DownloaderCommands::AddSource(args) => args.execute(config).await,
+            DownloaderCommands::ListSources(args) => args.execute(config).await,
         }
     }
 }
