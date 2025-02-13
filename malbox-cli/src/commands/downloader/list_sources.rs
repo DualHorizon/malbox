@@ -128,21 +128,45 @@ fn print_category(
 fn print_source(term: &Term, source: &DownloadSource, detailed: bool) -> std::io::Result<()> {
     if detailed {
         term.write_line(&format!(
-            "\n  {} {} ({})",
+            "\n  {} {} ({}) [{}]",
             style("▶").cyan(),
             style(&source.name).bold(),
-            style(&source.version).yellow()
+            style(&source.version).yellow(),
+            style(format!("{:?}", source.source_type)).blue()
         ))?;
+
         term.write_line(&format!(
             "    {} {}",
             style("Description:").dim(),
             source.description
         ))?;
+
+        term.write_line(&format!(
+            "    {} {} / {}",
+            style("Platform:").dim(),
+            style(format!("{:?}", source.platform)).cyan(),
+            style(format!("{:?}", source.architecture)).cyan(),
+        ))?;
+
+        term.write_line(&format!(
+            "    {} {}",
+            style("Status:").dim(),
+            style(format!("{:?}", source.metadata.processing_status)).yellow()
+        ))?;
+
         term.write_line(&format!(
             "    {} {}",
             style("URL:").dim(),
             style(&source.url).blue().underlined()
         ))?;
+
+        if let Some(ref doc_url) = source.documentation_url {
+            term.write_line(&format!(
+                "    {} {}",
+                style("Documentation:").dim(),
+                style(doc_url).blue().underlined()
+            ))?;
+        }
 
         if let Some(size) = source.size {
             let byte = Byte::from_u128(size as u128).unwrap_or_default();
@@ -159,6 +183,40 @@ fn print_source(term: &Term, source: &DownloadSource, detailed: bool) -> std::io
             ))?;
         }
 
+        if let Some(ref reqs) = source.minimum_requirements {
+            term.write_line(&format!("    {}", style("System Requirements:").dim()))?;
+            term.write_line(&format!(
+                "      CPU Cores: {}, Memory: {} MB, Disk: {} GB",
+                reqs.cpu_cores, reqs.memory_mb, reqs.disk_gb
+            ))?;
+        }
+
+        if let Some(ref build) = source.metadata.build_info {
+            term.write_line(&format!("    {}", style("Build Information:").dim()))?;
+            term.write_line(&format!(
+                "      Built on: {}, ID: {}",
+                build.build_date, build.build_id
+            ))?;
+            if let Some(ref prov_ver) = build.provisioner_version {
+                term.write_line(&format!("      Provisioner: {}", prov_ver))?;
+            }
+        }
+
+        if let Some(ref parent) = source.metadata.parent_source {
+            term.write_line(&format!("    {} {}", style("Derived from:").dim(), parent))?;
+        }
+
+        term.write_line(&format!(
+            "    {} Added: {}, Downloads: {}",
+            style("Stats:").dim(),
+            source.metadata.added_date.date(),
+            source.metadata.downloads_count
+        ))?;
+
+        if let Some(verified) = source.metadata.last_verified {
+            term.write_line(&format!("           Last verified: {}", verified.date()))?;
+        }
+
         if !source.tags.is_empty() {
             term.write_line(&format!(
                 "    {} {}",
@@ -170,6 +228,10 @@ fn print_source(term: &Term, source: &DownloadSource, detailed: bool) -> std::io
                     .collect::<Vec<_>>()
                     .join(", ")
             ))?;
+        }
+
+        if let Some(ref license) = source.license {
+            term.write_line(&format!("    {} {}", style("License:").dim(), license))?;
         }
 
         if !source.mirrors.is_empty() {
@@ -184,10 +246,11 @@ fn print_source(term: &Term, source: &DownloadSource, detailed: bool) -> std::io
         }
     } else {
         term.write_line(&format!(
-            "  {} {} ({})",
+            "  {} {} ({}) [{}]",
             style("•").cyan(),
             style(&source.name).bold(),
-            style(&source.version).yellow()
+            style(&source.version).yellow(),
+            style(format!("{:?}", source.source_type)).blue()
         ))?;
     }
     Ok(())

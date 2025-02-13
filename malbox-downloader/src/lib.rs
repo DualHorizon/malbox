@@ -3,7 +3,7 @@
 
 mod downloader;
 mod error;
-mod registry;
+pub mod registry;
 
 pub use downloader::Downloader;
 pub use error::Error;
