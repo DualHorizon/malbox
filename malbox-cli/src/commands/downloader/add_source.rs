@@ -4,6 +4,7 @@ use crate::{
     utils::progress::Progress,
 };
 use clap::Parser;
+use dialoguer::Confirm;
 use malbox_config::Config;
 use malbox_downloader::{
     registry::{
@@ -27,7 +28,7 @@ pub struct AddSourceArgs {
     pub source_type: SourceType,
     #[arg(value_enum, short = 'p', long, default_value = "linux")]
     pub platform: Platform,
-    #[arg(value_enum, short = 'a', long, default_value = "x86_64")]
+    #[arg(value_enum, short = 'a', long, default_value = "x86-64")]
     pub architecture: Architecture,
     #[arg(short, long)]
     pub checksum: Option<String>,
@@ -58,11 +59,26 @@ pub struct AddSourceArgs {
 impl Command for AddSourceArgs {
     async fn execute(self, config: &Config) -> Result<()> {
         let registry_path = config.paths.download_dir.join("download_registry.json");
+        let mut registry = DownloadRegistry::load(registry_path.clone()).await?;
+
+        let source_key = format!("{}-{}", self.name, self.version);
+        if registry.custom_sources.contains_key(&source_key) {
+            let confirm = Confirm::new()
+                .with_prompt(format!(
+                    "Source '{}' version '{}' already exists. Do you want to override it?",
+                    self.name, self.version
+                ))
+                .default(false)
+                .interact()?;
+
+            if !confirm {
+                println!("Operation cancelled by user");
+                return Ok(());
+            }
+        }
 
         Progress::new()
             .run(&format!("Adding custom source: {}", self.name), async {
-                let mut registry = DownloadRegistry::load(registry_path.clone()).await?;
-
                 let now = OffsetDateTime::now_utc();
                 let source = DownloadSource {
                     name: self.name,
@@ -108,6 +124,7 @@ impl Command for AddSourceArgs {
 
                 registry.add_custom_source(source);
                 registry.save(registry_path).await?;
+
                 Ok(())
             })
             .await

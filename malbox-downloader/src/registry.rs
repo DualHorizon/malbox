@@ -2,6 +2,7 @@ use crate::error::{Error, Result};
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
 use std::path::PathBuf;
 use time::OffsetDateTime;
 use tokio::fs;
@@ -24,6 +25,17 @@ pub enum SourceType {
     ContainerImage,
     #[serde(rename = "archive")]
     Archive,
+}
+
+impl fmt::Display for SourceType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SourceType::Iso => write!(f, "ISO"),
+            SourceType::VmImage => write!(f, "VM Image"),
+            SourceType::ContainerImage => write!(f, "Container Image"),
+            SourceType::Archive => write!(f, "Archive"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ValueEnum)]
@@ -98,7 +110,7 @@ pub enum Platform {
 pub enum Architecture {
     #[serde(rename = "x86")]
     X86,
-    #[serde(rename = "x86_64")]
+    #[serde(rename = "x86-64")]
     X86_64,
 }
 

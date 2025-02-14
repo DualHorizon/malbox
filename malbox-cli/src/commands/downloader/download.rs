@@ -1,7 +1,6 @@
 use crate::{
     commands::Command,
     error::{CliError, Result},
-    utils::{interaction::templates::TemplatePrompt, progress::Progress},
 };
 use clap::Parser;
 use malbox_config::Config;
@@ -28,30 +27,36 @@ impl Command for DownloadArgs {
         let registry = DownloadRegistry::load(registry_path.clone()).await?;
         let downloader = Downloader::builder().show_progress(true).build();
 
-        if let Some(url) = self.url {
-            // Should be done in downloader, based on the actualy file name.
-            // Since it may not be in the URL.
-            let output = self.output.unwrap_or_else(|| {
-                config
-                    .paths
-                    .download_dir
-                    .join(url.split("/").last().unwrap_or("download.iso"))
-            });
-            downloader.download(&url, output).await?;
-            return Ok(());
+        match (self.url.as_ref(), self.name.as_ref()) {
+            (Some(url), None) => {
+                let output_path = downloader
+                    .download(url, None, &config.paths.download_dir, self.output)
+                    .await?;
+                println!("\nDownload saved to: {}", output_path.display());
+            }
+            (None, Some(name)) => {
+                let source = registry.get_source(name, self.version.as_deref())?;
+                let output_path = downloader
+                    .download(
+                        &source.url,
+                        Some(&source),
+                        &config.paths.download_dir,
+                        self.output,
+                    )
+                    .await?;
+                println!("\nDownload saved to: {}", output_path.display());
+            }
+            (None, None) => {
+                return Err(CliError::InvalidArgument(
+                    "Either --name or --url must be provided".to_string(),
+                ));
+            }
+            (Some(_), Some(_)) => {
+                return Err(CliError::InvalidArgument(
+                    "Cannot specify both --name and --url".to_string(),
+                ));
+            }
         }
-
-        let name = self.name.as_deref().ok_or_else(|| {
-            CliError::InvalidArgument("Either --name or --url most be provided".to_string())
-        })?;
-
-        let source = registry.get_source(name, self.version.as_deref())?;
-        let filename = format!("{}-{}.iso", source.name, source.version);
-        let output = self
-            .output
-            .unwrap_or_else(|| config.paths.download_dir.join(filename));
-
-        downloader.download(&source.url, output).await?;
 
         Ok(())
     }
