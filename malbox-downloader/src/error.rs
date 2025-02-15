@@ -11,6 +11,8 @@ pub enum Error {
     EmptyContent,
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+    #[error("File type detection error: {0}")]
+    Detection(String),
     #[error("Source not found: {0}")]
     SourceNotFound(String),
     #[error("Version not found: {0} for source {1}")]

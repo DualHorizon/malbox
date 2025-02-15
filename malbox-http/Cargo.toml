@@ -19,7 +19,7 @@ serde = { workspace = true }
 time = { workspace = true }
 tracing = { workspace = true }
 thiserror = { workspace = true }
-magic = "0.16.2"
+magic.workspace = true
 axum = { version = "0.8.1", features = ["multipart"] }
 axum-macros = "0.5.0"
 axum_typed_multipart = "0.15.1"
