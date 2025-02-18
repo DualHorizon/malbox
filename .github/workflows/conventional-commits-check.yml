@@ -1,3 +1,4 @@
+name: cocogitto - conventional commit checks
 on: [push]
 
 jobs:
