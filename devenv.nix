@@ -1,4 +1,8 @@
-{ pkgs, lib, config, inputs, ... }: {
+{ pkgs, lib, config, inputs, ... }:
+
+let
+  unstable = import inputs.nixpkgs-unstable { system = pkgs.stdenv.system; };
+in {
   languages = {
     rust = {
       enable = true;
@@ -53,6 +57,7 @@
     clang_18
     glibc
     packer
+    unstable.cocogitto
   ];
 
   processes = {
