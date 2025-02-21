@@ -1,0 +1,271 @@
+{
+  "sources": {
+    "linux": [
+      {
+        "name": "ubuntu",
+        "version": "22.04-server-64",
+        "description": "Ubuntu 22.04 LTS Server x64",
+        "url": "https://releases.ubuntu.com/22.04/ubuntu-22.04-live-server-amd64.iso",
+        "source_type": "iso",
+        "metadata": {
+          "added_date": [
+            2025,
+            45,
+            11,
+            14,
+            7,
+            876455826,
+            0,
+            0,
+            0
+          ],
+          "last_verified": [
+            2025,
+            45,
+            11,
+            14,
+            7,
+            876455826,
+            0,
+            0,
+            0
+          ],
+          "last_downloaded": null,
+          "downloads_count": 0,
+          "verified": true,
+          "processing_status": "Raw",
+          "parent_source": null,
+          "build_info": null
+        },
+        "checksum": null,
+        "checksum_type": null,
+        "size": null,
+        "compression": null,
+        "platform": "linux",
+        "architecture": "x86-64",
+        "minimum_requirements": {
+          "cpu_cores": 1,
+          "memory_mb": 2048,
+          "disk_gb": 25,
+          "additional_requirements": null
+        },
+        "tags": [
+          "linux",
+          "server"
+        ],
+        "mirrors": [],
+        "license": "GPL",
+        "documentation_url": "https://ubuntu.com/server/docs",
+        "release_notes": "https://ubuntu.com/server/releases/22.04"
+      }
+    ],
+    "windows": [
+      {
+        "name": "windows",
+        "version": "10-22h2-64",
+        "description": "Windows 10 22H2 x64",
+        "url": "https://example.com/win10-22h2-64.iso",
+        "source_type": "iso",
+        "metadata": {
+          "added_date": [
+            2025,
+            45,
+            11,
+            14,
+            7,
+            876455826,
+            0,
+            0,
+            0
+          ],
+          "last_verified": [
+            2025,
+            45,
+            11,
+            14,
+            7,
+            876455826,
+            0,
+            0,
+            0
+          ],
+          "last_downloaded": null,
+          "downloads_count": 0,
+          "verified": true,
+          "processing_status": "Raw",
+          "parent_source": null,
+          "build_info": null
+        },
+        "checksum": "abc123",
+        "checksum_type": "sha256",
+        "size": 5368709120,
+        "compression": null,
+        "platform": "windows",
+        "architecture": "x86-64",
+        "minimum_requirements": {
+          "cpu_cores": 2,
+          "memory_mb": 4096,
+          "disk_gb": 64,
+          "additional_requirements": null
+        },
+        "tags": [
+          "windows",
+          "desktop"
+        ],
+        "mirrors": [],
+        "license": "Microsoft Windows License",
+        "documentation_url": "https://docs.microsoft.com/windows",
+        "release_notes": null
+      }
+    ]
+  },
+  "custom_sources": {
+    "custom-windows-src-entreprise-2024": {
+      "name": "custom-windows-src",
+      "version": "entreprise-2024",
+      "description": "entreprise custom",
+      "url": "https://delivery.activated.win/f6f032ff-a234-46f0-8c5c-4dfc81173b29/en-us_windows_10_consumer_editions_version_22h2_updated_nov_2024_x64_dvd_3eeacab9.iso",
+      "source_type": "iso",
+      "metadata": {
+        "added_date": [
+          2025,
+          45,
+          11,
+          16,
+          36,
+          461266014,
+          0,
+          0,
+          0
+        ],
+        "last_verified": [
+          2025,
+          45,
+          11,
+          16,
+          36,
+          461266014,
+          0,
+          0,
+          0
+        ],
+        "last_downloaded": null,
+        "downloads_count": 0,
+        "verified": false,
+        "processing_status": "Raw",
+        "parent_source": null,
+        "build_info": null
+      },
+      "checksum": null,
+      "checksum_type": null,
+      "size": null,
+      "compression": null,
+      "platform": "linux",
+      "architecture": "x86-64",
+      "minimum_requirements": null,
+      "tags": [],
+      "mirrors": [],
+      "license": null,
+      "documentation_url": null,
+      "release_notes": null
+    },
+    "custom-windows-src-5-entreprise-2025": {
+      "name": "custom-windows-src-5",
+      "version": "entreprise-2025",
+      "description": "entreprise custom",
+      "url": "https://delivery.massgrave.dev/d2e2ab84-6504-4e69-85be-193260c62a3a/en-us_windows_10_consumer_editions_version_22h2_updated_nov_2024_x64_dvd_3eeacab9.iso?t=1c632ca6-379f-4098-8c67-79ba233bccda&P1=1739573440&P2=601&P3=2&P4=hrwUskbEOSaIiX731ObxtL2aUjfoa6OWRjwllGkNlm4%3D",
+      "source_type": "iso",
+      "metadata": {
+        "added_date": [
+          2025,
+          45,
+          16,
+          51,
+          17,
+          137351340,
+          0,
+          0,
+          0
+        ],
+        "last_verified": [
+          2025,
+          45,
+          16,
+          51,
+          17,
+          137351340,
+          0,
+          0,
+          0
+        ],
+        "last_downloaded": null,
+        "downloads_count": 0,
+        "verified": false,
+        "processing_status": "Raw",
+        "parent_source": null,
+        "build_info": null
+      },
+      "checksum": null,
+      "checksum_type": null,
+      "size": null,
+      "compression": null,
+      "platform": "linux",
+      "architecture": "x86-64",
+      "minimum_requirements": null,
+      "tags": [],
+      "mirrors": [],
+      "license": null,
+      "documentation_url": null,
+      "release_notes": null
+    },
+    "custom-windows-src-5-entreprise-2024": {
+      "name": "custom-windows-src-5",
+      "version": "entreprise-2024",
+      "description": "entreprise custom",
+      "url": "https://delivery.activated.win/f6f032ff-a234-46f0-8c5c-4dfc81173b29/en-us_windows_10_consumer_editions_version_22h2_updated_nov_2024_x64_dvd_3eeacab9.iso",
+      "source_type": "iso",
+      "metadata": {
+        "added_date": [
+          2025,
+          45,
+          11,
+          29,
+          46,
+          771669202,
+          0,
+          0,
+          0
+        ],
+        "last_verified": [
+          2025,
+          45,
+          11,
+          29,
+          46,
+          771669202,
+          0,
+          0,
+          0
+        ],
+        "last_downloaded": null,
+        "downloads_count": 0,
+        "verified": false,
+        "processing_status": "Raw",
+        "parent_source": null,
+        "build_info": null
+      },
+      "checksum": null,
+      "checksum_type": null,
+      "size": null,
+      "compression": null,
+      "platform": "linux",
+      "architecture": "x86-64",
+      "minimum_requirements": null,
+      "tags": [],
+      "mirrors": [],
+      "license": null,
+      "documentation_url": null,
+      "release_notes": null
+    }
+  }
+}
