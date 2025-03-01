@@ -36,7 +36,14 @@ async fn load_config_internal() -> Result<Config, ConfigError> {
         return Err(ConfigError::NotFound);
     };
 
-    let content = tokio::fs::read_to_string(&config_path).await?;
+    let content =
+        tokio::fs::read_to_string(&config_path)
+            .await
+            .map_err(|e| ConfigError::Parse {
+                file: config_path.display().to_string(),
+                error: e.to_string(),
+            })?;
+
     let mut config: Config = toml::from_str(&content).map_err(|e| ConfigError::Parse {
         file: config_path.display().to_string(),
         error: e.to_string(),
@@ -73,7 +80,7 @@ fn find_system_config() -> Option<PathBuf> {
 async fn load_provider_config(config: &mut Config) -> Result<(), ConfigError> {
     let provider_type = config.general.provider.to_string();
     let provider_config =
-        machinery::MachineryConfig::load(&config.paths.config_dir, &provider_type).await?;
+        machinery::MachineryConfig::load(&config.paths.terraform_dir, &provider_type).await?;
     config.machinery = provider_config;
     Ok(())
 }

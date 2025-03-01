@@ -74,10 +74,11 @@ pub trait MachineProvider {
 impl MachineryConfig {
     pub async fn load(config_root: &Path, provider_type: &str) -> Result<Self, ConfigError> {
         let provider_path = config_root
-            .join("machinery")
             .join("providers")
             .join(provider_type)
             .join(format!("{}.default.toml", provider_type));
+
+        tracing::debug!("current path: {:#?}", provider_path);
 
         let content = tokio::fs::read_to_string(&provider_path)
             .await
