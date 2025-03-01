@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+malbox-hashing = { path = "../malbox-hashing" }
 tokio.workspace = true
 thiserror.workspace = true
 indicatif.workspace = true
@@ -13,6 +14,7 @@ serde_json.workspace = true
 time.workspace = true
 tracing.workspace = true
 magic.workspace = true
+dialoguer.workspace = true
 reqwest = { version = "0.12.12", features = [ "stream" ] }
 tokio-stream = "0.1.17"
 clap = "4.5.28"

@@ -3,13 +3,11 @@ use crate::error::Result;
 use clap::{Parser, Subcommand};
 use malbox_config::Config;
 
-mod add_source;
 mod download;
-mod list_sources;
+mod sources;
 
-pub use add_source::AddSourceArgs;
 pub use download::DownloadArgs;
-pub use list_sources::ListSourcesArgs;
+pub use sources::SourceCommand;
 
 #[derive(Parser)]
 pub struct DownloaderCommand {
@@ -19,17 +17,18 @@ pub struct DownloaderCommand {
 
 #[derive(Subcommand)]
 pub enum DownloaderCommands {
+    /// Download a file directly or via its source
     Download(DownloadArgs),
-    AddSource(AddSourceArgs),
-    ListSources(ListSourcesArgs),
+    #[command(subcommand)]
+    /// Manage download sources and their configuration
+    Source(SourceCommand),
 }
 
 impl Command for DownloaderCommand {
     async fn execute(self, config: &Config) -> Result<()> {
         match self.command {
             DownloaderCommands::Download(args) => args.execute(config).await,
-            DownloaderCommands::AddSource(args) => args.execute(config).await,
-            DownloaderCommands::ListSources(args) => args.execute(config).await,
+            DownloaderCommands::Source(cmd) => cmd.execute(config).await,
         }
     }
 }

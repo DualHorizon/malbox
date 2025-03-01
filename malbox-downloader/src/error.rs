@@ -1,26 +1,38 @@
-use reqwest::StatusCode;
+use std::path::PathBuf;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("HTTP request failed: {0}")]
-    Request(#[from] reqwest::Error),
     #[error("HTTP status error: {0}")]
-    HttpStatus(StatusCode),
-    #[error("Download failed: Content length is zero")]
-    EmptyContent,
+    HttpStatus(reqwest::StatusCode),
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("File type detection error: {0}")]
+    #[error("Request error: {0}")]
+    Request(#[from] reqwest::Error),
+    #[error("File detection error: {0}")]
     Detection(String),
+    #[error("File exists at path: {0}")]
+    FileExists(PathBuf),
+    #[error("Empty content received")]
+    EmptyContent,
     #[error("Source not found: {0}")]
     SourceNotFound(String),
-    #[error("Version not found: {0} for source {1}")]
-    VersionNotFound(String, String),
-    #[error("Invalid registry data: {0}")]
+    #[error("Invalid data: {0}")]
     InvalidData(String),
-    #[error("Registry error: {0}")]
-    Registry(String),
+    #[error("Hash mismatch: {0}")]
+    HashMismatch(String),
+    #[error("Size mismatch: {0}")]
+    SizeMismatch(String),
+    #[error("Dialoguer error: {0}")]
+    Dialoguer(#[from] dialoguer::Error),
+    #[error("Invalid source path: {0}")]
+    InvalidSourcePath(String),
+    #[error("Source family not found: {0}")]
+    SourceFamilyNotFound(String),
+    #[error("Source edition not found: {0}")]
+    SourceEditionNotFound(String),
+    #[error("Source release not found: {0}")]
+    SourceReleaseNotFound(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

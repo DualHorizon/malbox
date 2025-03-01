@@ -1,11 +1,14 @@
 use crate::error::{Error, Result};
-use crate::registry::{DownloadSource, SourceType};
+use crate::registry::{SourceRegistry, SourceType, SourceVariant};
 use bon::Builder;
+use dialoguer::{theme::ColorfulTheme, Confirm};
 use indicatif::{ProgressBar, ProgressStyle};
 use magic::{cookie::DatabasePaths, cookie::Flags as CookieFlags, Cookie};
+use malbox_hashing::get_sha256;
 use reqwest::Client;
-use std::path::PathBuf;
-use tokio::{fs::File, io::AsyncWriteExt};
+use std::path::{Path, PathBuf};
+use time::OffsetDateTime;
+use tokio::{fs, fs::File, io::AsyncWriteExt};
 use tokio_stream::StreamExt;
 
 #[derive(Builder)]
@@ -16,15 +19,22 @@ pub struct Downloader {
     show_progress: bool,
     progress_style: Option<String>,
     chunk_size: Option<usize>,
+    #[builder(default = true)]
+    verify_hashes: bool,
+    #[builder(default = false)]
+    auto_update_metadata: bool,
+}
+
+#[derive(Debug)]
+pub struct DownloadResult {
+    pub path: PathBuf,
+    pub size: u64,
+    pub sha256: String,
+    pub matches_expected: Option<bool>,
 }
 
 impl Downloader {
     fn detect_file_type_from_bytes(&self, bytes: &[u8]) -> Result<SourceType> {
-        // NOTE:
-        // It is probably better if we find another crate better suited for this, I don't really
-        // like the way we match file types here. Note that the `tree_magic_mini` crate didn't properly
-        // recognize file types.
-
         let cookie = Cookie::open(CookieFlags::default())
             .map_err(|e| Error::Detection(format!("Failed to open magic cookie: {}", e)))?;
 
@@ -79,10 +89,14 @@ impl Downloader {
     async fn get_download_filename(
         &self,
         url: &str,
-        source: Option<&DownloadSource>,
+        source: Option<&SourceVariant>,
     ) -> Result<String> {
         if let Some(src) = source {
-            return Ok(format!("{}-{}.iso", src.name, src.version));
+            return Ok(format!(
+                "{}.{}",
+                src.id,
+                self.get_file_extension(&src.source_type)
+            ));
         }
 
         let response = self.client.get(url).send().await?;
@@ -102,10 +116,22 @@ impl Downloader {
 
         Ok("download.bin".to_string())
     }
+
+    fn get_file_extension(&self, source_type: &SourceType) -> String {
+        match source_type {
+            SourceType::Iso => "iso",
+            SourceType::VmImage => "img",
+            SourceType::ContainerImage => "tar",
+            SourceType::Archive => "zip",
+        }
+        .to_string()
+    }
+
+    // Main download method that matches the original signature
     pub async fn download(
         &self,
         url: &str,
-        source: Option<&DownloadSource>,
+        source: Option<&SourceVariant>,
         download_dir: &PathBuf,
         output: Option<PathBuf>,
     ) -> Result<PathBuf> {
@@ -146,10 +172,12 @@ impl Downloader {
             }
         }
 
-        let file_type = self.detect_file_type_from_bytes(&content)?;
-        // FIXME:
-        // For some reason, this trace won't print out!
-        // Will def. need some investigation.
+        let file_type = if let Some(src) = source {
+            src.source_type.clone()
+        } else {
+            self.detect_file_type_from_bytes(&content)?
+        };
+
         tracing::debug!("File type detected as: {}", file_type);
 
         let final_path = if let Some(explicit_path) = output {
@@ -157,16 +185,18 @@ impl Downloader {
         } else {
             match source {
                 Some(src) => {
+                    // For sources from the registry, use a specific directory structure
                     let source_dir = download_dir
-                        .join(src.source_type.to_string().to_lowercase())
-                        .join(&src.name)
-                        .join(&src.version);
+                        .join(file_type.to_string().to_lowercase())
+                        .join(&src.id);
 
                     tokio::fs::create_dir_all(&source_dir).await?;
+
                     let filename = self.get_download_filename(url, Some(src)).await?;
                     source_dir.join(filename)
                 }
                 None => {
+                    // For direct downloads
                     let filename = self.get_download_filename(url, None).await?;
                     let type_dir = download_dir
                         .join("direct")
@@ -185,12 +215,7 @@ impl Downloader {
 
         if let Some(bar) = &progress_bar {
             if let Some(src) = source {
-                bar.set_message(format!(
-                    "Writing {} {} ({})",
-                    src.name,
-                    src.version,
-                    file_type.to_string()
-                ));
+                bar.set_message(format!("Writing {} ({})", src.id, file_type.to_string()));
             } else {
                 bar.set_message(format!("Writing {} file", file_type.to_string()));
             }
@@ -198,6 +223,14 @@ impl Downloader {
 
         if let Some(parent) = final_path.parent() {
             tokio::fs::create_dir_all(parent).await?;
+        }
+
+        let file_size = content.len() as u64;
+        let mut download_result = self.compute_hashes(&content, file_size)?;
+        download_result.path = final_path.clone();
+
+        if let Some(src) = source {
+            self.validate_download(&download_result, src).await?;
         }
 
         let mut file = File::create(&final_path).await?;
@@ -208,6 +241,251 @@ impl Downloader {
             bar.finish_with_message(format!("Download complete: {}", final_path.display()));
         }
 
+        if let Some(src) = source {
+            self.update_registry(download_dir, src, &download_result, &final_path)
+                .await?;
+        }
+
         Ok(final_path)
+    }
+
+    fn compute_hashes(&self, content: &[u8], size: u64) -> Result<DownloadResult> {
+        let mut content_clone = content.to_vec();
+        let sha256_hash = get_sha256(&mut content_clone);
+
+        Ok(DownloadResult {
+            path: PathBuf::new(),
+            size,
+            sha256: sha256_hash,
+            matches_expected: None,
+        })
+    }
+
+    async fn validate_download(
+        &self,
+        download_result: &DownloadResult,
+        source: &SourceVariant,
+    ) -> Result<()> {
+        if !self.verify_hashes {
+            return Ok(());
+        }
+
+        if let Some(expected_hash) = &source.checksum {
+            if source.checksum_type.as_deref().unwrap_or("sha256") != "sha256" {
+                tracing::warn!(
+                    "Only SHA256 hashes are supported, but source uses {:?}",
+                    source.checksum_type
+                );
+            }
+
+            let actual_hash = &download_result.sha256;
+
+            if actual_hash != expected_hash && !self.auto_update_metadata {
+                let theme = ColorfulTheme::default();
+
+                let confirm = Confirm::with_theme(&theme)
+                    .with_prompt(format!(
+                        "SHA256 hash mismatch detected for {}!\nExpected: {}\nActual: {}\nContinue anyway?",
+                        source.id, expected_hash, actual_hash
+                    ))
+                    .default(false)
+                    .interact()?;
+
+                if !confirm {
+                    return Err(Error::HashMismatch(format!(
+                        "SHA256 hash mismatch for {}",
+                        source.id
+                    )));
+                }
+            }
+        }
+
+        if let Some(expected_size) = source.size {
+            if expected_size != download_result.size && !self.auto_update_metadata {
+                let theme = ColorfulTheme::default();
+
+                let confirm = Confirm::with_theme(&theme)
+                    .with_prompt(format!(
+                        "Size mismatch detected for {}!\nExpected size: {} bytes\nActual size: {} bytes\nContinue anyway?",
+                        source.id, expected_size, download_result.size
+                    ))
+                    .default(false)
+                    .interact()?;
+
+                if !confirm {
+                    return Err(Error::SizeMismatch(format!(
+                        "Size mismatch for {}",
+                        source.id
+                    )));
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn update_registry(
+        &self,
+        download_dir: &Path,
+        source: &SourceVariant,
+        download_result: &DownloadResult,
+        file_path: &Path,
+    ) -> Result<()> {
+        let registry_path = download_dir.join("download_registry.json");
+        let registry = SourceRegistry::load(registry_path.clone()).await?;
+
+        let path_str = file_path.to_string_lossy().to_string();
+        let now = OffsetDateTime::now_utc();
+
+        // Variables to store source location if found
+        let mut source_family = None;
+        let mut source_edition = None;
+        let mut source_version = None;
+        let mut source_found = false;
+
+        // Find where this source exists in the registry structure
+        for family in registry.list_families() {
+            for edition in &family.editions {
+                for release in &edition.releases {
+                    for variant in &release.variants {
+                        if variant.id == source.id && variant.url == source.url {
+                            // Found the source, store its details
+                            source_family = Some(family.id.clone());
+                            source_edition = Some(edition.id.clone());
+                            source_version = Some(release.version.clone());
+                            source_found = true;
+                            break;
+                        }
+                    }
+                    if source_found {
+                        break;
+                    }
+                }
+                if source_found {
+                    break;
+                }
+            }
+            if source_found {
+                break;
+            }
+        }
+
+        // Create an updated variant with new information
+        let mut updated_variant = source.clone();
+        updated_variant.metadata.last_downloaded = Some(now);
+        updated_variant.metadata.downloads_count += 1;
+        updated_variant.metadata.local_path = Some(path_str);
+
+        // Update size and checksum if needed
+        if updated_variant.size.is_none() || updated_variant.size != Some(download_result.size) {
+            updated_variant.size = Some(download_result.size);
+        }
+
+        if updated_variant.checksum.is_none()
+            || updated_variant.checksum.as_deref() != Some(&download_result.sha256)
+        {
+            updated_variant.checksum = Some(download_result.sha256.clone());
+            updated_variant.checksum_type = Some("sha256".to_string());
+        }
+
+        let mut registry = SourceRegistry::load(registry_path.clone()).await?;
+
+        if let (Some(family_id), Some(edition_id), Some(version)) =
+            (source_family, source_edition, source_version)
+        {
+            // Add updated variant to registry
+            registry.add_source(&family_id, &edition_id, &version, updated_variant)?;
+        } else {
+            // If source wasn't found in the standard registry, add it to custom sources
+            let family_id = "custom";
+            let edition_id = "download";
+            let version = source.id.clone();
+
+            // Add to custom sources in registry
+            registry.add_source(family_id, edition_id, &version, updated_variant)?;
+        }
+
+        // Save registry with updates
+        registry.save(registry_path).await?;
+
+        Ok(())
+    }
+
+    // Get a source using the component-based approach
+    pub async fn get_source(
+        &self,
+        family_id: Option<&str>,
+        edition_id: Option<&str>,
+        version: Option<&str>,
+        variant_id: Option<&str>,
+        download_dir: &PathBuf,
+    ) -> Result<SourceVariant> {
+        let registry_path = download_dir.join("download_registry.json");
+        let registry = SourceRegistry::load(registry_path).await?;
+
+        registry.get_source(family_id, edition_id, version, variant_id)
+    }
+
+    // Helper method to get a source based on a name string
+    pub async fn find_source_by_name(
+        &self,
+        name: &str,
+        version: Option<&str>,
+        download_dir: &PathBuf,
+    ) -> Result<SourceVariant> {
+        // For backward compatibility - try various ways to match the name
+        // First try as variant ID
+        let registry_path = download_dir.join("download_registry.json");
+        let registry = SourceRegistry::load(registry_path).await?;
+
+        if let Ok(source) = registry.get_source(None, None, None, Some(name)) {
+            return Ok(source);
+        }
+
+        // Try as family ID
+        if let Ok(source) = registry.get_source(Some(name), None, version, None) {
+            return Ok(source);
+        }
+
+        // Try as edition ID
+        if let Ok(source) = registry.get_source(None, Some(name), version, None) {
+            return Ok(source);
+        }
+
+        // Try as version if version parameter wasn't provided
+        if version.is_none() {
+            if let Ok(source) = registry.get_source(None, None, Some(name), None) {
+                return Ok(source);
+            }
+        }
+
+        // If nothing found, return error
+        Err(Error::SourceNotFound(format!(
+            "No source found matching name: {}",
+            name
+        )))
+    }
+
+    // Get the local path for a source if already downloaded
+    pub async fn get_source_path(
+        &self,
+        family_id: Option<&str>,
+        edition_id: Option<&str>,
+        version: Option<&str>,
+        variant_id: Option<&str>,
+        download_dir: &PathBuf,
+    ) -> Result<Option<PathBuf>> {
+        match self
+            .get_source(family_id, edition_id, version, variant_id, download_dir)
+            .await
+        {
+            Ok(source) => {
+                if let Some(path_str) = &source.metadata.local_path {
+                    return Ok(Some(PathBuf::from(path_str)));
+                }
+                Ok(None)
+            }
+            Err(_) => Ok(None),
+        }
     }
 }

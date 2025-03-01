@@ -7,27 +7,29 @@ use clap::Parser;
 use dialoguer::Confirm;
 use malbox_config::Config;
 use malbox_downloader::{
-    registry::{
-        Architecture, Platform, ProcessingStatus, SourceMetadata, SourceType, SystemRequirements,
-    },
-    DownloadRegistry, DownloadSource,
+    Architecture, Platform, ProcessingStatus, SourceMetadata, SourceRegistry, SourceType,
+    SourceVariant, SystemRequirements,
 };
 use time::OffsetDateTime;
 
 #[derive(Parser)]
 pub struct AddSourceArgs {
-    #[arg(short, long)]
-    pub name: String,
-    #[arg(short, long)]
+    #[arg(short = 'f', long)]
+    pub family: String,
+    #[arg(short = 'e', long)]
+    pub edition: String,
+    #[arg(short = 'v', long)]
     pub version: String,
+    #[arg(short = 'i', long)]
+    pub variant_id: String,
     #[arg(short, long)]
     pub description: String,
     #[arg(short, long)]
     pub url: String,
     #[arg(value_enum, short, long, default_value = "iso")]
     pub source_type: SourceType,
-    #[arg(value_enum, short = 'p', long, default_value = "linux")]
-    pub platform: Platform,
+    #[arg(value_enum, short = 'p', long)]
+    pub platform: Option<Platform>,
     #[arg(value_enum, short = 'a', long, default_value = "x86-64")]
     pub architecture: Architecture,
     #[arg(short, long)]
@@ -59,14 +61,24 @@ pub struct AddSourceArgs {
 impl Command for AddSourceArgs {
     async fn execute(self, config: &Config) -> Result<()> {
         let registry_path = config.paths.download_dir.join("download_registry.json");
-        let mut registry = DownloadRegistry::load(registry_path.clone()).await?;
+        let mut registry = SourceRegistry::load(registry_path.clone()).await?;
 
-        let source_key = format!("{}-{}", self.name, self.version);
-        if registry.custom_sources.contains_key(&source_key) {
+        let platform = self.platform.unwrap_or_else(|| match self.family.as_str() {
+            "windows" => Platform::Windows,
+            "linux" => Platform::Linux,
+            "macos" => Platform::MacOS,
+            _ => Platform::Linux,
+        });
+
+        if registry.source_exists(
+            Some(&self.family),
+            Some(&self.edition),
+            Some(&self.version),
+            Some(&self.variant_id),
+        ) {
             let confirm = Confirm::new()
                 .with_prompt(format!(
-                    "Source '{}' version '{}' already exists. Do you want to override it?",
-                    self.name, self.version
+                    "Source already exists. Do you want to override it?"
                 ))
                 .default(false)
                 .interact()?;
@@ -78,14 +90,19 @@ impl Command for AddSourceArgs {
         }
 
         Progress::new()
-            .run(&format!("Adding custom source: {}", self.name), async {
+            .run("Adding source", async {
                 let now = OffsetDateTime::now_utc();
-                let source = DownloadSource {
-                    name: self.name,
-                    version: self.version,
+
+                let source_variant = SourceVariant {
+                    id: self.variant_id,
                     description: self.description,
+                    architecture: self.architecture,
                     url: self.url,
+                    checksum: self.checksum,
+                    checksum_type: self.checksum_type,
+                    size: None, // Will be determined during download
                     source_type: self.source_type,
+                    compression: None,
                     metadata: SourceMetadata {
                         added_date: now,
                         last_verified: Some(now),
@@ -94,14 +111,9 @@ impl Command for AddSourceArgs {
                         verified: false,
                         processing_status: self.processing_status,
                         parent_source: self.parent_source,
-                        build_info: None, // Could be added as optional parameters if needed
+                        build_info: None,
+                        local_path: None,
                     },
-                    checksum: self.checksum,
-                    checksum_type: self.checksum_type,
-                    size: None,        // Will be determined during download
-                    compression: None, // Could be added as parameter if needed
-                    platform: self.platform,
-                    architecture: self.architecture,
                     minimum_requirements: if self.min_cpu_cores.is_some()
                         || self.min_memory_mb.is_some()
                         || self.min_disk_gb.is_some()
@@ -115,16 +127,15 @@ impl Command for AddSourceArgs {
                     } else {
                         None
                     },
-                    tags: self.tags.unwrap_or_default(),
                     mirrors: self.mirrors.unwrap_or_default(),
                     license: self.license,
                     documentation_url: self.documentation_url,
-                    release_notes: self.release_notes,
                 };
 
-                registry.add_custom_source(source);
+                registry.add_source(&self.family, &self.edition, &self.version, source_variant)?;
                 registry.save(registry_path).await?;
 
+                println!("Source added successfully");
                 Ok(())
             })
             .await

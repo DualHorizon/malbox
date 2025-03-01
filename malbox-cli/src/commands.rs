@@ -2,7 +2,7 @@ use crate::error::Result;
 use clap::{Parser, Subcommand};
 use malbox_config::Config;
 
-pub mod builder;
+// pub mod builder;
 pub mod completion;
 pub mod config;
 pub mod daemon;
@@ -18,7 +18,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    Builder(builder::BuilderCommand),
+    //  Builder(builder::BuilderCommand),
     Infra(infra::InfraCommand),
     Config(config::ConfigCommand),
     Daemon(daemon::DaemonCommand),
@@ -29,7 +29,7 @@ pub enum Commands {
 impl Command for Cli {
     async fn execute(self, config: &Config) -> Result<()> {
         match self.command {
-            Commands::Builder(cmd) => cmd.execute(config).await,
+            //         Commands::Builder(cmd) => cmd.execute(config).await,
             Commands::Infra(cmd) => cmd.execute(config).await,
             Commands::Config(cmd) => cmd.execute(config).await,
             Commands::Daemon(cmd) => cmd.execute(config).await,

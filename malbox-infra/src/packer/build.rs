@@ -44,6 +44,8 @@ impl BuildManager {
         let template_path = self.get_template_path(&config.template, &config.platform);
         cmd.arg(template_path);
 
+        tracing::debug!("got template path");
+
         if let Some(dir) = &config.working_dir {
             cmd.current_dir(dir);
         }
@@ -67,7 +69,9 @@ impl BuildManager {
             Platform::Linux => "linux",
         };
 
-        PathBuf::from("/home/shard/.config/malbox/templates/windows/base.pkr.hcl")
+        PathBuf::from(
+            "/home/shard/.config/malbox/infrastructure/packer/templates/windows/base.pkr.hcl",
+        )
 
         //     PathBuf::from(&self.config.templates_dir)
         //         .join("templates")
