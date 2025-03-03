@@ -18,6 +18,7 @@ bon = { workspace = true }
 tracing = { workspace = true }
 dialoguer = { workspace = true }
 indicatif = { workspace = true }
+chrono.workspace = true
 clap = { version = "4.5.26", features = ["derive"] }
 clap_complete = "4.5.42"
 serde_yaml = "0.9.34"
