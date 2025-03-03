@@ -160,7 +160,6 @@ impl Command for ListSourcesArgs {
                     }
                 } else {
                     let families = registry.list_families();
-                    tracing::debug!("Families: {:#?}", families);
 
                     if families.is_empty() {
                         term.write_line("\nNo sources found in registry.")?;

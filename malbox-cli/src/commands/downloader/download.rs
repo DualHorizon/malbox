@@ -142,7 +142,6 @@ fn select_source_interactively(
     let theme = ColorfulTheme::default();
 
     let families = registry.list_families();
-    tracing::debug!("Families: {:#?}", families);
     if families.is_empty() {
         return Err(CliError::InvalidArgument(
             "No families found in registry".to_string(),
