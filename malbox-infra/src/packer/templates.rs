@@ -1,11 +1,12 @@
 use crate::error::{Error, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 mod manager;
 mod vars;
 
-pub use manager::TemplateManager;
+pub use manager::{TemplateInfo, TemplateManager};
 pub use vars::Variable;
 
 // IMPORTANT - We only support HCL syntax for packer templates, no JSON
@@ -35,6 +36,8 @@ pub struct TemplateConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Template {
+    pub name: String,
+    pub path: Option<PathBuf>,
     pub variables: HashMap<String, Variable>,
     pub sources: Vec<Source>,
     pub provisioners: Vec<Provisioner>,

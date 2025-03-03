@@ -2,7 +2,8 @@ use super::{vars::VarType, Provisioner, Source, Template, Variable};
 use crate::error::{Error, Result};
 use hcl::{Block, Body};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use tokio::fs;
 
 pub struct TemplateManager {}
 
@@ -12,9 +13,109 @@ impl TemplateManager {
     }
 
     pub async fn load(&self, path: PathBuf) -> Result<Template> {
-        let content = tokio::fs::read_to_string(path).await?;
+        let content = fs::read_to_string(&path).await?;
         let parsed = self.parse_template(&content)?;
-        Ok(Template { content, ..parsed })
+
+        // Add the path and file name information to the template
+        let display_name = path
+            .file_stem()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
+
+        Ok(Template {
+            name: display_name,
+            path: Some(path),
+            content,
+            ..parsed
+        })
+    }
+
+    pub async fn find_templates(&self, base_dir: &Path) -> Result<Vec<TemplateInfo>> {
+        let mut results = Vec::new();
+
+        if !base_dir.exists() {
+            return Ok(results);
+        }
+
+        self.find_templates_in_dir(base_dir, &mut results).await?;
+
+        Ok(results)
+    }
+
+    async fn find_templates_in_dir(
+        &self,
+        dir: &Path,
+        results: &mut Vec<TemplateInfo>,
+    ) -> Result<()> {
+        let mut entries = fs::read_dir(dir).await?;
+
+        while let Some(entry) = entries.next_entry().await? {
+            let path = entry.path();
+
+            if path.is_dir() {
+                // Use Box::pin to handle recursion in async function
+                Box::pin(self.find_templates_in_dir(&path, results)).await?;
+            } else if let Some(ext) = path.extension() {
+                if ext == "hcl" {
+                    // Check if it's a packer template
+                    if let Ok(content) = fs::read_to_string(&path).await {
+                        if content.contains("source")
+                            && (content.contains("build {") || content.contains("build{"))
+                        {
+                            // Quick parse to get basic info
+                            if let Ok(info) = self.extract_template_info(&path, &content).await {
+                                results.push(info);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn extract_template_info(&self, path: &Path, content: &str) -> Result<TemplateInfo> {
+        let name = path
+            .file_stem()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
+
+        let description = if let Ok(body) = hcl::from_str::<Body>(content) {
+            // Try to find a description in packer variables
+            for structure in body.iter() {
+                if let hcl::Structure::Block(block) = structure {
+                    if block.identifier() == "variable" {
+                        if let Some(var_name) = block.labels().first() {
+                            if var_name.as_str() == "description" {
+                                for attr in block.body().attributes() {
+                                    if attr.key() == "default" {
+                                        return Ok(TemplateInfo {
+                                            name: name.clone(),
+                                            path: path.to_path_buf(),
+                                            description: Some(attr.expr().to_string()),
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If we get here, no description was found
+            None
+        } else {
+            None
+        };
+
+        Ok(TemplateInfo {
+            name,
+            path: path.to_path_buf(),
+            description,
+        })
     }
 
     pub fn validate(&self, template: &Template, variables: &HashMap<String, String>) -> Result<()> {
@@ -65,6 +166,8 @@ impl TemplateManager {
         }
 
         Ok(Template {
+            name: String::new(), // Will be populated by the caller
+            path: None,          // Will be populated by the caller
             variables,
             sources,
             provisioners,
@@ -111,9 +214,27 @@ impl TemplateManager {
     }
 
     fn parse_enum_validation(&self, attr: &hcl::Attribute) -> Option<Vec<String>> {
-        // Parse validation rules that define enum values
-        // Example: validation { condition = contains(["a", "b", "c"], var.value) }
-        // Implementation depends on the HCL validation syntax
+        // Try to extract enum values from validation rules
+        // This is a more sophisticated version that tries to handle different validation patterns
+
+        let expr_str = attr.expr().to_string();
+
+        // Simple pattern: contains(["value1", "value2"], var.xyz)
+        if expr_str.contains("contains(") && expr_str.contains("[") && expr_str.contains("]") {
+            let start = expr_str.find('[').unwrap_or(0);
+            let end = expr_str.find(']').unwrap_or(expr_str.len());
+
+            if start < end && start > 0 {
+                let values_str = &expr_str[start + 1..end];
+                return Some(
+                    values_str
+                        .split(',')
+                        .map(|s| s.trim().trim_matches('"').trim_matches('\'').to_string())
+                        .collect(),
+                );
+            }
+        }
+
         None
     }
 
@@ -177,4 +298,12 @@ impl TemplateManager {
             .map(|(name, var)| (name.clone(), var.required, var.description.clone()))
             .collect()
     }
+}
+
+/// Basic information about a template without fully parsing it
+#[derive(Debug, Clone)]
+pub struct TemplateInfo {
+    pub name: String,
+    pub path: PathBuf,
+    pub description: Option<String>,
 }
