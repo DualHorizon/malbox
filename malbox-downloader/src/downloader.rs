@@ -127,7 +127,6 @@ impl Downloader {
         .to_string()
     }
 
-    // Main download method that matches the original signature
     pub async fn download(
         &self,
         url: &str,
@@ -185,7 +184,6 @@ impl Downloader {
         } else {
             match source {
                 Some(src) => {
-                    // For sources from the registry, use a specific directory structure
                     let source_dir = download_dir
                         .join(file_type.to_string().to_lowercase())
                         .join(&src.id);
@@ -196,7 +194,6 @@ impl Downloader {
                     source_dir.join(filename)
                 }
                 None => {
-                    // For direct downloads
                     let filename = self.get_download_filename(url, None).await?;
                     let type_dir = download_dir
                         .join("direct")
@@ -337,19 +334,16 @@ impl Downloader {
         let path_str = file_path.to_string_lossy().to_string();
         let now = OffsetDateTime::now_utc();
 
-        // Variables to store source location if found
         let mut source_family = None;
         let mut source_edition = None;
         let mut source_version = None;
         let mut source_found = false;
 
-        // Find where this source exists in the registry structure
         for family in registry.list_families() {
             for edition in &family.editions {
                 for release in &edition.releases {
                     for variant in &release.variants {
                         if variant.id == source.id && variant.url == source.url {
-                            // Found the source, store its details
                             source_family = Some(family.id.clone());
                             source_edition = Some(edition.id.clone());
                             source_version = Some(release.version.clone());
@@ -370,13 +364,11 @@ impl Downloader {
             }
         }
 
-        // Create an updated variant with new information
         let mut updated_variant = source.clone();
         updated_variant.metadata.last_downloaded = Some(now);
         updated_variant.metadata.downloads_count += 1;
         updated_variant.metadata.local_path = Some(path_str);
 
-        // Update size and checksum if needed
         if updated_variant.size.is_none() || updated_variant.size != Some(download_result.size) {
             updated_variant.size = Some(download_result.size);
         }
@@ -393,25 +385,20 @@ impl Downloader {
         if let (Some(family_id), Some(edition_id), Some(version)) =
             (source_family, source_edition, source_version)
         {
-            // Add updated variant to registry
             registry.add_source(&family_id, &edition_id, &version, updated_variant)?;
         } else {
-            // If source wasn't found in the standard registry, add it to custom sources
             let family_id = "custom";
             let edition_id = "download";
             let version = source.id.clone();
 
-            // Add to custom sources in registry
             registry.add_source(family_id, edition_id, &version, updated_variant)?;
         }
 
-        // Save registry with updates
         registry.save(registry_path).await?;
 
         Ok(())
     }
 
-    // Get a source using the component-based approach
     pub async fn get_source(
         &self,
         family_id: Option<&str>,
@@ -426,15 +413,13 @@ impl Downloader {
         registry.get_source(family_id, edition_id, version, variant_id)
     }
 
-    // Helper method to get a source based on a name string
+    // NOTE: Created for loose matching on sources. Should we keep something like this?
     pub async fn find_source_by_name(
         &self,
         name: &str,
         version: Option<&str>,
         download_dir: &PathBuf,
     ) -> Result<SourceVariant> {
-        // For backward compatibility - try various ways to match the name
-        // First try as variant ID
         let registry_path = download_dir.join("download_registry.json");
         let registry = SourceRegistry::load(registry_path).await?;
 
@@ -442,31 +427,26 @@ impl Downloader {
             return Ok(source);
         }
 
-        // Try as family ID
         if let Ok(source) = registry.get_source(Some(name), None, version, None) {
             return Ok(source);
         }
 
-        // Try as edition ID
         if let Ok(source) = registry.get_source(None, Some(name), version, None) {
             return Ok(source);
         }
 
-        // Try as version if version parameter wasn't provided
         if version.is_none() {
             if let Ok(source) = registry.get_source(None, None, Some(name), None) {
                 return Ok(source);
             }
         }
 
-        // If nothing found, return error
         Err(Error::SourceNotFound(format!(
             "No source found matching name: {}",
             name
         )))
     }
 
-    // Get the local path for a source if already downloaded
     pub async fn get_source_path(
         &self,
         family_id: Option<&str>,
