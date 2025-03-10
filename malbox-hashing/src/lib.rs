@@ -28,7 +28,7 @@ pub fn get_sha256(buf: &mut [u8]) -> String {
 
     let mut hex_string = String::new();
     for byte in result.iter() {
-        hex_string.push_str(&format!("{:x}", byte));
+        hex_string.push_str(&format!("{:02x}", byte));
     }
 
     hex_string
