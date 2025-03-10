@@ -20,46 +20,32 @@ use tokio::fs;
 
 #[derive(Parser)]
 pub struct BuildArgs {
-    /// Platform type
     #[arg(short, long)]
     pub platform: Option<PlatformType>,
-    /// Template name to use for building
     #[arg(short, long)]
     pub template_name: Option<String>,
-    /// Direct path to template file
     #[arg(long)]
     pub template_path: Option<PathBuf>,
-    /// Name for the built image
     #[arg(short, long)]
     pub output_name: Option<String>,
-    /// OS family (e.g., windows, ubuntu)
     #[arg(long)]
     pub family: Option<String>,
-    /// OS edition (e.g., server, desktop)
     #[arg(long)]
     pub edition: Option<String>,
-    /// OS version (e.g., 10, 22.04)
     #[arg(long)]
     pub version: Option<String>,
-    /// Source variant identifier
     #[arg(long)]
     pub variant: Option<String>,
-    /// Direct path to ISO file
     #[arg(long)]
     pub iso: Option<String>,
-    /// Force overwrite of existing images
     #[arg(short, long)]
     pub force: bool,
-    /// Working directory for build operations
     #[arg(short, long)]
     pub working_dir: Option<PathBuf>,
-    /// Template variables in KEY=VALUE format
     #[arg(short, long = "var", value_parser = parse_key_val)]
     pub variables: Vec<(String, String)>,
-    /// Force download even if ISO already exists locally
     #[arg(long)]
     pub force_download: bool,
-    /// Run without interactive prompts
     #[arg(long, default_value = "false")]
     pub non_interactive: bool,
 }
@@ -107,12 +93,10 @@ impl Command for BuildArgs {
             }
         };
 
-        let template_manager = TemplateManager::new();
-        let template = if let Some(path) = template_path_opt {
-            template_manager.load(path).await?
+        let template_path = if let Some(path) = template_path_opt {
+            path
         } else if let Some(name) = template_name_opt {
-            let template_path = find_template_by_name(config, &name, &platform).await?;
-            template_manager.load(template_path).await?
+            find_template_by_name(config, &name, &platform).await?
         } else {
             if non_interactive {
                 return Err(CliError::InvalidArgument(
@@ -120,9 +104,11 @@ impl Command for BuildArgs {
                 ));
             }
 
-            let template_path = discover_and_select_template(config, &platform).await?;
-            template_manager.load(template_path).await?
+            discover_and_select_template(config, &platform).await?
         };
+
+        let template_manager = TemplateManager::new();
+        let template = template_manager.load(template_path.clone()).await?;
 
         let mut variables: HashMap<String, String> = vars.into_iter().collect();
 
@@ -132,7 +118,7 @@ impl Command for BuildArgs {
         });
 
         if let Some(iso_path) = iso_opt.clone() {
-            variables.insert("iso_url".to_string(), iso_path.clone());
+            variables.insert("iso_url".to_string(), iso_path);
         } else {
             let has_source_components = family_opt.is_some()
                 || edition_opt.is_some()
@@ -161,7 +147,7 @@ impl Command for BuildArgs {
             if let Some(local_path) = &source.metadata.local_path {
                 let path = Path::new(local_path);
 
-                if path.exists() && !self.force_download {
+                if path.exists() && !force_download {
                     variables.insert("iso_url".to_string(), local_path.clone());
 
                     if let Some(checksum) = &source.checksum {
@@ -210,15 +196,10 @@ impl Command for BuildArgs {
         let build_config = BuildConfig {
             platform: platform.into(),
             name: output_name,
+            template_path,
             force,
             working_dir: working_dir_opt,
             iso: iso_opt,
-            template: config
-                .paths
-                .packer_dir
-                .to_str()
-                .unwrap_or_default()
-                .to_string(),
             variables,
         };
 

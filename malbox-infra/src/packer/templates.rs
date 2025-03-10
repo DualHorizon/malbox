@@ -1,12 +1,13 @@
 use crate::error::{Error, Result};
+use bon::Builder;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::PathBuf;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 mod manager;
 mod vars;
 
-pub use manager::{TemplateInfo, TemplateManager};
+pub use manager::TemplateManager;
 pub use vars::Variable;
 
 // IMPORTANT - We only support HCL syntax for packer templates, no JSON
@@ -29,19 +30,47 @@ pub struct Provisioner {
     pub config: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone)]
-pub struct TemplateConfig {
-    pub template: String,
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Builder)]
+pub struct TemplateDependencies {
+    #[builder(default = HashSet::new())]
+    pub script_files: HashSet<String>,
+    #[builder(default = HashSet::new())]
+    pub floppy_files: HashSet<String>,
+    #[builder(default = HashSet::new())]
+    pub provisioner_files: HashSet<String>,
+    #[builder(default = HashSet::new())]
+    pub http_directories: HashSet<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl TemplateDependencies {
+    pub fn has_scripts(&self) -> bool {
+        !self.script_files.is_empty()
+    }
+    pub fn has_floppy(&self) -> bool {
+        !self.floppy_files.is_empty()
+    }
+    pub fn has_provisioners(&self) -> bool {
+        !self.provisioner_files.is_empty()
+    }
+    pub fn has_http(&self) -> bool {
+        !self.http_directories.is_empty()
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct Template {
     pub name: String,
     pub path: Option<PathBuf>,
+    #[builder(default = HashMap::new())]
     pub variables: HashMap<String, Variable>,
+    #[builder(default = Vec::new())]
     pub sources: Vec<Source>,
+    #[builder(default = Vec::new())]
     pub provisioners: Vec<Provisioner>,
     pub content: String,
+    #[builder(default = TemplateDependencies::default())]
+    pub dependencies: TemplateDependencies,
+    pub description: Option<String>,
 }
 
 impl Template {

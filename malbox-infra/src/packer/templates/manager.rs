@@ -1,7 +1,7 @@
-use super::{vars::VarType, Provisioner, Source, Template, Variable};
+use super::{vars::VarType, Provisioner, Source, Template, TemplateDependencies, Variable};
 use crate::error::{Error, Result};
 use hcl::{Block, Body};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use tokio::fs;
 
@@ -14,24 +14,21 @@ impl TemplateManager {
 
     pub async fn load(&self, path: PathBuf) -> Result<Template> {
         let content = fs::read_to_string(&path).await?;
-        let parsed = self.parse_template(&content)?;
+        let mut parsed = self.parse_template(&content)?;
 
-        // Add the path and file name information to the template
         let display_name = path
             .file_stem()
             .unwrap_or_default()
             .to_string_lossy()
             .to_string();
 
-        Ok(Template {
-            name: display_name,
-            path: Some(path),
-            content,
-            ..parsed
-        })
+        parsed.name = display_name;
+        parsed.path = Some(path);
+
+        Ok(parsed)
     }
 
-    pub async fn find_templates(&self, base_dir: &Path) -> Result<Vec<TemplateInfo>> {
+    pub async fn find_templates(&self, base_dir: &Path) -> Result<Vec<Template>> {
         let mut results = Vec::new();
 
         if !base_dir.exists() {
@@ -43,29 +40,34 @@ impl TemplateManager {
         Ok(results)
     }
 
-    async fn find_templates_in_dir(
-        &self,
-        dir: &Path,
-        results: &mut Vec<TemplateInfo>,
-    ) -> Result<()> {
+    async fn find_templates_in_dir(&self, dir: &Path, results: &mut Vec<Template>) -> Result<()> {
         let mut entries = fs::read_dir(dir).await?;
 
         while let Some(entry) = entries.next_entry().await? {
             let path = entry.path();
 
             if path.is_dir() {
-                // Use Box::pin to handle recursion in async function
                 Box::pin(self.find_templates_in_dir(&path, results)).await?;
             } else if let Some(ext) = path.extension() {
                 if ext == "hcl" {
-                    // Check if it's a packer template
                     if let Ok(content) = fs::read_to_string(&path).await {
                         if content.contains("source")
                             && (content.contains("build {") || content.contains("build{"))
                         {
-                            // Quick parse to get basic info
-                            if let Ok(info) = self.extract_template_info(&path, &content).await {
-                                results.push(info);
+                            if let Ok(mut template) = self.parse_template(&content) {
+                                template.name = path
+                                    .file_stem()
+                                    .unwrap_or_default()
+                                    .to_string_lossy()
+                                    .to_string();
+                                template.path = Some(path);
+
+                                if let Ok(body) = hcl::from_str::<Body>(&content) {
+                                    template.description =
+                                        self.extract_description_from_body(&body);
+                                }
+
+                                results.push(template);
                             }
                         }
                     }
@@ -76,46 +78,23 @@ impl TemplateManager {
         Ok(())
     }
 
-    async fn extract_template_info(&self, path: &Path, content: &str) -> Result<TemplateInfo> {
-        let name = path
-            .file_stem()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string();
-
-        let description = if let Ok(body) = hcl::from_str::<Body>(content) {
-            // Try to find a description in packer variables
-            for structure in body.iter() {
-                if let hcl::Structure::Block(block) = structure {
-                    if block.identifier() == "variable" {
-                        if let Some(var_name) = block.labels().first() {
-                            if var_name.as_str() == "description" {
-                                for attr in block.body().attributes() {
-                                    if attr.key() == "default" {
-                                        return Ok(TemplateInfo {
-                                            name: name.clone(),
-                                            path: path.to_path_buf(),
-                                            description: Some(attr.expr().to_string()),
-                                        });
-                                    }
+    fn extract_description_from_body(&self, body: &Body) -> Option<String> {
+        for structure in body.iter() {
+            if let hcl::Structure::Block(block) = structure {
+                if block.identifier() == "variable" {
+                    if let Some(var_name) = block.labels().first() {
+                        if var_name.as_str() == "description" {
+                            for attr in block.body().attributes() {
+                                if attr.key() == "default" {
+                                    return Some(attr.expr().to_string());
                                 }
                             }
                         }
                     }
                 }
             }
-
-            // If we get here, no description was found
-            None
-        } else {
-            None
-        };
-
-        Ok(TemplateInfo {
-            name,
-            path: path.to_path_buf(),
-            description,
-        })
+        }
+        None
     }
 
     pub fn validate(&self, template: &Template, variables: &HashMap<String, String>) -> Result<()> {
@@ -135,27 +114,55 @@ impl TemplateManager {
         Ok(())
     }
 
+    pub fn get_missing_variables(
+        &self,
+        template: &Template,
+        provided: &HashMap<String, String>,
+    ) -> Result<Vec<String>> {
+        template.get_missing_variables(provided)
+    }
+
+    pub fn get_variable_info(&self, template: &Template) -> Vec<(String, bool, Option<String>)> {
+        template
+            .variables
+            .iter()
+            .map(|(name, var)| (name.clone(), var.required, var.description.clone()))
+            .collect()
+    }
+
     fn parse_template(&self, content: &str) -> Result<Template> {
         let body: Body = hcl::from_str(content)?;
         let mut variables = HashMap::new();
         let mut sources = Vec::new();
         let mut provisioners = Vec::new();
+        let mut dependencies = TemplateDependencies::default();
+        let mut description = None;
 
         for structure in body.iter() {
             match structure {
                 hcl::Structure::Block(block) => match block.identifier().as_ref() {
                     "variable" => {
                         if let Some(var) = self.parse_variable(block)? {
+                            if var.0 == "description" {
+                                if let Some(default) = &var.1.default {
+                                    description = Some(default.clone());
+                                }
+                            }
                             variables.insert(var.0, var.1);
                         }
                     }
                     "source" => {
                         if let Some(source) = self.parse_source(block)? {
+                            self.extract_source_dependencies(block, &mut dependencies)?;
                             sources.push(source);
                         }
                     }
+                    "build" => {
+                        self.extract_build_dependencies(block, &mut dependencies)?;
+                    }
                     "provisioner" => {
                         if let Some(provisioner) = self.parse_provisioner(block)? {
+                            self.extract_provisioner_dependencies(block, &mut dependencies)?;
                             provisioners.push(provisioner);
                         }
                     }
@@ -165,14 +172,15 @@ impl TemplateManager {
             }
         }
 
-        Ok(Template {
-            name: String::new(), // Will be populated by the caller
-            path: None,          // Will be populated by the caller
-            variables,
-            sources,
-            provisioners,
-            content: content.to_string(),
-        })
+        Ok(Template::builder()
+            .name(String::new())
+            .content(content.to_string())
+            .variables(variables)
+            .sources(sources)
+            .provisioners(provisioners)
+            .dependencies(dependencies)
+            .maybe_description(description)
+            .build())
     }
 
     fn parse_variable(&self, block: &Block) -> Result<Option<(String, Variable)>> {
@@ -214,9 +222,6 @@ impl TemplateManager {
     }
 
     fn parse_enum_validation(&self, attr: &hcl::Attribute) -> Option<Vec<String>> {
-        // Try to extract enum values from validation rules
-        // This is a more sophisticated version that tries to handle different validation patterns
-
         let expr_str = attr.expr().to_string();
 
         // Simple pattern: contains(["value1", "value2"], var.xyz)
@@ -275,35 +280,112 @@ impl TemplateManager {
         }))
     }
 
-    pub fn get_missing_variables(
+    fn extract_source_dependencies(
         &self,
-        template: &Template,
-        provided: &HashMap<String, String>,
-    ) -> Result<Vec<String>> {
-        let mut missing = Vec::new();
-
-        for (name, var) in &template.variables {
-            if var.required && !provided.contains_key(name) {
-                missing.push(name.clone());
+        block: &Block,
+        deps: &mut TemplateDependencies,
+    ) -> Result<()> {
+        for attr in block.body().attributes() {
+            match attr.key() {
+                "http_directory" => {
+                    if let Some(dir) = self.extract_string_value(attr.expr()) {
+                        deps.http_directories.insert(dir);
+                    }
+                }
+                "floppy_files" => {
+                    self.extract_file_list(attr.expr(), &mut deps.floppy_files)?;
+                }
+                _ => {}
             }
         }
-
-        Ok(missing)
+        Ok(())
     }
 
-    pub fn get_variable_info(&self, template: &Template) -> Vec<(String, bool, Option<String>)> {
-        template
-            .variables
-            .iter()
-            .map(|(name, var)| (name.clone(), var.required, var.description.clone()))
-            .collect()
+    fn extract_build_dependencies(
+        &self,
+        block: &Block,
+        deps: &mut TemplateDependencies,
+    ) -> Result<()> {
+        for structure in block.body().iter() {
+            if let hcl::Structure::Block(inner_block) = structure {
+                if inner_block.identifier() == "provisioner" {
+                    self.extract_provisioner_dependencies(inner_block, deps)?;
+                }
+            }
+        }
+        Ok(())
     }
-}
 
-/// Basic information about a template without fully parsing it
-#[derive(Debug, Clone)]
-pub struct TemplateInfo {
-    pub name: String,
-    pub path: PathBuf,
-    pub description: Option<String>,
+    fn extract_provisioner_dependencies(
+        &self,
+        block: &Block,
+        deps: &mut TemplateDependencies,
+    ) -> Result<()> {
+        if let Some(provisioner_type) = block.labels().first() {
+            match provisioner_type.as_str() {
+                "shell" | "powershell" => {
+                    for attr in block.body().attributes() {
+                        match attr.key() {
+                            "scripts" => {
+                                self.extract_file_list(attr.expr(), &mut deps.script_files)?;
+                            }
+                            "script" => {
+                                if let Some(script) = self.extract_string_value(attr.expr()) {
+                                    self.extract_filename(&script, &mut deps.script_files);
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                "ansible" => {
+                    for attr in block.body().attributes() {
+                        if attr.key() == "playbook_file" {
+                            if let Some(playbook) = self.extract_string_value(attr.expr()) {
+                                self.extract_filename(&playbook, &mut deps.provisioner_files);
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+
+    fn extract_string_value(&self, expr: &hcl::Expression) -> Option<String> {
+        match expr {
+            hcl::Expression::String(s) => Some(s.to_string()),
+            _ => {
+                let s = expr.to_string();
+                if s.starts_with('"') && s.ends_with('"') {
+                    Some(s.trim_matches('"').to_string())
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
+    fn extract_filename(&self, path: &str, set: &mut HashSet<String>) {
+        if let Some(filename) = Path::new(path).file_name() {
+            if let Some(name) = filename.to_str() {
+                set.insert(name.to_string());
+            }
+        }
+    }
+
+    fn extract_file_list(&self, expr: &hcl::Expression, files: &mut HashSet<String>) -> Result<()> {
+        match expr {
+            hcl::Expression::Array(items) => {
+                for item in items {
+                    if let Some(path) = self.extract_string_value(item) {
+                        self.extract_filename(&path, files);
+                    }
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
 }

@@ -1,4 +1,5 @@
 pub mod ansible;
+mod command;
 pub mod error;
 pub mod packer;
 pub mod terraform;
