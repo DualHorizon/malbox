@@ -125,7 +125,7 @@ impl Command for BuildArgs {
                 || version_opt.is_some()
                 || variant_opt.is_some();
 
-            let registry_path = config.paths.download_dir.join("download_registry.json");
+            let registry_path = config.paths.download_dir.join("source_registry.json");
             let registry = SourceRegistry::load(registry_path).await?;
 
             let source = if has_source_components {

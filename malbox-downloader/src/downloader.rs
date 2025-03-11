@@ -328,7 +328,7 @@ impl Downloader {
         download_result: &DownloadResult,
         file_path: &Path,
     ) -> Result<()> {
-        let registry_path = download_dir.join("download_registry.json");
+        let registry_path = download_dir.join("source_registry.json");
         let registry = SourceRegistry::load(registry_path.clone()).await?;
 
         let path_str = file_path.to_string_lossy().to_string();
@@ -407,7 +407,7 @@ impl Downloader {
         variant_id: Option<&str>,
         download_dir: &PathBuf,
     ) -> Result<SourceVariant> {
-        let registry_path = download_dir.join("download_registry.json");
+        let registry_path = download_dir.join("source_registry.json");
         let registry = SourceRegistry::load(registry_path).await?;
 
         registry.get_source(family_id, edition_id, version, variant_id)
@@ -420,7 +420,7 @@ impl Downloader {
         version: Option<&str>,
         download_dir: &PathBuf,
     ) -> Result<SourceVariant> {
-        let registry_path = download_dir.join("download_registry.json");
+        let registry_path = download_dir.join("source_registry.json");
         let registry = SourceRegistry::load(registry_path).await?;
 
         if let Ok(source) = registry.get_source(None, None, None, Some(name)) {

@@ -23,7 +23,7 @@ pub struct ListSourcesArgs {
 
 impl Command for ListSourcesArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let registry_path = config.paths.download_dir.join("download_registry.json");
+        let registry_path = config.paths.download_dir.join("source_registry.json");
         let registry = SourceRegistry::load(registry_path).await?;
         let term = Term::stdout();
 

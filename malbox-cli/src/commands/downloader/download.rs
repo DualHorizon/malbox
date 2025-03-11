@@ -38,7 +38,7 @@ pub struct DownloadArgs {
 
 impl Command for DownloadArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let registry_path = config.paths.download_dir.join("download_registry.json");
+        let registry_path = config.paths.download_dir.join("source_registry.json");
         let downloader = Downloader::builder().show_progress(true).build();
         let registry = SourceRegistry::load(registry_path).await?;
 

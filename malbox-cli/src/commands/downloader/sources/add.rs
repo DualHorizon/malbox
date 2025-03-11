@@ -60,7 +60,7 @@ pub struct AddSourceArgs {
 
 impl Command for AddSourceArgs {
     async fn execute(self, config: &Config) -> Result<()> {
-        let registry_path = config.paths.download_dir.join("download_registry.json");
+        let registry_path = config.paths.download_dir.join("source_registry.json");
         let mut registry = SourceRegistry::load(registry_path.clone()).await?;
 
         let platform = self.platform.unwrap_or_else(|| match self.family.as_str() {
