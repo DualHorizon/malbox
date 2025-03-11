@@ -47,16 +47,12 @@ Each plugin has metadata, and can be qualified for specific categories, plugins 
 ```mermaid
 graph TD
     A[Core System] --> B[Plugin Manager]
-    B --> C[Analysis Plugins]
-    B --> D[Storage Plugins]
-    B --> E[Report Plugins]
-    B --> F[Infrastructure Plugins]
+    B --> C[Host Plugins]
+    B --> D[Guest Plugins]
     
-    subgraph "Plugin Types"
+    subgraph "Analysis Plugin Types"
         C
         D
-        E
-        F
     end
 ```
 
@@ -148,17 +144,9 @@ For good measure, you can find a couple of functionalities that are already avai
 | API | ![Axum](https://img.shields.io/badge/axum-latest-green.svg) | Modern web framework |
 | Frontend | ![Astro](https://img.shields.io/badge/astro-latest-purple.svg) | Fast, static frontend |
 
-## Performance
+## Architecture
 
-### Analysis Metrics
-
-| Operation | Performance | Notes |
-|-----------|-------------|--------|
-| Static Analysis | 2-5 seconds | PE files up to 10MB |
-| Dynamic Analysis | 45-60 seconds | Full system monitoring |
-| Concurrent Analyses | 50+ | With recommended hardware |
-| Memory Usage | 512MB base | +256MB per analysis |
-| Storage Required | 20GB+ | Scales with retention policy |
+![Runtime Architecture](assets/malbox-runtime.svg)
 
 ## Quick Start
 
