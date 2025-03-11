@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#f9f9f9" rx="10" ry="10"/>
+  
+  <!-- Title -->
+  <g font-family="Arial, Helvetica, sans-serif">
+  <text x="400" y="30" font-size="20" text-anchor="middle" font-weight="bold">Malbox Runtime Architecture</text>
+  
+  <!-- Task Manager Box -->
+  <rect x="50" y="70" width="200" height="120" fill="#e1f5fe" stroke="#01579b" stroke-width="2" rx="5" ry="5"/>
+  <text x="150" y="95" font-size="16" text-anchor="middle" font-weight="bold">Task Manager</text>
+  <text x="150" y="120" font-size="12" text-anchor="middle">- Task queue and prioritization</text>
+  <text x="150" y="140" font-size="12" text-anchor="middle">- Task state tracking</text>
+  <text x="150" y="160" font-size="12" text-anchor="middle">- DB integration</text>
+  
+  <!-- Resource Manager Box -->
+  <rect x="300" y="70" width="200" height="120" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" rx="5" ry="5"/>
+  <text x="400" y="95" font-size="16" text-anchor="middle" font-weight="bold">Resource Manager</text>
+  <text x="400" y="120" font-size="12" text-anchor="middle">- VM provisioning via Terraform</text>
+  <text x="400" y="140" font-size="12" text-anchor="middle">- Resource allocation/tracking</text>
+  <text x="400" y="160" font-size="12" text-anchor="middle">- VM pool management</text>
+  
+  <!-- Plugin Manager Box -->
+  <rect x="550" y="70" width="200" height="120" fill="#fff3e0" stroke="#e65100" stroke-width="2" rx="5" ry="5"/>
+  <text x="650" y="95" font-size="16" text-anchor="middle" font-weight="bold">Plugin Manager</text>
+  <text x="650" y="120" font-size="12" text-anchor="middle">- Plugin loading/unloading</text>
+  <text x="650" y="140" font-size="12" text-anchor="middle">- Plugin lifecycle</text>
+  <text x="650" y="160" font-size="12" text-anchor="middle">- Global vs task plugins</text>
+  
+  <!-- Workers Box -->
+  <rect x="50" y="240" width="200" height="120" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="5" ry="5"/>
+  <text x="150" y="265" font-size="16" text-anchor="middle" font-weight="bold">Worker Pool</text>
+  <text x="150" y="290" font-size="12" text-anchor="middle">- Task execution</text>
+  <text x="150" y="310" font-size="12" text-anchor="middle">- Concurrent processing</text>
+  <text x="150" y="330" font-size="12" text-anchor="middle">- Result collection</text>
+  
+  <!-- Terraform Box -->
+  <rect x="300" y="240" width="200" height="120" fill="#e0f2f1" stroke="#00695c" stroke-width="2" rx="5" ry="5"/>
+  <text x="400" y="265" font-size="16" text-anchor="middle" font-weight="bold">Terraform Integration</text>
+  <text x="400" y="290" font-size="12" text-anchor="middle">- Infrastructure as Code</text>
+  <text x="400" y="310" font-size="12" text-anchor="middle">- Provider abstraction</text>
+  <text x="400" y="330" font-size="12" text-anchor="middle">- State management</text>
+  
+  <!-- VM Box -->
+  <rect x="550" y="240" width="200" height="120" fill="#e8eaf6" stroke="#303f9f" stroke-width="2" rx="5" ry="5"/>
+  <text x="650" y="265" font-size="16" text-anchor="middle" font-weight="bold">VM Management</text>
+  <text x="650" y="290" font-size="12" text-anchor="middle">- Snapshot handling</text>
+  <text x="650" y="310" font-size="12" text-anchor="middle">- Network configuration</text>
+  <text x="650" y="330" font-size="12" text-anchor="middle">- Host/Guest communication</text>
+  
+  <!-- Plugin Types Box -->
+  <rect x="300" y="390" width="470" height="140" fill="#ffebee" stroke="#b71c1c" stroke-width="2" rx="5" ry="5"/>
+  <text x="535" y="415" font-size="16" text-anchor="middle" font-weight="bold">Plugin Types</text>
+  
+  <!-- Host Plugin Box -->
+  <rect x="320" y="430" width="210" height="80" fill="#fce4ec" stroke="#880e4f" stroke-width="1" rx="3" ry="3"/>
+  <text x="425" y="450" font-size="14" text-anchor="middle" font-weight="bold">Host Plugins</text>
+  <text x="425" y="470" font-size="12" text-anchor="middle">- E.g. Memory forensics</text>
+  <text x="425" y="490" font-size="12" text-anchor="middle">- E.g. Emulation</text>
+  
+  <!-- Guest Plugin Box -->
+  <rect x="540" y="430" width="210" height="80" fill="#e1f5fe" stroke="#01579b" stroke-width="1" rx="3" ry="3"/>
+  <text x="645" y="450" font-size="14" text-anchor="middle" font-weight="bold">Guest Plugins (In-VM Agent)</text>
+  <text x="645" y="470" font-size="12" text-anchor="middle">- E.g. Dynamic Analysis</text>
+  
+  <!-- Database Box -->
+  <rect x="50" y="390" width="200" height="140" fill="#fffde7" stroke="#f57f17" stroke-width="2" rx="5" ry="5"/>
+  <text x="150" y="415" font-size="16" text-anchor="middle" font-weight="bold">Database</text>
+  <text x="150" y="440" font-size="12" text-anchor="middle">- Task storage</text>
+  <text x="150" y="460" font-size="12" text-anchor="middle">- Machine inventory</text>
+  <text x="150" y="480" font-size="12" text-anchor="middle">- Analysis results</text>
+  <text x="150" y="500" font-size="12" text-anchor="middle">- Resource tracking</text>
+  </g>
+  
+  <!-- Arrows -->
+  <!-- Task Manager to Resource Manager -->
+  <line x1="250" y1="130" x2="300" y2="130" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Resource Manager to Terraform -->
+  <line x1="400" y1="190" x2="400" y2="240" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Task Manager to Plugin Manager -->
+  <line x1="250" y1="100" x2="550" y2="100" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Task Manager to Workers -->
+  <line x1="150" y1="190" x2="150" y2="240" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Resource Manager to VM Management -->
+  <line x1="500" y1="130" x2="550" y2="240" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Plugin Manager to Plugin Types -->
+  <line x1="650" y1="190" x2="535" y2="390" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Database to Task Manager -->
+  <line x1="150" y1="390" x2="150" y2="190" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Arrowhead definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+  </defs>
+</svg>
