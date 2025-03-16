@@ -1,9 +1,9 @@
-use anyhow::Context;
+use crate::error::{Result, TaskError};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow, PgPool};
 use time::{macros::date, PrimitiveDateTime};
 
-#[derive(sqlx::Type, Debug, Serialize, Deserialize)]
+#[derive(sqlx::Type, Debug, Serialize, Deserialize, Clone)]
 #[sqlx(type_name = "status_type", rename_all = "lowercase")]
 pub enum StatusType {
     Pending,
@@ -34,9 +34,9 @@ pub struct Task {
     pub sample_id: i64,
 }
 
-#[derive(FromRow, Debug)]
+#[derive(FromRow, Debug, Clone)]
 pub struct TaskEntity {
-    pub id: i64,
+    pub id: i32,
     pub target: String,
     pub module: String,
     pub timeout: i64,
@@ -88,7 +88,7 @@ impl Default for TaskEntity {
     }
 }
 
-pub async fn insert_task(pool: &PgPool, task: Task) -> anyhow::Result<TaskEntity> {
+pub async fn insert_task(pool: &PgPool, task: Task) -> Result<TaskEntity> {
     query_as!(
         TaskEntity,
         r#"
@@ -116,10 +116,23 @@ pub async fn insert_task(pool: &PgPool, task: Task) -> anyhow::Result<TaskEntity
     )
     .fetch_one(pool)
     .await
-    .context("failed to insert sample")
+    .map_err(|e| TaskError::InsertFailed { name: task.target, message: "Failed to insert task".to_string(), source: e }.into())
 }
 
-pub async fn fetch_pending_tasks(pool: &PgPool) -> anyhow::Result<Vec<TaskEntity>> {
+pub async fn fetch_task(pool: &PgPool, id: i32) -> Result<TaskEntity> {
+    query_as!(
+        TaskEntity,
+        r#"
+        SELECT id, target, module, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, added_on, started_on, completed_on, status AS "status!: StatusType", sample_id
+        from "tasks" WHERE id = $1
+        "#,
+        id
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| TaskError::FetchFailed { message: "Failed to fetch task".to_string(), source: e }.into())
+}
+pub async fn fetch_pending_tasks(pool: &PgPool) -> Result<Vec<TaskEntity>> {
     query_as!(
         TaskEntity,
         r#"
@@ -129,5 +142,23 @@ pub async fn fetch_pending_tasks(pool: &PgPool) -> anyhow::Result<Vec<TaskEntity
     )
     .fetch_all(pool)
     .await
-    .context("failed to fetch pending tasks")
+    .map_err(|e| TaskError::FetchFailed { message: "Failed to fetch pending tasks".to_string(), source: e }.into())
+}
+
+pub async fn update_task_status(pool: &PgPool, id: i32, status: StatusType) -> Result<TaskEntity> {
+    query_as!(
+        TaskEntity,
+        r#"
+        UPDATE "tasks"
+        SET
+            status = $1
+        WHERE id = $2
+        RETURNING id, target, module, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, added_on, started_on, completed_on, status AS "status!: StatusType", sample_id
+        "#,
+        status as StatusType,
+        id
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| TaskError::UpdateFailed { task_id: id, message: "Failed to update status".to_string(), source: e }.into())
 }

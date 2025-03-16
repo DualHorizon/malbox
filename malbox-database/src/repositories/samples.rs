@@ -1,5 +1,5 @@
-use anyhow::Context;
 use sqlx::{postgres::PgDatabaseError, query_as, FromRow, PgPool};
+use crate::error::{SampleError, Result};
 
 #[derive(Debug)]
 pub struct Sample {
@@ -13,7 +13,7 @@ pub struct Sample {
     pub ssdeep: String,
 }
 
-#[derive(FromRow, Debug)]
+#[derive(FromRow, Debug, Clone)]
 pub struct SampleEntity {
     pub id: i64,
     pub file_size: i64,
@@ -42,7 +42,7 @@ impl Default for SampleEntity {
     }
 }
 
-pub async fn insert_sample(pool: &PgPool, sample: Sample) -> anyhow::Result<SampleEntity> {
+pub async fn insert_sample(pool: &PgPool, sample: Sample) -> Result<SampleEntity> {
     match query_as!(
         SampleEntity,
         r#"
@@ -81,13 +81,13 @@ pub async fn insert_sample(pool: &PgPool, sample: Sample) -> anyhow::Result<Samp
                         )
                         .fetch_one(pool)
                         .await
-                        .context("failed to fetch existing sample")?;
+                        .map_err(|e| SampleError::FetchFailed { hash: sample.sha256, message: "Failed to fetch existing sample".to_string(), source: e })?;
 
                         return Ok(existing_sample);
                     }
                 }
 
-            Err(e).context("failed to insert sample")
+            Err(SampleError::InsertFailed { hash: "".to_string(), message: "".to_string(), source: e }.into())
         }
     }
 }

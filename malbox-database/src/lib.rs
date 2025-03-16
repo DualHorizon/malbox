@@ -1,3 +1,4 @@
+use error::Result;
 use malbox_config::core::DatabaseConfig;
 use malbox_config::machinery::{MachineProvider, MachineryConfig, ProviderConfig};
 use repositories::machinery::{clean_machines, insert_machine, Machine};
@@ -6,8 +7,10 @@ use sqlx::postgres::PgPoolOptions;
 pub use sqlx::Error;
 pub use sqlx::PgPool;
 
+pub mod error;
 pub mod repositories;
 
+// NOTE: Unwrap here or later?
 pub async fn init_database(config: &DatabaseConfig) -> sqlx::Pool<sqlx::Postgres> {
     let db = PgPoolOptions::new()
         .max_connections(10)
@@ -20,7 +23,7 @@ pub async fn init_database(config: &DatabaseConfig) -> sqlx::Pool<sqlx::Postgres
     db
 }
 
-pub async fn init_machines(pool: &PgPool, config: &MachineryConfig) -> anyhow::Result<()> {
+pub async fn init_machines(pool: &PgPool, config: &MachineryConfig) -> Result<()> {
     clean_machines(pool).await.unwrap();
 
     let machines = match &config.provider {
