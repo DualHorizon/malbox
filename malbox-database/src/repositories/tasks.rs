@@ -119,7 +119,7 @@ pub async fn insert_task(pool: &PgPool, task: Task) -> Result<TaskEntity> {
     .map_err(|e| TaskError::InsertFailed { name: task.target, message: "Failed to insert task".to_string(), source: e }.into())
 }
 
-pub async fn fetch_task(pool: &PgPool, id: i32) -> Result<TaskEntity> {
+pub async fn fetch_task(pool: &PgPool, id: i32) -> Result<Option<TaskEntity>> {
     query_as!(
         TaskEntity,
         r#"
@@ -128,7 +128,7 @@ pub async fn fetch_task(pool: &PgPool, id: i32) -> Result<TaskEntity> {
         "#,
         id
     )
-    .fetch_one(pool)
+    .fetch_optional(pool)
     .await
     .map_err(|e| TaskError::FetchFailed { message: "Failed to fetch task".to_string(), source: e }.into())
 }
