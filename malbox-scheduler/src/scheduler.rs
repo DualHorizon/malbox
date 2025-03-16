@@ -1,115 +1,70 @@
-use malbox_database::{repositories::machinery::MachinePlatform, PgPool};
+use crate::resource::{Resource, ResourceError, ResourceKind, ResourceManager};
+use crate::task::{Task, TaskError, TaskManager, TaskOptions, TaskState};
+use crate::worker::WorkerPool;
+use malbox_core::plugin::{LoadedPlugin, PluginError, PluginManager, PluginState};
+
+use malbox_config::Config;
+use malbox_database::PgPool;
 use std::sync::Arc;
-use tokio::sync::{
-    mpsc::{Receiver, Sender},
-    Semaphore,
-};
+use tracing::info;
 
-use malbox_database::repositories::{
-    machinery::{fetch_machine, MachineFilter},
-    tasks::{fetch_pending_tasks, TaskEntity},
-};
-
-use malbox_machinery::machinery::kvm::{shutdown_machine, start_machine};
-
-pub struct TaskScheduler {
-    tx: Sender<TaskEntity>,
-    db: PgPool,
-    sent_tasks: Vec<i64>,
+pub struct Scheduler {
+    pub resource_manager: Arc<ResourceManager>,
+    pub task_manager: Arc<TaskManager>,
+    pub plugin_manager: Arc<PluginManager>,
+    worker_pool: Option<WorkerPool>,
 }
 
-impl TaskScheduler {
-    pub fn new(tx: Sender<TaskEntity>, db: PgPool) -> Self {
-        TaskScheduler {
-            tx,
-            db,
-            sent_tasks: Vec::new(),
-        }
+impl Scheduler {
+    pub async fn new(config: Config, db: PgPool) -> Result<Self, Box<dyn std::error::Error>> {
+        let resource_manager = Arc::new(ResourceManager::new(db.clone(), config.clone()));
+        resource_manager.initialize().await?;
+
+        let plugin_manager = Arc::new(PluginManager::new(config.clone())?);
+        plugin_manager.initialize().await?;
+
+        let (task_manager, worker_rx, worker_tx) =
+            TaskManager::new(db.clone(), config.clone(), resource_manager.clone());
+        let task_manager = Arc::new(task_manager);
+
+        let worker_pool = WorkerPool::new(
+            config.clone(),
+            resource_manager.clone(),
+            plugin_manager.clone(),
+            worker_rx,
+            worker_tx,
+        );
+
+        Ok(Self {
+            resource_manager,
+            task_manager,
+            plugin_manager,
+            worker_pool: Some(worker_pool),
+        })
     }
 
-    pub async fn scheduler(mut self) {
-        tracing::info!("[STARTUP] running tasks scheduler");
+    pub async fn start(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        info!("Starting malbox scheduler system");
 
-        loop {
-            let pending_tasks = fetch_pending_tasks(&self.db).await;
+        self.task_manager.start().await?;
 
-            if let Ok(pending) = pending_tasks {
-                for task in pending {
-                    if !self.sent_tasks.contains(&task.id) {
-                        self.sent_tasks.push(task.id);
-
-                        if let Err(e) = self.tx.send(task).await {
-                            tracing::error!("[ERR] scheduler failed to send task: {}", e);
-                        }
-                    }
-                }
-            }
-
-            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-        }
-    }
-}
-
-pub struct TaskWorker {
-    rx: Receiver<TaskEntity>,
-    db: PgPool,
-    semaphore: Arc<Semaphore>,
-}
-
-impl TaskWorker {
-    pub fn new(rx: Receiver<TaskEntity>, db: PgPool, max_workers: usize) -> Self {
-        TaskWorker {
-            rx,
-            db,
-            semaphore: Arc::new(Semaphore::new(max_workers)),
-        }
-    }
-
-    pub async fn worker(mut self) {
-        tracing::info!("[STARTUP] launching workers");
-
-        while let Some(task) = self.rx.recv().await {
-            let permit = self.semaphore.clone().acquire_owned().await.unwrap();
-
-            let db = self.db.clone();
-
+        if let Some(worker_pool) = self.worker_pool.take() {
             tokio::spawn(async move {
-                tracing::info!("[WORKER] processing task: {:#?}", task.id);
-
-                tracing::info!("[WORKER] Checking for free machine...");
-
-                let free_machine = fetch_machine(
-                    &db,
-                    Some(MachineFilter {
-                        locked: Some(false),
-                        platform: Some(MachinePlatform::Linux),
-                        ..MachineFilter::default()
-                    }),
-                )
-                .await
-                .unwrap();
-
-                if free_machine.is_none() {
-                    tracing::info!("[WORKER] No free machine found, waiting...");
-                }
-
-                if let Some(free_machine) = free_machine {
-                    if free_machine.snapshot.is_none() {
-                        start_machine(&free_machine.name, None).await.unwrap();
-                    } else {
-                        start_machine(&free_machine.name, free_machine.snapshot)
-                            .await
-                            .unwrap();
-                    }
-
-                    shutdown_machine(&free_machine.name).await.unwrap();
-                }
-
-                tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                tracing::info!("[WORKER] completed task: {:#?}", task.id);
-
-                drop(permit);
+                let mut pool = worker_pool;
+                pool.start().await;
             });
         }
+
+        info!("Scheduler system started successfully");
+        Ok(())
+    }
+
+    pub async fn shutdown(&self) -> Result<(), Box<dyn std::error::Error>> {
+        info!("Shutting down malbox scheduler");
+
+        self.plugin_manager.unload_all_plugins().await?;
+
+        info!("Scheduler shutdown complete");
+        Ok(())
     }
 }

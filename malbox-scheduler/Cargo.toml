@@ -8,5 +8,10 @@ edition = "2021"
 [dependencies]
 malbox-database = { path = "../malbox-database" }
 malbox-machinery = { path = "../malbox-machinery" }
+malbox-config.path = "../malbox-config"
+malbox-core.path = "../malbox-core"
+serde_json.workspace = true
+thiserror.workspace = true
+time.workspace = true
 tokio = { workspace = true }
 tracing = { workspace = true }

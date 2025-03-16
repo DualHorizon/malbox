@@ -1,24 +1,25 @@
-use malbox_database::repositories::tasks::TaskEntity;
+use malbox_config::Config;
 use malbox_database::PgPool;
-use scheduler::{TaskScheduler, TaskWorker};
-use tokio::sync::mpsc;
+use scheduler::Scheduler;
+use tracing::{error, info};
+
+mod error;
+mod resource;
 mod scheduler;
+mod task;
+mod worker;
 
-pub async fn init_scheduler(db: PgPool, max_workers: usize) {
-    tracing::info!(
-        "[STARTUP] initializing schedulers with {} worker(s)",
-        max_workers
-    );
-
-    let (tx, rx) = mpsc::channel::<TaskEntity>(8);
-
-    let scheduler = TaskScheduler::new(tx, db.clone());
-    tokio::spawn(async move {
-        scheduler.scheduler().await;
-    });
-
-    let worker = TaskWorker::new(rx, db, max_workers);
-    tokio::spawn(async move {
-        worker.worker().await;
-    });
+pub async fn init_scheduler(config: Config, db: PgPool, max_workers: usize) {
+    match Scheduler::new(config.clone(), db.clone()).await {
+        Ok(mut scheduler) => {
+            if let Err(e) = scheduler.start().await {
+                error!("Failed to start scheduler: {}", e);
+                return;
+            }
+            info!("Scheduler initialized with {} max workers", max_workers);
+        }
+        Err(e) => {
+            error!("Failed to create scheduler: {}", e);
+        }
+    }
 }
