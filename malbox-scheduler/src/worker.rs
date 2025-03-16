@@ -120,7 +120,7 @@ impl WorkerPool {
                             .feedback_tx
                             .send(TaskCommand::TaskFailed {
                                 task_id,
-                                error: TaskError::Canceled,
+                                error: TaskError::Canceled.into(),
                             })
                             .await;
 
@@ -191,7 +191,7 @@ impl Worker {
             }
             Err(e) => {
                 error!("Failed to allocate resources for task {}: {}", task_id, e);
-                self.send_task_failed(e).await?;
+                self.send_task_failed(Arc::new(e)).await?;
                 return Err(e);
             }
         };
@@ -206,9 +206,10 @@ impl Worker {
         let vm_name = vm.name.clone();
         if let Err(e) = self.start_vm(&vm_name, vm.snapshot()).await {
             error!("Failed to start VM for task {}: {}", task_id, e);
-            self.send_task_failed(TaskError::Resource(ResourceError::VMOperation(
-                e.to_string(),
-            )))
+            self.send_task_failed(
+                TaskError::Resource(ResourceError::VMOperation(e.to_string())).into(),
+            )
+            .into()
             .await?;
             self.cleanup_resources().await?;
             return Err(TaskError::Resource(ResourceError::VMOperation(
@@ -222,7 +223,7 @@ impl Worker {
 
         if let Err(e) = self.start_plugins(&plugins).await {
             error!("Failed to start plugins for task {}: {}", task_id, e);
-            self.send_task_failed(TaskError::Plugin(e.to_string()))
+            self.send_task_failed(TaskError::Plugin(e.to_string()).into())
                 .await?;
             self.cleanup_resources().await?;
             return Err(TaskError::Plugin(e.to_string()));
@@ -394,7 +395,7 @@ impl Worker {
             .map_err(|_| TaskError::Internal("Failed to send progress update".to_string()))
     }
 
-    async fn send_task_failed(&self, error: &TaskError) -> Result<()> {
+    async fn send_task_failed(&self, error: Arc<TaskError>) -> Result<()> {
         self.feedback_tx
             .send(TaskCommand::TaskFailed {
                 task_id: self.task.id,

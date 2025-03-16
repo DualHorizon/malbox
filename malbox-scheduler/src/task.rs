@@ -154,7 +154,7 @@ impl From<TaskEntity> for Task {
 }
 
 #[derive(Debug)]
-pub enum TaskCommand<'a> {
+pub enum TaskCommand {
     StartTask {
         task: Task,
         response: oneshot::Sender<Result<()>>,
@@ -169,7 +169,7 @@ pub enum TaskCommand<'a> {
     },
     TaskFailed {
         task_id: i32,
-        error: &'a TaskError,
+        error: Arc<TaskError>,
     },
     TaskProgress {
         task_id: i32,
@@ -178,14 +178,14 @@ pub enum TaskCommand<'a> {
     },
 }
 
-pub struct TaskManager<'a> {
+pub struct TaskManager {
     db: PgPool,
     config: Config,
     resource_manager: Arc<ResourceManager>,
     tasks: RwLock<HashMap<i32, Task>>,
     task_queue: RwLock<VecDeque<i32>>,
-    task_tx: mpsc::Sender<&'a TaskCommand>,
-    task_feedback_rx: mpsc::Receiver<&'a TaskCommand>,
+    task_tx: mpsc::Sender<TaskCommand>,
+    task_feedback_rx: mpsc::Receiver<TaskCommand>,
 }
 
 impl TaskManager {
@@ -250,7 +250,10 @@ impl TaskManager {
                         }
                     }
                     TaskCommand::TaskFailed { task_id, error } => {
-                        if let Err(e) = self.handle_task_failed(task_id, error).await {
+                        if let Err(e) = self
+                            .handle_task_failed(task_id, Arc::try_unwrap(error).unwrap())
+                            .await
+                        {
                             error!("Error handling task failure: {}", e);
                         }
                     }
