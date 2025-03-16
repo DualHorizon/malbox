@@ -247,7 +247,7 @@ impl ResourceManager {
         );
 
         let vm_config = crate::terraform::VMConfig {
-            name: format!("vm-{}-{}", platform.to_string().to_lowercase(), task_id),
+            name: format!("vm-{:?}-{}", platform, task_id),
             platform,
             memory: 4096,
             cpus: 2,
