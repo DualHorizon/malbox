@@ -42,11 +42,6 @@ pub async fn init_machines(pool: &PgPool, config: &MachineryConfig) -> Result<()
             tags: machine_config.tags.clone(),
             interface: machine_config.interface.clone(),
             snapshot: machine_config.snapshot.clone(),
-            result_server_ip: machine_config.result_server.as_ref().map(|s| s.ip.clone()),
-            result_server_port: machine_config
-                .result_server
-                .as_ref()
-                .map(|s| s.port.to_string()),
             reserved: machine_config.reserved,
             ..Machine::default()
         };

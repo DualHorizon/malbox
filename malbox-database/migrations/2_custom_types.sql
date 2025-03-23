@@ -1,8 +1,12 @@
-CREATE TYPE status_type AS ENUM (
+CREATE TYPE task_state AS ENUM (
     'pending',
-    'processing',
-    'failure',
-    'success'
+    'initializing',
+    'preparing_resources',
+    'running',
+    'stopping',
+    'completed',
+    'failed',
+    'canceled'
 );
 
 CREATE TYPE machine_arch AS ENUM (
@@ -12,7 +16,5 @@ CREATE TYPE machine_arch AS ENUM (
 
 CREATE TYPE machine_platform AS ENUM (
     'windows',
-    'linux',
-    'android',
-    'macos'
+    'linux'
 );

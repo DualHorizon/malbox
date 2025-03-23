@@ -1,164 +1,166 @@
+use super::machinery::MachinePlatform;
+use super::samples::Sample;
 use crate::error::{Result, TaskError};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, FromRow, PgPool};
+use std::collections::HashMap;
 use time::{macros::date, PrimitiveDateTime};
 
-#[derive(sqlx::Type, Debug, Serialize, Deserialize, Clone)]
-#[sqlx(type_name = "status_type", rename_all = "lowercase")]
-pub enum StatusType {
+#[derive(sqlx::Type, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[sqlx(type_name = "task_state", rename_all = "lowercase")]
+pub enum TaskState {
     Pending,
-    Processing,
-    Failure,
-    Success,
+    Initializing,
+    PreparingResources,
+    Running,
+    Stopping,
+    Completed,
+    Failed,
+    Canceled,
 }
-
+#[derive(Debug, Clone, FromRow)]
 pub struct Task {
+    pub id: Option<i32>,
     pub target: String,
-    pub module: String,
-    pub tags: Option<String>,
-    pub owner: Option<String>,
+    pub plugins: Vec<String>,
+    pub profile: Option<String>,
+    pub platform: MachinePlatform,
     pub timeout: i64,
+    pub enforce_timeout: Option<bool>,
     pub priority: i64,
-    pub custom: Option<String>,
-    pub machine: Option<String>,
-    pub package: Option<String>,
-    pub options: Option<String>,
-    pub platform: Option<String>,
-    pub memory: bool,
-    pub unique: Option<bool>,
-    pub enforce_timeout: bool,
-    pub added_on: PrimitiveDateTime,
+    pub machine_id: i32,
+    pub machine_memory: Option<i64>,
+    pub machine_cpus: Option<i32>,
+    pub created_on: PrimitiveDateTime,
     pub started_on: Option<PrimitiveDateTime>,
     pub completed_on: Option<PrimitiveDateTime>,
-    pub status: StatusType,
-    pub sample_id: i64,
-}
-
-#[derive(FromRow, Debug, Clone)]
-pub struct TaskEntity {
-    pub id: i32,
-    pub target: String,
-    pub module: String,
-    pub timeout: i64,
-    pub priority: i64,
-    pub custom: Option<String>,
-    pub machine: Option<String>,
-    pub package: Option<String>,
-    pub options: Option<String>,
-    pub platform: Option<String>,
-    pub memory: bool,
-    pub enforce_timeout: bool,
-    pub added_on: Option<PrimitiveDateTime>,
-    pub started_on: Option<PrimitiveDateTime>,
-    pub completed_on: Option<PrimitiveDateTime>,
-    pub status: StatusType,
+    pub status: TaskState,
     pub sample_id: Option<i64>,
+    pub owner: Option<String>,
+    pub tags: Option<Vec<String>>,
 }
 
-impl Default for TaskEntity {
-    fn default() -> Self {
-        TaskEntity {
-            id: 1,
-            target: String::from("default"),
-            module: String::from("default"),
-            timeout: 0,
-            priority: 1,
-            custom: Some(String::from("default")),
-            machine: Some(String::from("default")),
-            package: Some(String::from("default")),
-            options: Some(String::from("default")),
-            platform: Some(String::from("default")),
-            memory: false,
-            enforce_timeout: false,
-            added_on: Some(PrimitiveDateTime::new(
-                date!(2019 - 01 - 01),
-                time::macros::time!(0:00),
-            )),
-            started_on: Some(PrimitiveDateTime::new(
-                date!(2019 - 01 - 01),
-                time::macros::time!(0:00),
-            )),
-            completed_on: Some(PrimitiveDateTime::new(
-                date!(2019 - 01 - 01),
-                time::macros::time!(0:00),
-            )),
-            status: StatusType::Pending,
-            sample_id: Some(1),
-        }
-    }
-}
-
-pub async fn insert_task(pool: &PgPool, task: Task) -> Result<TaskEntity> {
+pub async fn insert_task(pool: &PgPool, task: Task) -> Result<Task> {
     query_as!(
-        TaskEntity,
+        Task,
         r#"
-        INSERT into "tasks" (target, module, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, added_on, started_on, completed_on, status, sample_id)
-        values ($1::varchar, $2::varchar, $3::bigint, $4::bigint, $5::varchar, $6::varchar, $7::varchar,
-            $8::varchar, $9::varchar, $10::boolean, $11::boolean, $12::timestamp, $13::timestamp, $14::timestamp, $15::status_type, $16::bigint)
-        returning id, target, module, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, added_on, started_on, completed_on, status AS "status!: StatusType", sample_id
+        INSERT into "tasks" (
+            target, plugins, profile, platform,
+            timeout, enforce_timeout, priority, machine_id, machine_memory,
+            machine_cpus, created_on, started_on, completed_on,
+            status, sample_id, owner, tags
+        )
+        VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+        )
+        RETURNING
+            id, target, plugins, profile, platform AS "platform!: MachinePlatform",
+            timeout, enforce_timeout, priority, machine_id, machine_memory,
+            machine_cpus, created_on, started_on, completed_on,
+            status AS "status!: TaskState", sample_id, owner, tags
         "#,
         task.target,
-        task.module,
+        &task.plugins,
+        task.profile,
+        task.platform as MachinePlatform,
         task.timeout,
-        task.priority,
-        task.custom,
-        task.machine,
-        task.package,
-        task.options,
-        task.platform,
-        task.memory,
         task.enforce_timeout,
-        task.added_on,
+        task.priority,
+        task.machine_id,
+        task.machine_memory,
+        task.machine_cpus,
+        task.created_on,
         task.started_on,
         task.completed_on,
-        task.status as StatusType,
-        task.sample_id
+        task.status as TaskState,
+        task.sample_id,
+        task.owner,
+        task.tags.as_deref(),
     )
     .fetch_one(pool)
     .await
-    .map_err(|e| TaskError::InsertFailed { name: task.target, message: "Failed to insert task".to_string(), source: e }.into())
+    .map_err(|e| {
+        TaskError::InsertFailed {
+            name: task.target,
+            message: "Failed to insert task".to_string(),
+            source: e,
+        }
+        .into()
+    })
 }
 
-pub async fn fetch_task(pool: &PgPool, id: i32) -> Result<Option<TaskEntity>> {
+pub async fn fetch_task(pool: &PgPool, id: i32) -> Result<Option<Task>> {
     query_as!(
-        TaskEntity,
+        Task,
         r#"
-        SELECT id, target, module, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, added_on, started_on, completed_on, status AS "status!: StatusType", sample_id
-        from "tasks" WHERE id = $1
+        SELECT
+            id, target, plugins, profile, platform AS "platform!: MachinePlatform",
+            timeout, enforce_timeout, priority, machine_id, machine_memory,
+            machine_cpus, created_on, started_on, completed_on,
+            status AS "status!: TaskState", sample_id, owner, tags
+        FROM "tasks" WHERE id = $1
         "#,
         id
     )
     .fetch_optional(pool)
     .await
-    .map_err(|e| TaskError::FetchFailed { message: "Failed to fetch task".to_string(), source: e }.into())
+    .map_err(|e| {
+        TaskError::FetchFailed {
+            message: "Failed to fetch task".to_string(),
+            source: e,
+        }
+        .into()
+    })
 }
-pub async fn fetch_pending_tasks(pool: &PgPool) -> Result<Vec<TaskEntity>> {
+
+pub async fn fetch_pending_tasks(pool: &PgPool) -> Result<Vec<Task>> {
     query_as!(
-        TaskEntity,
+        Task,
         r#"
-        SELECT id, target, module, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, added_on, started_on, completed_on, status AS "status!: StatusType", sample_id
-        from "tasks" WHERE status = 'pending'
+        SELECT
+            id, target, plugins, profile, platform AS "platform!: MachinePlatform",
+            timeout, enforce_timeout, priority, machine_id, machine_memory,
+            machine_cpus, created_on, started_on, completed_on,
+            status AS "status!: TaskState", sample_id, owner, tags
+        FROM "tasks" WHERE status = 'pending'
         "#,
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| TaskError::FetchFailed { message: "Failed to fetch pending tasks".to_string(), source: e }.into())
+    .map_err(|e| {
+        TaskError::FetchFailed {
+            message: "Failed to fetch pending tasks".to_string(),
+            source: e,
+        }
+        .into()
+    })
 }
 
-pub async fn update_task_status(pool: &PgPool, id: i32, status: StatusType) -> Result<TaskEntity> {
+pub async fn update_task_status(pool: &PgPool, id: i32, status: TaskState) -> Result<Task> {
     query_as!(
-        TaskEntity,
+        Task,
         r#"
         UPDATE "tasks"
         SET
             status = $1
         WHERE id = $2
-        RETURNING id, target, module, timeout, priority, custom, machine, package, options, platform, memory, enforce_timeout, added_on, started_on, completed_on, status AS "status!: StatusType", sample_id
+        RETURNING
+            id, target, plugins, profile, platform AS "platform!: MachinePlatform",
+            timeout, enforce_timeout, priority, machine_id, machine_memory,
+            machine_cpus, created_on, started_on, completed_on,
+            status AS "status!: TaskState", sample_id, owner, tags
         "#,
-        status as StatusType,
+        status as TaskState,
         id
     )
     .fetch_one(pool)
     .await
-    .map_err(|e| TaskError::UpdateFailed { task_id: id, message: "Failed to update status".to_string(), source: e }.into())
+    .map_err(|e| {
+        TaskError::UpdateFailed {
+            task_id: id,
+            message: "Failed to update status".to_string(),
+            source: e,
+        }
+        .into()
+    })
 }

@@ -7,10 +7,11 @@ edition = "2021"
 
 [dependencies]
 malbox-config = { path = "../malbox-config" }
+bon.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 anyhow = { workspace = true }
 serde = { workspace = true }
 time = { workspace = true }
 chrono = { workspace = true }
 sqlx = { workspace = true }
-bon = { workspace = true }
