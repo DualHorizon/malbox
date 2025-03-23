@@ -1,11 +1,12 @@
 use malbox_config::Config;
 use malbox_database::{
     repositories::machinery::{
-        fetch_machine, fetch_machines, lock_machine, unlock_machine, MachineEntity, MachineFilter,
+        fetch_machine, fetch_machines, lock_machine, unlock_machine, Machine, MachineFilter,
         MachinePlatform,
     },
     PgPool,
 };
+use malbox_infra::terraform::manager::{TerraformManager, VmConfig};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -49,7 +50,7 @@ pub struct Resource {
 }
 
 impl Resource {
-    pub fn from_machine(machine: &MachineEntity) -> Self {
+    pub fn from_machine(machine: &Machine) -> Self {
         let mut properties = HashMap::new();
         properties.insert("platform".to_string(), format!("{:?}", machine.platform));
         properties.insert("ip".to_string(), machine.ip.clone());
@@ -96,12 +97,17 @@ pub struct ResourceManager {
     config: Config,
     resources: RwLock<HashMap<String, Resource>>,
     allocations: RwLock<HashMap<String, HashSet<String>>>,
-    terraform_manager: Arc<crate::terraform::TerraformManager>,
+    terraform_manager: Arc<TerraformManager>,
 }
 
 impl ResourceManager {
     pub fn new(db: PgPool, config: Config) -> Self {
-        let terraform_manager = Arc::new(crate::terraform::TerraformManager::new(config.clone()));
+        let terraform_manager = Arc::new(
+            TerraformManager::builder()
+                .db_pool(db.clone())
+                .config(config.clone())
+                .build(),
+        );
 
         Self {
             db,
@@ -138,13 +144,13 @@ impl ResourceManager {
 
     pub async fn allocate_vm_for_task(
         &self,
-        task_id: &str,
+        task_id: i32,
         platform: Option<MachinePlatform>,
         specific_machine: Option<&str>,
     ) -> Result<Resource> {
         {
             let allocations = self.allocations.read().await;
-            if let Some(resource_ids) = allocations.get(task_id) {
+            if let Some(resource_ids) = allocations.get(&task_id.to_string()) {
                 for resource_id in resource_ids {
                     let resources = self.resources.read().await;
                     if let Some(resource) = resources.get(resource_id) {
@@ -157,10 +163,11 @@ impl ResourceManager {
         }
 
         let vm = if let Some(machine_name) = specific_machine {
-            self.allocate_specific_machine(task_id, machine_name)
+            self.allocate_specific_machine(&task_id.to_string(), machine_name)
                 .await?
         } else {
-            self.allocate_suitable_machine(task_id, platform).await?
+            self.allocate_suitable_machine(&task_id.to_string(), platform)
+                .await?
         };
 
         {
@@ -190,7 +197,7 @@ impl ResourceManager {
                 ResourceError::NotFound(format!("Machine not found: {}", machine_name))
             })?;
 
-        lock_machine(&self.db, machine.id, None).await?;
+        lock_machine(&self.db, machine.id.unwrap(), None).await?;
 
         let mut resource = Resource::from_machine(&machine);
         resource.allocated = true;
@@ -215,13 +222,13 @@ impl ResourceManager {
     ) -> Result<Resource> {
         let machine_filter = MachineFilter::builder()
             .locked(false)
-            .maybe_platform(platform)
+            .maybe_platform(platform.clone())
             .build();
 
         let machine = fetch_machine(&self.db, Some(machine_filter)).await?;
 
         if let Some(machine) = machine {
-            lock_machine(&self.db, machine.id, None).await?;
+            lock_machine(&self.db, machine.id.unwrap(), None).await?;
 
             let mut resource = Resource::from_machine(&machine);
             resource.allocated = true;
@@ -246,7 +253,7 @@ impl ResourceManager {
             platform, task_id
         );
 
-        let vm_config = crate::terraform::VMConfig {
+        let vm_config = VmConfig {
             name: format!("vm-{:?}-{}", platform, task_id),
             platform,
             memory: 4096,
@@ -294,10 +301,10 @@ impl ResourceManager {
         Ok(resource)
     }
 
-    pub async fn release_resources(&self, task_id: &str) -> Result<()> {
+    pub async fn release_resources(&self, task_id: i32) -> Result<()> {
         let resource_ids = {
             let mut allocations = self.allocations.write().await;
-            allocations.remove(task_id).unwrap_or_default()
+            allocations.remove(&task_id.to_string()).unwrap_or_default()
         };
 
         for resource_id in resource_ids {

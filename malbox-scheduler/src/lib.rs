@@ -10,7 +10,7 @@ mod task;
 mod worker;
 
 pub async fn init_scheduler(config: Config, db: PgPool, max_workers: usize) {
-    match Scheduler::new(config.clone(), db.clone()).await {
+    match Scheduler::new(config, db).await {
         Ok(mut scheduler) => {
             if let Err(e) = scheduler.start().await {
                 error!("Failed to start scheduler: {}", e);
