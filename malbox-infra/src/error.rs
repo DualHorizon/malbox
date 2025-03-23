@@ -2,6 +2,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Database error: {0}")]
+    Database(#[from] malbox_database::error::DatabaseError),
     #[error("Packer error: {0}")]
     Packer(String),
     #[error("Template error: {0}")]

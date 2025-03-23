@@ -63,6 +63,10 @@ impl BuildManager {
         Self { config }
     }
 
+    // TODO:
+    // Initialize method for checks, such as one to check if packer bin
+    // is in path / installed or not.
+
     pub async fn build(&self, config: BuildConfig) -> Result<()> {
         let build_dir = self.prepare_build_dir(&config).await?;
         debug!("Build dir prepared: {:#?}", build_dir);

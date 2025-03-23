@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 malbox-config = { path = "../malbox-config" }
+malbox-database.path = "../malbox-database"
 anyhow = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

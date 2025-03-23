@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 mod manager;
-mod vars;
+pub mod vars;
 
 pub use manager::TemplateManager;
 pub use vars::Variable;
