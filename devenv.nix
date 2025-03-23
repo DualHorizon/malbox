@@ -57,6 +57,7 @@ in {
     clang_18
     glibc
     packer
+    terraform
     unstable.cocogitto
   ];
 
