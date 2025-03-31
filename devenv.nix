@@ -59,6 +59,8 @@ in {
     packer
     terraform
     unstable.cocogitto
+    protoc-gen-rust
+    protobuf
   ];
 
   processes = {
