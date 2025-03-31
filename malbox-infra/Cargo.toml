@@ -13,8 +13,8 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 bon = { workspace = true }
 chrono.workspace = true
+tokio-stream.workspace = true
+futures.workspace = true
 serde_yaml = "0.9.34"
 toml = "0.8.19"
 hcl-rs = "0.18.3"
-tokio-stream = { version = "0.1.17", features = ["io-util"] }
-futures = "0.3.31"
