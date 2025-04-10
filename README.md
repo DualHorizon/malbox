@@ -1,4 +1,4 @@
-![Dashboard-Text](https://github.com/user-attachments/assets/6afdd6ec-09d4-4d73-a3c6-6f1ed6db427d)
+![malbox banner](assets/banner-1.png)
 
 
 
@@ -6,11 +6,9 @@
 
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/github/license/DualHorizon/malbox?style=for-the-badge)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/DualHorizon/malbox?style=for-the-badge)](https://github.com/DualHorizon/malbox/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status//malbox/rust.yml?style=for-the-badge)](https://github.com/DualHorizon/malbox/actions)
 [![Coverage](https://codecov.io/gh/DualHorizon/malbox/branch/main/graph/badge.svg?token=123)](https://codecov.io/gh/DualHorizon/malbox)
 [![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/your-invite)
-[![Plugins](https://img.shields.io/badge/plugins-50%2B-blue?style=for-the-badge)](https://marketplace.malbox.io)
+[![Plugins](https://img.shields.io/badge/plugins-WIP-blue?style=for-the-badge)](https://marketplace.malbox.io)
 
 [Documentation](docs) • [Installation](docs/installation.md) • [API Reference](docs/api) • [Plugin Marketplace](https://marketplace.mal.box) • [Discord](https://discord.gg/XWBdpQ5bMp)
 
@@ -20,61 +18,136 @@
 
 
 > [!IMPORTANT]  
-> Malbox is still in a very early stage of development, currently, the platform as is isn't ready to be utilized.
+> Malbox is still in a very early stage of development, currently, the platform as is, isn't ready to be utilized.
+> There are still a lot of rough edges, the code is for the most part not refactored/optimized, and all features described
+> further-on may not be implemented yet (or only partially).
+
 > The estimated release version to achieve something functional and stable is `v0.4.0`. 
 
 
 ## Overview
 
-Malbox is an enterprise-grade malware analysis platform built in Rust. Its plugin-driven architecture enables security teams and malware analysis enthousiasts to extend and customize analysis capabilities while maintaining high performance and stability.
+Malbox is a malware analysis platform/framework built in Rust. Its plugin-driven architecture enables security teams and malware analysis enthousiasts to extend and customize analysis capabilities easily. 
 
-![image](https://github.com/user-attachments/assets/071b8371-6536-4ff6-ba70-1127ad86f9a6)
 
 ### Why Malbox?
 
-- **Plugin Architecture**: Extend functionality through plugins, which can be written in Rust, Javascript and Python.
-- **High Performance**: Malbox is using [iceoryx2](https://docs.rs/iceoryx2/latest/iceoryx2/), a shared memory IPC (Inter-Process-Communication) library, allowing zero-copy and lock-free inter-process communication.
-- **Completely Free and Self-Hostable**: Complete control over your infrastructure
-- **Large Ecosystem**: Thanks to Malbox's built-in marketplace, you can easily install and go through official and verified plugins, not rebuild or restart required, hot-reloading all the way!
-- **Cloud or On-Premise**: Malbox supports cloud providers and on-premise for machinery and storage.
-- **Easy Deployment**: User-friendly and no-overhead setup of the platform, ready to use within a few minutes.
+- **Plugin Architecture**: Extend functionality easily through plugins, which can be written in Rust, Javascript and Python.
+- **High Performance**: Malbox does not compromise on performance despite its modular plugin system. It primarily uses [iceoryx2](https://docs.rs/iceoryx2/latest/iceoryx2/), a shared-memory IPC (Inter-Process-Communication) library that enables zero-copy and lock-free communication. In addition, plugin creators and users can declare and configure plugin specifics, often resulting in more optimized runtimes and adaptable use cases.
+- **Completely Free and Self-Hostable**: Retain full control over your infrastructure—Malbox will remain open-source and free forever.
+- **User-friendly Ecosystem**: Malbox’s built-in marketplace makes it easy to install official and community verified plugins. Installation does not require rebuilding or restarting the Malbox service. Plugins and profiles follow strict standards to ensure a healthy, thriving ecosystem.
+- **Cloud or On-Premise Storage and Deployment**: Malbox supports both cloud-based and on-premise solutions for your infrastructure and storage needs.
+- **Easy Deployment**: Enjoy a user-friendly, minimal-overhead setup that is ready to use within minutes. Malbox emphasizes declarative configuration to reduce complexity and simplify the setup and configuration process.
 
-## Plugin Ecosystem
+# Plugin Ecosystem
 
-At the core of Malbox is its extensible plugin system, powered by high-performance IPC using iceoryx2. Plugins maintain process isolation while enabling seamless integration of new capabilities.
-Each plugin has metadata, and can be qualified for specific categories, plugins can be grouped together in different analysis profiles, which are also available through the marketplace.
+At the core of Malbox is its extensible plugin system, designed for analysis flexibility while maintaining process isolation. Plugins operate with a well-defined lifecycle and communication framework that enables seamless integration of new capabilities, sharing data between plugins without any duplication, and much more.
+
+## Architecture Overview
 
 ```mermaid
 graph TD
     A[Core System] --> B[Plugin Manager]
     B --> C[Host Plugins]
     B --> D[Guest Plugins]
+    B --> E[Hybrid Plugins]
     
-    subgraph "Analysis Plugin Types"
-        C
-        D
+    C --> F[IPC Channel]
+    D --> G[gRPC Channel]
+    E --> F
+    E --> G
+    
+    F --> H[Plugin Registry]
+    G --> H
+    
+    subgraph "Communication Bridge"
+        F
+        G
+    end
+    
+    subgraph "Plugin Management"
+        B
+        H
     end
 ```
 
-### Plugin Types
+## Plugin Types by Execution Context
 
-- **Static Analysis**
-  - PE/ELF/MachO analysis
-  - YARA pattern matching
-  - String and entropy analysis
-  - Digital signature verification
-  - Office document analysis
-  - PDF analysis
+Malbox supports plugins in diverse execution environments:
+
+- **Host Plugins**: Run directly on the host OS for static analysis, reporting, and task coordination
+- **Guest Plugins**: Execute within VM environments for dynamic analysis
+- **Hybrid Plugins**: Operate across both environments with coordinated components
+
+## Execution Models
+
+Plugins can operate in various modes:
+
+- **Exclusive**: Plugin must be executed alone, no other plugins can run
+- **Sequential**: Plugin must be executed sequentially, one at a time
+- **Parallel**: Plugin can run in parallel with other plugins in the same group
+- **Unrestricted**: Plugin has no special execution requirements
+
+## State Management
+
+Plugins can maintain different levels of persistence:
+
+- **Stateless**: Fresh state for each task (default)
+- **Stateful**: Maintains state between all tasks
+- **StatefulByType**: Maintains state only across tasks of the same type
+
+## Communication Infrastructure
+
+The plugin system uses advanced IPC mechanisms:
+
+- **Host Communication**: Zero-copy IPC using iceoryx2
+- **Guest Communication**: gRPC for VM-based plugins
+- **Bridge Component**: Translates between different communication protocols
+
+## Plugin Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created
+    Created --> Starting: start()
+    Starting --> Running
+    Running --> Stopping: stop()
+    Stopping --> Stopped
+    Stopped --> Starting: start()
+    Stopped --> [*]
+    
+    Starting --> Failed
+    Running --> Failed
+    Failed --> [*]
+```
+
+## Example Plugin Categories
+
+- **Static Analysis Plugins**
+  - File format analysis (PE/ELF/MachO)
+  - YARA scanning
+  - Signature verification
+  - String extraction and analysis
   
-- **Dynamic Analysis**
+- **Dynamic Analysis Plugins**
   - Process monitoring
   - Network traffic analysis
-  - Memory analysis
-  - Registry monitoring
-  - Behavioral tracking
-  - Anti-VM detection mitigation
+  - Memory inspection
+  - Behavioral analysis
+  
+- **Infrastructure Plugins**
+  - VM management
+  - Network configuration
+  - Artifact storage
+  - Result aggregation
 
-- **Unpacking**
+- **Utility Plugins**
+  - Unpacking
+  - Decryption
+  - File type detection
+  - Data visualization
+
+Plugins are discoverable via metadata, which defines their capabilities, requirements, and compatibility with other plugins. This allows for creating comprehensive analysis profiles that combine multiple plugins for in-depth examination of artifacts.
 
 > [!WARNING]  
 > Plugin categories aren't defined yet, this is just a rough idea of what they could be. Stay tuned for updates!
