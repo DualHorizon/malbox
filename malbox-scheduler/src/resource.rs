@@ -64,7 +64,10 @@ impl Resource {
         }
 
         Self {
-            id: machine.id.to_string(),
+            id: machine
+                .id
+                .expect("Machine ID needs to be provided.")
+                .to_string(),
             kind: ResourceKind::VM,
             name: machine.name.clone(),
             properties,
@@ -92,6 +95,7 @@ impl Resource {
     }
 }
 
+// FIXME
 pub struct ResourceManager {
     db: PgPool,
     config: Config,

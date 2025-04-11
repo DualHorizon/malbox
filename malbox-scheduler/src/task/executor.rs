@@ -1,4 +1,4 @@
-use super::{Result, TaskError};
+use super::{worker::WorkerPool, Result, TaskError};
 use crate::resource::{self, ResourceError, ResourceManager};
 use malbox_database::repositories::tasks::Task;
 use std::sync::Arc;
@@ -12,7 +12,7 @@ pub struct TaskExecutor {
     // Resource manager for allocating VMs, network, etc.
     resource_manager: Arc<ResourceManager>,
     // Channel for sending comands to worker processes.
-    worker_tx: mpsc::Sender<TaskCommand>,
+    worker_pool: Arc<WorkerPool>,
     // Channel for sending results back to the parent system.
     feedback_tx: mpsc::Sender<TaskCommand>,
     // Config for execution settings (timeouts, retry, policies, etc.)
@@ -22,13 +22,13 @@ pub struct TaskExecutor {
 impl TaskExecutor {
     pub fn new(
         resource_manager: Arc<ResourceManager>,
-        worker_tx: mpsc::Sender<TaskCommand>,
+        worker_pool: Arc<WorkerPool>,
         feedback_tx: mpsc::Sender<TaskCommand>,
         // config: Config,
     ) -> Self {
         Self {
             resource_manager,
-            worker_tx,
+            worker_pool,
             feedback_tx,
         }
     }
@@ -46,44 +46,42 @@ impl TaskExecutor {
         self.send_progress_update(task_id, 10, "Allocating resources")
             .await?;
 
-        let resource_result = self.allocate_resources(&task).await;
+        // NOTE: Should we allocate resources here?!
+        // It would be nice if a profile could decide of this - or plugins.
+
+        // let resource_result = self.allocate_resources(&task).await;
 
         // If resource allocation fails, report failure and exit.
-        if let Err(e) = resource_result {
-            // Wrap the error in an Arc since we need to clone it.
-            // Note that we can't implement Clone on our error type.
-            let error = Arc::new(TaskError::Resource(ResourceError::AllocationFailed(
-                format!("Failed to allocate resources: {}", e),
-            )));
-            self.report_task_failure(task_id, &error).await?;
-            return Err(Arc::try_unwrap(error).expect("Failed to unwrap error"));
-        }
+        // if let Err(e) = resource_result {
+        //     // Wrap the error in an Arc since we need to clone it.
+        //     // Note that we can't implement Clone on our error type.
+        //     let error = Arc::new(TaskError::Resource(ResourceError::AllocationFailed(
+        //         format!("Failed to allocate resources: {}", e),
+        //     )));
+        //     self.report_task_failure(task_id, &error).await?;
+        //     return Err(Arc::try_unwrap(error).expect("Failed to unwrap error"));
+        // }
 
         self.send_progress_update(task_id, 20, "Resources allocated")
             .await?;
 
         // Prepare the task for execution (e.g, copy files, set up environment etc.)
-        let prepare_result = self.prepare_task_env(&task).await;
-        if let Err(e) = prepare_result {
-            // On preparation failure, release resources and report error.
-            self.release_resources(&task).await?;
-            let error = Arc::new(TaskError::Internal(format!(
-                "Failed to prepare task environment: {}",
-                e
-            )));
-            self.report_task_failure(task_id, &error).await?;
-            return Err(Arc::try_unwrap(error).expect("Failed to unwrap error"));
-        }
+        // let prepare_result = self.prepare_task_env(&task).await;
+        // if let Err(e) = prepare_result {
+        //     // On preparation failure, release resources and report error.
+        //     self.release_resources(&task).await?;
+        //     let error = Arc::new(TaskError::Internal(format!(
+        //         "Failed to prepare task environment: {}",
+        //         e
+        //     )));
+        //     self.report_task_failure(task_id, &error).await?;
+        //     return Err(Arc::try_unwrap(error).expect("Failed to unwrap error"));
+        // }
 
         // Send task to worker through the worker_tx channel.
-        if let Err(e) = self.send_to_worker(&task).await {
-            // If we can't dispatch to a worker, clean up and report failure.
+        if let Err(e) = self.worker_pool.assign_task(task.clone()).await {
             self.release_resources(&task).await?;
-            let error = Arc::new(TaskError::Internal(format!(
-                "Failed to dispatch task to worker: {}",
-                e
-            )));
-            return Err(Arc::try_unwrap(error).expect("Failed to unwrap error"));
+            return Err(e);
         }
 
         self.send_progress_update(task_id, 40, "Task dispatched to worker")
@@ -98,49 +96,32 @@ impl TaskExecutor {
     }
 
     /// Send a task to a worker.
-    async fn send_to_worker(&self, task: &Task) -> Result<()> {
-        // Create a oneshot channel for the worker to respond.
-        let (response_tx, response_rx) = oneshot::channel();
+    // async fn send_to_worker(&self, task: &Task) -> Result<()> {
+    //     // Create a oneshot channel for the worker to respond.
+    //     let (response_tx, response_rx) = oneshot::channel();
 
-        let command = TaskCommand::StartTask {
-            task: task.clone(),
-            response: response_tx,
-        };
+    //     let command = TaskCommand::StartTask {
+    //         task: task.clone(),
+    //         response: response_tx,
+    //     };
 
-        // Send the command to the worker.
-        self.worker_tx
-            .send(command)
-            .await
-            .map_err(|_| TaskError::Internal("Worker channel closed".into()))?;
+    //     // Send the command to the worker.
+    //     self.worker_tx
+    //         .send(command)
+    //         .await
+    //         .map_err(|e| TaskError::Internal(format!("Worker channel closed: {}", e).into()))?;
 
-        // Wait for the worker to accept the task.
-        match response_rx.await {
-            Ok(Ok(())) => Ok(()),
-            Ok(Err(e)) => Err(e),
-            Err(_) => Err(TaskError::Internal("Worker disconnected".into())),
-        }
-    }
+    //     // Wait for the worker to accept the task.
+    //     match response_rx.await {
+    //         Ok(Ok(())) => Ok(()),
+    //         Ok(Err(e)) => Err(e),
+    //         Err(_) => Err(TaskError::Internal("Worker disconnected".into())),
+    //     }
+    // }
 
+    /// Cancel a running task.
     pub async fn cancel_task(&self, task_id: i32) -> Result<()> {
-        // Create a cancellation command.
-        let (response_tx, response_rx) = oneshot::channel();
-
-        let command = TaskCommand::CancelTask {
-            task_id,
-            response: response_tx,
-        };
-
-        // Send to the worker.
-        self.worker_tx
-            .send(command)
-            .await
-            .map_err(|_| TaskError::Internal("Worker channel closed".into()))?;
-
-        // Wait for worker response.
-        match response_rx.await {
-            Ok(result) => result,
-            Err(_) => Err(TaskError::Internal("Worker disconnected".into())),
-        }
+        self.worker_pool.cancel_task(task_id).await
     }
 
     /// Allocate resources needed for task execution.

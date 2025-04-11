@@ -15,8 +15,9 @@ use time::{OffsetDateTime, PrimitiveDateTime};
 use tokio::sync::{mpsc, oneshot, RwLock};
 use tracing::{debug, error, info, warn};
 
-mod coordinator;
+pub mod coordinator;
 mod executor;
+pub mod notification;
 mod queue;
 mod storage;
 mod worker;

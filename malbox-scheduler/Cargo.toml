@@ -9,10 +9,10 @@ edition = "2021"
 malbox-database = { path = "../malbox-database" }
 malbox-machinery = { path = "../malbox-machinery" }
 malbox-config.path = "../malbox-config"
-malbox-core.path = "../malbox-core"
 malbox-infra.path = "../malbox-infra"
 serde_json.workspace = true
 thiserror.workspace = true
+uuid.workspace = true
 time.workspace = true
 tokio = { workspace = true }
 tracing = { workspace = true }

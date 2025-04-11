@@ -1,9 +1,9 @@
-use crate::resource::{self, ResourceManager};
-
-use super::executor::{self, TaskExecutor};
+use super::executor::TaskExecutor;
 use super::storage::TaskStore;
+use super::worker::{TaskWorker, WorkerPool};
 use super::Result;
 use super::{queue::TaskQueue, TaskCommand};
+use crate::resource::ResourceManager;
 use malbox_database::repositories::tasks::TaskState;
 use malbox_database::PgPool;
 use std::sync::Arc;
@@ -16,6 +16,7 @@ pub struct TaskCoordinator {
     store: Arc<TaskStore>,
     queue: Arc<TaskQueue>,
     executor: Arc<TaskExecutor>,
+    worker_pool: Arc<WorkerPool>,
 
     // Configuration
     // config: Config,
@@ -23,6 +24,7 @@ pub struct TaskCoordinator {
     // Communication channels
     feedback_tx: mpsc::Sender<TaskCommand>,
     feedback_rx: Option<mpsc::Receiver<TaskCommand>>,
+    task_notifications: Option<mpsc::Receiver<i32>>,
 }
 
 impl TaskCoordinator {
@@ -31,17 +33,20 @@ impl TaskCoordinator {
         db: PgPool,
         // config: Config,
         resource_manager: Arc<ResourceManager>,
+        task_notifications: mpsc::Receiver<i32>,
+        max_workers: usize,
     ) -> Self {
         // Create communication channels.
-        let (worker_tx, _worker_rx) = mpsc::channel(100);
         let (feedback_tx, feedback_rx) = mpsc::channel(100);
+
+        let worker_pool = Arc::new(WorkerPool::new(max_workers, feedback_tx.clone()));
 
         // Create core components.
         let store = Arc::new(TaskStore::new(db));
         let queue = Arc::new(TaskQueue::new());
         let executor = Arc::new(TaskExecutor::new(
             resource_manager,
-            worker_tx.clone(),
+            worker_pool.clone(),
             feedback_tx.clone(),
         ));
 
@@ -49,8 +54,10 @@ impl TaskCoordinator {
             store,
             queue,
             executor,
+            worker_pool,
             feedback_tx,
             feedback_rx: Some(feedback_rx),
+            task_notifications: Some(task_notifications),
         }
     }
 
@@ -78,8 +85,41 @@ impl TaskCoordinator {
         self.start_feedback_loop();
         // Start the scheduler loop.
         self.start_scheduler_loop();
+        // Start the task notification listener.
+        self.start_notification_listener();
 
         Ok(())
+    }
+
+    /// Start the notification listener.
+    fn start_notification_listener(&mut self) {
+        let store = self.store.clone();
+        let queue = self.queue.clone();
+
+        let mut task_notifications = self
+            .task_notifications
+            .take()
+            .expect("Task notifications already taken");
+
+        tokio::spawn(async move {
+            info!("Starting task notification listener");
+
+            while let Some(task_id) = task_notifications.recv().await {
+                debug!("Received notification for new task: {}", task_id);
+
+                match store.load_task(task_id).await {
+                    Ok(task) => {
+                        info!("Adding new task {} to queue", task_id);
+                        queue.enqueue(task_id, task.priority).await;
+                    }
+                    Err(e) => {
+                        error!("Failed to load notified task {}: {}", task_id, e);
+                    }
+                }
+            }
+
+            warn!("Task notification listener terminated - channel closed");
+        });
     }
 
     /// Start the loop that processes feedback from task execution.
