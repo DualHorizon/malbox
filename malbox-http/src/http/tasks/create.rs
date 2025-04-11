@@ -1,3 +1,4 @@
+use crate::http::{error::Error, AppState, Result};
 use anyhow::Context;
 use axum::body::Bytes;
 use axum::{
@@ -8,15 +9,15 @@ use axum::{
 use axum_macros::debug_handler;
 use axum_typed_multipart::{FieldData, TryFromField, TryFromMultipart, TypedMultipart};
 use magic::cookie::DatabasePaths;
+use malbox_database::repositories::{
+    machinery::MachinePlatform,
+    samples::{insert_sample, Sample, SampleEntity},
+    tasks::{insert_task, Task, TaskState},
+};
 use malbox_hashing::*;
 use tempfile::Builder;
 use time::{OffsetDateTime, PrimitiveDateTime};
-
-use crate::http::{error::Error, AppState, Result};
-use malbox_database::repositories::{
-    samples::{insert_sample, Sample, SampleEntity},
-    tasks::{insert_task, StatusType, Task, TaskEntity},
-};
+use tracing::{debug, error, info, warn};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -26,7 +27,7 @@ pub fn router() -> Router<AppState> {
 
 #[derive(serde::Serialize)]
 struct TaskResponse {
-    task_id: i64,
+    task_id: i32,
 }
 
 #[derive(Debug)]
@@ -41,6 +42,8 @@ struct FileInfo {
     crc32: String,
     ssdeep: String,
 }
+
+//yo bg, petite question, t'aurais de quoi me dépanner un peu de :herb: ? Je te paye la somme bien-sur cash ou liquide comme tu veux, juste histoire d'en faire un ou deux. Pas trop envie de commander car j'ai pas besoin d'autant c'est juste pour sortir avec des amis ce soir sur paris
 
 #[derive(TryFromMultipart)]
 struct CreateTaskRequest {
@@ -77,7 +80,15 @@ async fn create_task_from_file(
         .await
         .context("Failed to create task")?;
 
-    Ok(Json(TaskResponse { task_id: task.id }))
+    let task_id = task.id.expect("Task must have an ID");
+
+    if let Err(e) = state.task_notification.notify_new_task(task_id).await {
+        warn!("Failed to notify scheduler about new task: {}", e);
+    };
+
+    Ok(Json(TaskResponse {
+        task_id: task.id.unwrap(),
+    }))
 }
 
 // NOTE: This is temporary, file storage should be handled by the malbox_storage
@@ -134,9 +145,7 @@ async fn create_sample(state: &AppState, file_info: &FileInfo) -> Result<SampleE
         ssdeep: "not-available".to_string(),
     };
 
-    insert_sample(&state.pool, sample)
-        .await
-        .map_err(Error::from)
+    Ok(insert_sample(&state.pool, sample).await.unwrap())
 }
 
 async fn create_task(
@@ -144,35 +153,33 @@ async fn create_task(
     request: &CreateTaskRequest,
     file_info: &FileInfo,
     sample_id: i64,
-) -> Result<TaskEntity> {
+) -> Result<Task> {
     let utc_now = OffsetDateTime::now_utc();
     let current_primitive_datetime = PrimitiveDateTime::new(utc_now.date(), utc_now.time());
 
     let task = Task {
+        id: None,
         target: file_info.name.to_string(),
-        module: request
-            .module
-            .as_deref()
-            .unwrap_or("file_analysis")
-            .to_string(),
         timeout: request.timeout.unwrap_or(1),
         priority: request.priority.unwrap_or(1),
-        custom: request.custom.clone(),
-        machine: request.machine.clone(),
-        package: request.package.clone(),
-        options: request.options.clone(),
-        platform: request.platform.clone(),
-        unique: request.unique,
-        tags: request.tags.clone(),
+        platform: MachinePlatform::Linux,
+        tags: request
+            .tags
+            .clone()
+            .map(|tags_str| tags_str.split(',').map(|s| s.trim().to_string()).collect()),
         owner: request.owner.clone(),
-        memory: request.memory.unwrap_or(false),
-        enforce_timeout: request.enforce_timeout.unwrap_or(false),
-        added_on: current_primitive_datetime,
+        enforce_timeout: Some(request.enforce_timeout.unwrap_or(false)),
+        created_on: current_primitive_datetime,
         started_on: None,
         completed_on: None,
-        status: StatusType::Pending,
-        sample_id,
+        status: TaskState::Pending,
+        sample_id: Some(sample_id),
+        machine_cpus: None,
+        machine_id: None,
+        machine_memory: None,
+        plugins: vec!["0".to_string()],
+        profile: None,
     };
 
-    insert_task(&state.pool, task).await.map_err(Error::from)
+    Ok(insert_task(&state.pool, task).await.unwrap())
 }

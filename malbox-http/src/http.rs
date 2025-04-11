@@ -7,6 +7,7 @@ use axum::{
 };
 use malbox_config::Config as MalboxConfig;
 use malbox_database::PgPool;
+use malbox_scheduler::TaskNotificationService;
 use tokio::net::TcpListener;
 use tower_http::trace::TraceLayer;
 
@@ -20,12 +21,18 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 struct AppState {
     config: MalboxConfig,
     pool: PgPool,
+    task_notification: TaskNotificationService,
 }
 
-pub async fn serve(conf: MalboxConfig, db: PgPool) -> anyhow::Result<()> {
+pub async fn serve(
+    conf: MalboxConfig,
+    db: PgPool,
+    task_notification: TaskNotificationService,
+) -> anyhow::Result<()> {
     let shared_state = AppState {
         config: conf,
         pool: db,
+        task_notification,
     };
 
     let app = api_router()
