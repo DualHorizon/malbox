@@ -7,4 +7,4 @@ CREATE TABLE "errors" (
     FOREIGN KEY (task_id) REFERENCES tasks(id)
 );
 
-SELECT trigger_updated_at('"errors"');
+SELECT trigger_updated_on('"errors"');

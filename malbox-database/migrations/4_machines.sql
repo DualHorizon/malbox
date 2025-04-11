@@ -16,4 +16,4 @@ CREATE TABLE "machines" (
     PRIMARY KEY (id)
 );
 
-SELECT trigger_updated_at('"machines"');
+SELECT trigger_updated_on('"machines"');

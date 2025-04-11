@@ -13,4 +13,4 @@ CREATE TABLE "samples" (
 
 CREATE UNIQUE INDEX hash_index ON samples USING btree (md5, crc32, sha1, sha256, sha512);
 
-SELECT trigger_updated_at('"samples"');
+SELECT trigger_updated_on('"samples"');

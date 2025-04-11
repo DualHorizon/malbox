@@ -28,7 +28,7 @@ pub struct Task {
     pub timeout: i64,
     pub enforce_timeout: Option<bool>,
     pub priority: i64,
-    pub machine_id: i32,
+    pub machine_id: Option<i32>,
     pub machine_memory: Option<i64>,
     pub machine_cpus: Option<i32>,
     pub created_on: PrimitiveDateTime,

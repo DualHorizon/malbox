@@ -11,4 +11,4 @@ CREATE TABLE "guests" (
     FOREIGN KEY (task_id) REFERENCES tasks(id)
 );
 
-SELECT trigger_updated_at('"guests"');
+SELECT trigger_updated_on('"guests"');

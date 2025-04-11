@@ -5,15 +5,15 @@ CREATE TABLE "tasks" (
     profile varchar,
     timeout bigint DEFAULT 0 NOT NULL,
     priority bigint DEFAULT 1 NOT NULL,
-    machine_id integer NOT NULL,
+    machine_id integer,
     machine_memory bigint,
     machine_cpus integer,
     platform machine_platform NOT NULL,
-    memory boolean NOT NULL,
     enforce_timeout boolean DEFAULT true NOT NULL,
     created_on timestamp without time zone NOT NULL,
     started_on timestamp without time zone,
     completed_on timestamp without time zone,
+    updated_on timestamp without time zone, -- for debugging purposes
     status task_state DEFAULT 'pending'::task_state NOT NULL,
     sample_id bigint,
     owner varchar,
@@ -23,4 +23,4 @@ CREATE TABLE "tasks" (
     FOREIGN KEY (machine_id) REFERENCES machines(id)
 );
 
-SELECT trigger_updated_at('"tasks"');
+SELECT trigger_updated_on('"tasks"');
