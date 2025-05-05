@@ -152,7 +152,7 @@ Plugins are discoverable via metadata, which defines their capabilities, require
 
 ### Plugin Marketplace
 
-Access 50+ verified and official plugins from our [Marketplace](https://marketplace.mal.box) or at your self-hosted Malbox instance:
+Access community verified or official plugins through our [Marketplace](https://marketplace.mal.box) - also available in your self-hosted Malbox instance:
 
 ![Plugin Marketplace](https://github.com/user-attachments/assets/f0c2c099-1093-4d9c-a4d9-30adac8da4c9)
 
