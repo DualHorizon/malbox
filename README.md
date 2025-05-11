@@ -179,7 +179,7 @@ Licensed under GNU General Public License (GPL) - © 2024 Malbox Contributors
 
 <div align="center">
 
-**[⬆ Back to Top](#top)** • Made with ❤️ by the Malbox Team
+**[⬆ Back to Top](#top)** • Made with ❤️ by the Malbox maintainers and its contributors
 
 <a href="https://star-history.com/#DualHorizon/malbox">
   <img src="https://api.star-history.com/svg?repos=DualHorizon/malbox&type=Date" alt="Star History Chart" />
