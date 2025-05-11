@@ -164,7 +164,6 @@ For good measure, you can find a couple of functionalities that will be availabl
 - [Documentation](#)
 - [GitHub Issues](https://github.com/DualHorizon/malbox/issues)
 - [Discord Community](https://discord.gg/XWBdpQ5bMp)
-- [Enterprise Support](#)
 
 ## Contributing
 
