@@ -71,15 +71,14 @@ graph TD
     end
 ```
 
-## Plugin Types by Execution Context
+## Execution Context
 
 Malbox supports plugins in diverse execution environments:
 
-- **Host Plugins**: Run directly on the host OS for static analysis, reporting, and task coordination
-- **Guest Plugins**: Execute within VM environments for dynamic analysis
-- **Hybrid Plugins**: Operate across both environments with coordinated components
+- **Host Plugins**: Run directly on the host OS (e.g. for static analysis, emulation, etc.)
+- **Guest Plugins**: Execute within VM environments (e.g. for dynamic analysis)
 
-## Execution Models
+## Execution Policies
 
 Plugins can operate in various modes:
 
@@ -92,17 +91,16 @@ Plugins can operate in various modes:
 
 Plugins can maintain different levels of persistence:
 
-- **Stateless**: Fresh state for each task (default)
-- **Stateful**: Maintains state between all tasks
-- **StatefulByType**: Maintains state only across tasks of the same type
+- **Isolated**: Fresh state for each task (default)
+- **Global**: Maintains state between all tasks
+- **ContextAware**: Maintains state only across tasks of the same type
 
 ## Communication Infrastructure
 
 The plugin system uses advanced IPC mechanisms:
 
 - **Host Communication**: Zero-copy IPC using iceoryx2
-- **Guest Communication**: gRPC for VM-based plugins
-- **Bridge Component**: Translates between different communication protocols
+- **Guest Communication**: Zero-copy IPC using iceoryx2 for communication within the VM, exposed to a gRPC bridge that communicates back to the host .
 
 ## Plugin Lifecycle
 
@@ -154,7 +152,7 @@ Plugins are discoverable via metadata, which defines their capabilities, require
 
 ### Plugin Marketplace
 
-Access 50+ verified and official plugins from our [Marketplace](https://marketplace.mal.box) or at your self-hosted Malbox instance:
+Access community verified or official plugins through our [Marketplace](https://marketplace.mal.box) - also available in your self-hosted Malbox instance:
 
 ![Plugin Marketplace](https://github.com/user-attachments/assets/f0c2c099-1093-4d9c-a4d9-30adac8da4c9)
 
