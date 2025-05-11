@@ -7,10 +7,10 @@
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/github/license/DualHorizon/malbox?style=for-the-badge)](LICENSE)
 [![Coverage](https://codecov.io/gh/DualHorizon/malbox/branch/main/graph/badge.svg?token=123)](https://codecov.io/gh/DualHorizon/malbox)
-[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/your-invite)
+[![Discord](https://img.shields.io/discord/1332677602623623178?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/XWBdpQ5bMp)
 [![Plugins](https://img.shields.io/badge/plugins-WIP-blue?style=for-the-badge)](https://marketplace.malbox.io)
 
-[Documentation](docs) • [Installation](docs/installation.md) • [API Reference](docs/api) • [Plugin Marketplace](https://marketplace.mal.box) • [Discord](https://discord.gg/XWBdpQ5bMp)
+[Documentation](#) • [Installation](#) • [API Reference](#) • [Plugin Marketplace](#) • [Discord](https://discord.gg/XWBdpQ5bMp)
 
 </div>
 
@@ -107,23 +107,23 @@ Plugins are discoverable via metadata, which defines their capabilities, require
 
 ### Plugin Marketplace
 
-Access community verified or official plugins through our [Marketplace](https://marketplace.mal.box) - also available in your self-hosted Malbox instance:
+Access community verified or official plugins through our [Marketplace](#) - also available in your self-hosted Malbox instance:
 
 ![Plugin Marketplace](https://github.com/user-attachments/assets/f0c2c099-1093-4d9c-a4d9-30adac8da4c9)
 
 #### Official Plugins
-[![PE Analysis](https://img.shields.io/badge/PE%20Analysis-1.2.0-blue?style=flat-square&logo=windows)](https://marketplace.malbox.io/plugins/pe-analysis)
-[![Network Monitor](https://img.shields.io/badge/Network%20Monitor-2.0.1-blue?style=flat-square&logo=wireshark)](https://marketplace.malbox.io/plugins/network-monitor)
-[![YARA Engine](https://img.shields.io/badge/YARA%20Engine-3.1.0-blue?style=flat-square&logo=search)](https://marketplace.malbox.io/plugins/yara-engine)
-[![Memory Analysis](https://img.shields.io/badge/Memory%20Analysis-1.0.2-blue?style=flat-square&logo=memory)](https://marketplace.malbox.io/plugins/memory-analysis)
+[![PE Analysis](https://img.shields.io/badge/PE%20Analysis-1.2.0-blue?style=flat-square&logo=windows)](#)
+[![Network Monitor](https://img.shields.io/badge/Network%20Monitor-2.0.1-blue?style=flat-square&logo=wireshark)](#)
+[![YARA Engine](https://img.shields.io/badge/YARA%20Engine-3.1.0-blue?style=flat-square&logo=search)](#)
+[![Memory Analysis](https://img.shields.io/badge/Memory%20Analysis-1.0.2-blue?style=flat-square&logo=memory)](#)
 
 #### Featured Community Plugins
-[![Threat Intel](https://img.shields.io/badge/Threat%20Intel-2.1.0-green?style=flat-square)](https://marketplace.malbox.io/plugins/threat-intel)
-[![ML Classifier](https://img.shields.io/badge/ML%20Classifier-1.5.0-green?style=flat-square)](https://marketplace.malbox.io/plugins/ml-classifier)
-[![Report Generator](https://img.shields.io/badge/Report%20Generator-2.2.1-green?style=flat-square)](https://marketplace.malbox.io/plugins/report-gen)
+[![Threat Intel](https://img.shields.io/badge/Threat%20Intel-2.1.0-green?style=flat-square)](#)
+[![ML Classifier](https://img.shields.io/badge/ML%20Classifier-1.5.0-green?style=flat-square)](#)
+[![Malcat Scripting](https://img.shields.io/badge/Malcat%20Scripting-2.2.1-green?style=flat-square)](#)
 
 > [!IMPORTANT]  
-> All plugins undergo security review and verification before being listed in the marketplace. [Submit your plugin](docs/plugins/publishing.md)
+> All plugins undergo security review and verification before being listed in the marketplace. [Submit your plugin](#)
 
 ## Features
 
@@ -161,10 +161,10 @@ For good measure, you can find a couple of functionalities that will be availabl
 
 ## Support & Community
 
-- [Documentation](https://docs.malbox.io)
+- [Documentation](#)
 - [GitHub Issues](https://github.com/DualHorizon/malbox/issues)
-- [Discord Community](https://discord.gg/your-invite)
-- [Enterprise Support](https://malbox.io/enterprise)
+- [Discord Community](https://discord.gg/XWBdpQ5bMp)
+- [Enterprise Support](#)
 
 ## Contributing
 
