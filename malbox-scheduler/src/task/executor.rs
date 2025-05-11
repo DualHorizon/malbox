@@ -38,12 +38,12 @@ impl TaskExecutor {
         let task_id = task.id.expect("Task must have an ID for execution");
 
         // Notify that we're starting preparation.
-        self.send_progress_update(task_id, 0, "Preparing task execution")
+        self.send_progress_update(task_id, "Preparing task execution")
             .await?;
 
         // Allocate resources for the task based on its requirements/metadata.
         // Might involve provisioning VMs, networks, or other resources.
-        self.send_progress_update(task_id, 10, "Allocating resources")
+        self.send_progress_update(task_id, "Allocating resources")
             .await?;
 
         // NOTE: Should we allocate resources here?!
@@ -62,7 +62,7 @@ impl TaskExecutor {
         //     return Err(Arc::try_unwrap(error).expect("Failed to unwrap error"));
         // }
 
-        self.send_progress_update(task_id, 20, "Resources allocated")
+        self.send_progress_update(task_id, "Resources allocated")
             .await?;
 
         // Prepare the task for execution (e.g, copy files, set up environment etc.)
@@ -84,7 +84,7 @@ impl TaskExecutor {
             return Err(e);
         }
 
-        self.send_progress_update(task_id, 40, "Task dispatched to worker")
+        self.send_progress_update(task_id, "Task dispatched to worker")
             .await?;
 
         Ok(())
@@ -143,14 +143,14 @@ impl TaskExecutor {
         let task_id = task.id.expect("Task must have an ID for execution");
 
         self.resource_manager.release_resources(task_id).await?;
+
         Ok(())
     }
 
     /// Send a progress update about a task.
-    async fn send_progress_update(&self, task_id: i32, progress: u8, message: &str) -> Result<()> {
+    async fn send_progress_update(&self, task_id: i32, message: &str) -> Result<()> {
         let command = TaskCommand::TaskProgress {
             task_id,
-            progress,
             message: message.to_string(),
         };
 

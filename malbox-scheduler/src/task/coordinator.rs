@@ -175,20 +175,18 @@ impl TaskCoordinator {
                         error!("Task {} failed: {}", task_id, error);
 
                         // Update task state to failed.
-                        // NOTE: we might consider including error message in task state.
+                        // NOTE: we might consider including error message in task state through an additional field in DB.
                         if let Err(e) = store.update_task_state(task_id, TaskState::Failed).await {
                             error!("Failed to update task state: {}", e);
                         }
+                        // TODO:
+                        // Add setting to retry tasks.
                     }
-                    TaskCommand::TaskProgress {
-                        task_id,
-                        progress,
-                        message,
-                    } => {
-                        debug!("Task {} progress: {}% - {}", task_id, progress, message);
+                    TaskCommand::TaskProgress { task_id, message } => {
+                        debug!("Task {} progress: {}", task_id, message);
 
-                        // We could store progress updates if desired.
-                        // For now, we just log them.
+                        // TODO:
+                        // Progress should be propagated through UI.
                     }
                     _ => {
                         // For now, we don't need to handle other command types here.

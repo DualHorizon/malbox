@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn, Instrument};
+use tracing::{Instrument, debug, error, info, warn};
 use uuid::Uuid;
 
 use super::metadata::PluginManifest;

@@ -61,7 +61,6 @@ pub enum TaskCommand {
     },
     TaskProgress {
         task_id: i32,
-        progress: u8,
         message: String,
     },
 }

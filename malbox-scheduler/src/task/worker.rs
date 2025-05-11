@@ -263,6 +263,7 @@ impl TaskWorker {
     /// Execute a task using plugins.
     async fn execute_task(&self, task: Task) -> Result<String> {
         let task_id = task.id.expect("Task mus have ID for execution");
+
         todo!();
     }
 
