@@ -43,34 +43,6 @@ Malbox is a malware analysis platform/framework built in Rust. Its plugin-driven
 
 At the core of Malbox is its extensible plugin system, designed for analysis flexibility while maintaining process isolation. Plugins operate with a well-defined lifecycle and communication framework that enables seamless integration of new capabilities, sharing data between plugins without any duplication, and much more.
 
-## Architecture Overview
-
-```mermaid
-graph TD
-    A[Core System] --> B[Plugin Manager]
-    B --> C[Host Plugins]
-    B --> D[Guest Plugins]
-    B --> E[Hybrid Plugins]
-    
-    C --> F[IPC Channel]
-    D --> G[gRPC Channel]
-    E --> F
-    E --> G
-    
-    F --> H[Plugin Registry]
-    G --> H
-    
-    subgraph "Communication Bridge"
-        F
-        G
-    end
-    
-    subgraph "Plugin Management"
-        B
-        H
-    end
-```
-
 ## Execution Context
 
 Malbox supports plugins in diverse execution environments:
@@ -102,24 +74,7 @@ The plugin system uses advanced IPC mechanisms:
 - **Host Communication**: Zero-copy IPC using iceoryx2
 - **Guest Communication**: Zero-copy IPC using iceoryx2 for communication within the VM, exposed to a gRPC bridge that communicates back to the host .
 
-## Plugin Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> Created
-    Created --> Starting: start()
-    Starting --> Running
-    Running --> Stopping: stop()
-    Stopping --> Stopped
-    Stopped --> Starting: start()
-    Stopped --> [*]
-    
-    Starting --> Failed
-    Running --> Failed
-    Failed --> [*]
-```
-
-## Example Plugin Categories
+## [![TBD](https://img.shields.io/badge/TBD-red?style=flat-square)](#) Example Plugin Categories 
 
 - **Static Analysis Plugins**
   - File format analysis (PE/ELF/MachO)
@@ -174,13 +129,12 @@ Access community verified or official plugins through our [Marketplace](https://
 
 ### Analysis Capabilities
 
-Analysis capabilities depend on the plugins installed, hence, the capabilities will continue to grow as the project lives.
-For good measure, you can find a couple of functionalities that are already available through our plugins.
+Analysis capabilities depend on the plugins installed, hence, the capabilities will continue to grow as plugins are released, both from the community and maintainers.
+For good measure, you can find a couple of functionalities that will be available through official plugins.
 
 - **File Type Support**
   - Windows Executables (PE32, PE32+)
   - Linux Executables (ELF)
-  - macOS Executables (MachO)
   - Office Documents
   - PDF Files
   - Script Files (JS, VBS, PS1)
@@ -190,68 +144,20 @@ For good measure, you can find a couple of functionalities that are already avai
   - Automated unpacking
   - String extraction
   - Entropy analysis
-  - Network simulation
+  - Network analysis
   - Memory inspection
   - Behavioral analysis
   - Custom scripting support
 
 ![Analysis Result Popup](https://github.com/user-attachments/assets/1d25d9fc-291c-4cea-80bc-6c10e5ccff27)
 
-### Enterprise Features
+### [![TBD](https://img.shields.io/badge/TBD-red?style=flat-square)](#) Enterprise Features
 
 - Multi-user support with RBAC
 - Team management
 - API access and monitoring
 - Custom reporting
 - Integration capabilities
-
-## Technology Stack
-
-| Component | Technology | Details |
-|-----------|------------|----------|
-| Core | ![Rust](https://img.shields.io/badge/rust-1.81.0-orange.svg) | Safe, high-performance execution |
-| IPC | ![iceoryx2](https://img.shields.io/badge/iceoryx2-latest-blue.svg) | Zero-copy plugin communication |
-| Database | ![PostgreSQL](https://img.shields.io/badge/postgresql-13+-blue.svg) | Reliable state management |
-| API | ![Axum](https://img.shields.io/badge/axum-latest-green.svg) | Modern web framework |
-| Frontend | ![Astro](https://img.shields.io/badge/astro-latest-purple.svg) | Fast, static frontend |
-
-## Architecture
-
-![Runtime Architecture](assets/malbox-runtime.svg)
-
-## Quick Start
-
-### Prerequisites
-- Rust 1.81.0+
-- PostgreSQL 13+
-- One of: KVM, VMware, or VirtualBox
-
-```bash
-# Install
-git clone https://github.com/DualHorizon/malbox.git
-cd malbox
-
-# Configure
-cp configuration/malbox.example.toml configuration/malbox.toml
-$EDITOR configuration/malbox.toml
-
-# Build and Run
-cargo build --release
-cargo run --release
-```
-
-Detailed setup instructions available in our [Installation Guide](docs/installation.md).
-
-### Docker Support
-
-```bash
-# Pull official image
-docker pull malbox/malbox:latest
-
-# Start with docker-compose
-wget https://raw.githubusercontent.com/DualHorizon/malbox/main/docker-compose.yml
-docker-compose up -d
-```
 
 ## Support & Community
 
