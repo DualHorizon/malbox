@@ -69,10 +69,10 @@ Plugins can maintain different levels of persistence:
 
 ## Communication Infrastructure
 
-The plugin system uses advanced IPC mechanisms:
+The plugin system mainly uses IPC mechanisms:
 
 - **Host Communication**: Zero-copy IPC using iceoryx2
-- **Guest Communication**: Zero-copy IPC using iceoryx2 for communication within the VM, exposed to a gRPC bridge that communicates back to the host .
+- **Guest Communication**: Zero-copy IPC using iceoryx2 for communication within the VM, exposed to a gRPC bridge that communicates back to the host
 
 ## [![TBD](https://img.shields.io/badge/TBD-red?style=flat-square)](#) Example Plugin Categories 
 
