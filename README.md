@@ -4,11 +4,10 @@
 
 <div align="center">
 
-[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![License](https://img.shields.io/github/license/DualHorizon/malbox?style=for-the-badge)](LICENSE)
-[![Coverage](https://codecov.io/gh/DualHorizon/malbox/branch/main/graph/badge.svg?token=123)](https://codecov.io/gh/DualHorizon/malbox)
-[![Discord](https://img.shields.io/discord/1332677602623623178?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/XWBdpQ5bMp)
-[![Plugins](https://img.shields.io/badge/plugins-WIP-blue?style=for-the-badge)](https://marketplace.malbox.io)
+[![Rust](https://img.shields.io/badge/Built%20with%20Rust-grey?style=for-the-badge&logo=rust&color=%23282828)](https://www.rust-lang.org/)
+[![License](https://img.shields.io/github/license/DualHorizon/malbox?style=for-the-badge&color=%23282828)](LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-grey?style=for-the-badge&logo=discord&color=%23282828)](https://discord.gg/7BVnQHRy7h)
+[![Plugins](https://img.shields.io/badge/plugins-WIP-blue?style=for-the-badge&color=%23282828)](#)
 
 [Documentation](#) • [Installation](#) • [API Reference](#) • [Plugin Marketplace](#) • [Discord](https://discord.gg/XWBdpQ5bMp)
 
