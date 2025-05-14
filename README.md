@@ -9,7 +9,7 @@
 [![Discord](https://img.shields.io/badge/Discord-grey?style=for-the-badge&logo=discord&color=%23282828)](https://discord.gg/7BVnQHRy7h)
 [![Plugins](https://img.shields.io/badge/plugins-WIP-blue?style=for-the-badge&color=%23282828)](#)
 
-[Documentation](#) • [Installation](#) • [API Reference](#) • [Plugin Marketplace](#) • [Discord](https://discord.gg/XWBdpQ5bMp)
+[Documentation](https://dualhorizon.github.io/malbox-docs/) • [Installation](https://dualhorizon.github.io/malbox-docs/getting-started/quickstart/) • [API Reference](https://dualhorizon.github.io/malbox-docs/reference/api/) • [Plugin Marketplace](#) • [Discord](https://discord.gg/7BVnQHRy7h)
 
 </div>
 
