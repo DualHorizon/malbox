@@ -6,7 +6,9 @@ use tracing::{error, info};
 
 mod error;
 mod resource;
+mod scheduler;
 mod task;
+mod worker;
 
 pub use resource::ResourceManager;
 use task::coordinator::TaskCoordinator;

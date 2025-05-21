@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
-use tokio::sync::RwLock;
+use std::sync::Arc;
+use tokio::sync::{Notify, RwLock};
 
 /// A task entry in our priority queue.
 /// This holds both the task ID and its priority for sorting/ordering.
@@ -33,11 +34,13 @@ impl PartialOrd for TaskEntry {
     }
 }
 
-// The TaskQueue manages tasks waiting to be executed/processed, ordered by priority.
+/// The TaskQueue manages tasks waiting to be executed/processed, ordered by priority.
 pub struct TaskQueue {
     // RwLock allows multiple readers or a single writer.
     // BinaryHeap automatically maintains the heap property - highest priority at the top.
     queue: RwLock<BinaryHeap<TaskEntry>>,
+    // `tokio::sync::Notify` is used for signaling when the queue has items.
+    notify: Arc<Notify>,
 }
 
 impl TaskQueue {
@@ -45,17 +48,24 @@ impl TaskQueue {
     pub fn new() -> Self {
         Self {
             queue: RwLock::new(BinaryHeap::new()),
+            notify: Arc::new(Notify::new()),
         }
     }
 
     /// Add a task to the queue with a specified priority.
     /// Tasks with higher priority values will be processed before lower ones.
     pub async fn enqueue(&self, task_id: i32, priority: i64) {
-        // Acquire a write lock on the queue.
-        let mut queue = self.queue.write().await;
-        // Create a new task entry and add it to the heap.
-        // The heap will automatically reorder based on our Ord implementation.
-        queue.push(TaskEntry { task_id, priority })
+        // Encapsulation to drop the lock before we notify,
+        // since we could get deadlocks if we wouldn't.
+        {
+            // Acquire a write lock on the queue.
+            let mut queue = self.queue.write().await;
+            // Create a new task entry and add it to the heap.
+            // The heap will automatically reorder based on our Ord implementation.
+            queue.push(TaskEntry { task_id, priority });
+        }
+        // Notify that a task is available in the queue.
+        self.notify.notify_one();
     }
 
     /// Get the highest priority task from the queue.
@@ -109,9 +119,19 @@ impl TaskQueue {
 
     /// Add multiple tasks to the queue at once.
     pub async fn enqueue_batch(&self, tasks: Vec<(i32, i64)>) {
-        let mut queue = self.queue.write().await;
-        for (task_id, priority) in tasks {
-            queue.push(TaskEntry { task_id, priority });
+        // Encapsulation to drop the lock before we notify,
+        // since we could get deadlocks if we wouldn't.
+        {
+            let mut queue = self.queue.write().await;
+            for (task_id, priority) in tasks {
+                queue.push(TaskEntry { task_id, priority });
+            }
         }
+        self.notify.notify_one();
+    }
+
+    /// Get the queue's event notifier.
+    pub fn get_notifier(&self) -> Arc<Notify> {
+        self.notify.clone()
     }
 }
