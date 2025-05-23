@@ -14,7 +14,7 @@ pub enum MachineArch {
     X64,
 }
 
-#[derive(sqlx::Type, Debug, Serialize, Deserialize, Default, Clone, Hash, Eq)]
+#[derive(sqlx::Type, Debug, Serialize, Deserialize, Default, Clone, Hash, Eq, PartialEq)]
 #[sqlx(type_name = "machine_platform", rename_all = "lowercase")]
 pub enum MachinePlatform {
     #[default]
