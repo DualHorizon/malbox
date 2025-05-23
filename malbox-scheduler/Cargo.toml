@@ -14,6 +14,7 @@ malbox-core.path = "../malbox-core"
 serde_json.workspace = true
 thiserror.workspace = true
 uuid.workspace = true
+serde.workspace = true
 time.workspace = true
 tokio = { workspace = true }
 tracing = { workspace = true }
