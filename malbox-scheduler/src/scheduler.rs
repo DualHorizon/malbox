@@ -62,6 +62,9 @@ impl Scheduler {
 
     async fn execute_task(&self, task: Task) -> Result<()> {
         let worker = self.worker_pool.acquire_worker().await?;
+
+        worker.execute().await?;
+
         Ok(())
     }
 }

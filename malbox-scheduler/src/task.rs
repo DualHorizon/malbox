@@ -4,12 +4,10 @@ use std::sync::Arc;
 use thiserror::Error;
 use tokio::sync::oneshot;
 
-pub mod coordinator;
+pub mod batch;
 pub mod executor;
-pub mod notification;
 pub mod queue;
 pub mod store;
-mod worker;
 
 #[derive(Error, Debug)]
 pub enum TaskError {

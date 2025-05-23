@@ -24,6 +24,9 @@ pub struct WorkerConfig {
     /// Maximum time to wait for batch collection (milliseconds).
     #[serde(default = "default_batch_timeout")]
     pub batch_timeout_ms: u64,
+    /// Maximum idle time before timeout (milliseconds).
+    #[serde(default = "default_idle_timeout")]
+    pub idle_timeout_ms: u64,
     /// Maximum concurrent tasks this worker can handle.
     #[serde(default = "default_max_concurrent_tasks")]
     pub max_concurrent_tasks: usize,
@@ -70,6 +73,9 @@ fn default_max_batch_size() -> usize {
     1
 }
 fn default_batch_timeout() -> u64 {
+    500
+}
+fn default_idle_timeout() -> u64 {
     500
 }
 fn default_max_concurrent_tasks() -> usize {

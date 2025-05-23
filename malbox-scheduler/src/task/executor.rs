@@ -52,7 +52,7 @@ impl TaskExecutor {
         };
 
         self.store
-            .update_task_status(&task.id, final_status)
+            .update_task_state(task.id.expect("Task ID required"), final_status)
             .await?;
 
         // Release resources
