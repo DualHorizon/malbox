@@ -60,4 +60,20 @@ impl TaskExecutor {
 
         Ok(result)
     }
+
+    pub async fn execute_batch(
+        &self,
+        tasks: Vec<Task>,
+        resources: ResourceAllocation,
+    ) -> Result<Vec<TaskResult>> {
+        todo!()
+    }
+
+    async fn execute_plugin(
+        &self,
+        plugin_id: &str,
+        context: PluginContext,
+    ) -> Result<PluginResult> {
+        todo!()
+    }
 }
