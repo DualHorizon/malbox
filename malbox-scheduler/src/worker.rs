@@ -1,6 +1,9 @@
 use crate::{
     error::Result,
-    task::{batch::TaskBatch, executor::TaskExecutor},
+    task::{
+        batch::{BatchCollector, TaskBatch},
+        executor::TaskExecutor,
+    },
 };
 use std::{
     sync::Arc,
@@ -9,7 +12,6 @@ use std::{
 use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
-use crate::task::batch::BatchCollector;
 use config::WorkerConfig;
 use event::{ShutdownReason, WorkerEvent};
 use handle::WorkerHandle;
