@@ -5,9 +5,6 @@ use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 use tokio::sync::oneshot;
 
-// NOTE:
-// Work-in-progress, this is an MVP.
-
 /// A batch of tasks ready for processing.
 #[derive(Debug)]
 pub struct TaskBatch {
