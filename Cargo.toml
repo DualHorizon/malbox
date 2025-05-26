@@ -8,7 +8,6 @@ members = [
     "malbox-http",
     "malbox-storage",
     "malbox-tracing",
-    "malbox-machinery",
     "malbox-daemon",
     "malbox-cli",
     "malbox-infra",

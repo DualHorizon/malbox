@@ -8,7 +8,6 @@ malbox-database = { path = "../malbox-database" }
 malbox-hashing = { path = "../malbox-hashing" }
 malbox-config = { path = "../malbox-config" }
 malbox-scheduler = { path = "../malbox-scheduler" }
-malbox-machinery = { path = "../malbox-machinery" }
 malbox-http = { path = "../malbox-http" }
 malbox-core = { path = "../malbox-core" }
 anyhow = { workspace = true }

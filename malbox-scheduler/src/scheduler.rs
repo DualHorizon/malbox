@@ -35,7 +35,6 @@ impl Scheduler {
 
         loop {
             tokio::select! {
-                // Wait for new task submission
                 Some(task) = self.task_notifications.recv() => {
                     self.handle_new_task(task).await?;
                 }

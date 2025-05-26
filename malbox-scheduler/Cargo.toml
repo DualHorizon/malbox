@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 malbox-database = { path = "../malbox-database" }
-malbox-machinery = { path = "../malbox-machinery" }
 malbox-config.path = "../malbox-config"
 malbox-infra.path = "../malbox-infra"
 malbox-core.path = "../malbox-core"

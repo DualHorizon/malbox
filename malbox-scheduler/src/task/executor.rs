@@ -22,9 +22,6 @@ impl TaskExecutor {
             .update_task_state(task.id.expect("Task ID required"), TaskState::Running)
             .await?;
 
-        // Get plugins for this task
-        let plugins = self.plugin_registry.get_plugins_for_task(&task).await?;
-
         // Execute plugins in order
         let mut result = TaskResult::new(task.id.clone());
 
