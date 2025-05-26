@@ -6,18 +6,10 @@ use tracing::{error, info};
 
 mod error;
 mod resource;
+mod scheduler;
 mod task;
+mod worker;
 
-pub use resource::ResourceManager;
-use task::coordinator::TaskCoordinator;
-pub use task::notification::TaskNotificationService;
-
-pub async fn init_scheduler(
-    config: Config,
-    db: PgPool,
-    resource_manager: Arc<ResourceManager>,
-    task_notifications: mpsc::Receiver<i32>,
-) {
-    let mut coordinator = TaskCoordinator::new(db, resource_manager, task_notifications, 2);
-    coordinator.init().await.unwrap();
+pub async fn init_scheduler() {
+    todo!()
 }

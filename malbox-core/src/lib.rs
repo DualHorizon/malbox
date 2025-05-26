@@ -9,3 +9,4 @@ pub mod plugins;
 
 pub use communication::ipc::plugin::PluginIpc;
 pub use plugins::manager::PluginManager;
+pub use plugins::registry::PluginRegistry;

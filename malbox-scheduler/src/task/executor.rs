@@ -1,179 +1,76 @@
-use super::{worker::WorkerPool, Result, TaskError};
+use super::{store::TaskStore, worker::WorkerPool, Result, TaskError};
 use crate::resource::{self, ResourceError, ResourceManager};
-use malbox_database::repositories::tasks::Task;
+use malbox_core::PluginRegistry;
+use malbox_database::repositories::tasks::{Task, TaskState};
 use std::sync::Arc;
 use tokio::sync::{mpsc, oneshot};
 use tracing::{debug, error, info, warn};
 
-use super::TaskCommand;
-
 /// The TaskExecutor manages the actual execution of tasks and their resources.
 pub struct TaskExecutor {
-    // Resource manager for allocating VMs, network, etc.
-    resource_manager: Arc<ResourceManager>,
-    // Channel for sending comands to worker processes.
-    worker_pool: Arc<WorkerPool>,
-    // Channel for sending results back to the parent system.
-    feedback_tx: mpsc::Sender<TaskCommand>,
-    // Config for execution settings (timeouts, retry, policies, etc.)
-    // config: Config,
+    store: Arc<TaskStore>,
+    plugin_registry: Arc<PluginRegistry>,
 }
 
 impl TaskExecutor {
-    pub fn new(
-        resource_manager: Arc<ResourceManager>,
-        worker_pool: Arc<WorkerPool>,
-        feedback_tx: mpsc::Sender<TaskCommand>,
-        // config: Config,
-    ) -> Self {
-        Self {
-            resource_manager,
-            worker_pool,
-            feedback_tx,
-        }
-    }
+    pub async fn execute(&self, task: Task, resources: ResourceAllocation) -> Result<TaskResult> {
+        // Prepare execution environment
+        // let sandbox = self.machinery.create_sandbox(&resources).await?;
 
-    /// Execute a task, handling resource allocation and worker delegation.
-    pub async fn execute_task(&self, task: Task) -> Result<()> {
-        let task_id = task.id.expect("Task must have an ID for execution");
-
-        // Notify that we're starting preparation.
-        self.send_progress_update(task_id, "Preparing task execution")
+        // Update task status
+        self.store
+            .update_task_state(task.id.expect("Task ID required"), TaskState::Running)
             .await?;
 
-        // Allocate resources for the task based on its requirements/metadata.
-        // Might involve provisioning VMs, networks, or other resources.
-        self.send_progress_update(task_id, "Allocating resources")
-            .await?;
+        // Execute plugins in order
+        let mut result = TaskResult::new(task.id.clone());
 
-        // NOTE: Should we allocate resources here?!
-        // It would be nice if a profile could decide of this - or plugins.
+        for plugin in plugins {
+            let context = PluginContext {
+                task: task.clone(),
+                sandbox: sandbox.clone(),
+                resources: resources.clone(),
+            };
 
-        // let resource_result = self.allocate_resources(&task).await;
+            let plugin_result = plugin.execute(context).await?;
+            result.add_plugin_result(plugin.id(), plugin_result);
 
-        // If resource allocation fails, report failure and exit.
-        // if let Err(e) = resource_result {
-        //     // Wrap the error in an Arc since we need to clone it.
-        //     // Note that we can't implement Clone on our error type.
-        //     let error = Arc::new(TaskError::Resource(ResourceError::AllocationFailed(
-        //         format!("Failed to allocate resources: {}", e),
-        //     )));
-        //     self.report_task_failure(task_id, &error).await?;
-        //     return Err(Arc::try_unwrap(error).expect("Failed to unwrap error"));
-        // }
-
-        self.send_progress_update(task_id, "Resources allocated")
-            .await?;
-
-        // Prepare the task for execution (e.g, copy files, set up environment etc.)
-        // let prepare_result = self.prepare_task_env(&task).await;
-        // if let Err(e) = prepare_result {
-        //     // On preparation failure, release resources and report error.
-        //     self.release_resources(&task).await?;
-        //     let error = Arc::new(TaskError::Internal(format!(
-        //         "Failed to prepare task environment: {}",
-        //         e
-        //     )));
-        //     self.report_task_failure(task_id, &error).await?;
-        //     return Err(Arc::try_unwrap(error).expect("Failed to unwrap error"));
-        // }
-
-        // Send task to worker through the worker_tx channel.
-        if let Err(e) = self.worker_pool.assign_task(task.clone()).await {
-            self.release_resources(&task).await?;
-            return Err(e);
+            // Check if we should continue
+            if plugin_result.status == PluginStatus::Failed && task.stop_on_plugin_failure {
+                break;
+            }
         }
 
-        self.send_progress_update(task_id, "Task dispatched to worker")
-            .await?;
-
-        Ok(())
-    }
-
-    /// Prepare the environment for task execution.
-    async fn prepare_task_env(&self, task: &Task) -> Result<()> {
-        todo!();
-    }
-
-    /// Send a task to a worker.
-    // async fn send_to_worker(&self, task: &Task) -> Result<()> {
-    //     // Create a oneshot channel for the worker to respond.
-    //     let (response_tx, response_rx) = oneshot::channel();
-
-    //     let command = TaskCommand::StartTask {
-    //         task: task.clone(),
-    //         response: response_tx,
-    //     };
-
-    //     // Send the command to the worker.
-    //     self.worker_tx
-    //         .send(command)
-    //         .await
-    //         .map_err(|e| TaskError::Internal(format!("Worker channel closed: {}", e).into()))?;
-
-    //     // Wait for the worker to accept the task.
-    //     match response_rx.await {
-    //         Ok(Ok(())) => Ok(()),
-    //         Ok(Err(e)) => Err(e),
-    //         Err(_) => Err(TaskError::Internal("Worker disconnected".into())),
-    //     }
-    // }
-
-    /// Cancel a running task.
-    pub async fn cancel_task(&self, task_id: i32) -> Result<()> {
-        self.worker_pool.cancel_task(task_id).await
-    }
-
-    /// Allocate resources needed for task execution.
-    async fn allocate_resources(&self, task: &Task) -> Result<()> {
-        let task_id = task.id.expect("Task must have an ID for execution");
-
-        // Using the resource manager to provision what's needed.
-        // This depends on task fields/metadata like platform, memory, etc.
-
-        self.resource_manager
-            .allocate_vm_for_task(task_id, Some(task.platform.clone()), None)
-            .await?;
-
-        Ok(())
-    }
-
-    /// Release resources after task completion or failure.
-    async fn release_resources(&self, task: &Task) -> Result<()> {
-        let task_id = task.id.expect("Task must have an ID for execution");
-
-        self.resource_manager.release_resources(task_id).await?;
-
-        Ok(())
-    }
-
-    /// Send a progress update about a task.
-    async fn send_progress_update(&self, task_id: i32, message: &str) -> Result<()> {
-        let command = TaskCommand::TaskProgress {
-            task_id,
-            message: message.to_string(),
+        // Update task status
+        let final_status = if result.has_failures() {
+            TaskState::Failed
+        } else {
+            TaskState::Completed
         };
 
-        self.feedback_tx
-            .send(command)
-            .await
-            .map_err(|_| TaskError::Internal("Feedback channel closed".into()))?;
+        self.store
+            .update_task_state(task.id.expect("Task ID required"), final_status)
+            .await?;
 
-        Ok(())
+        // Release resources
+        self.resource_manager.release(&task.id).await?;
+
+        Ok(result)
     }
 
-    /// Report a task failure.
-    async fn report_task_failure(&self, task_id: i32, error: &Arc<TaskError>) -> Result<()> {
-        let command = TaskCommand::TaskFailed {
-            task_id,
-            error: Arc::clone(error),
-        };
+    pub async fn execute_batch(
+        &self,
+        tasks: Vec<Task>,
+        resources: ResourceAllocation,
+    ) -> Result<Vec<TaskResult>> {
+        todo!()
+    }
 
-        self.feedback_tx
-            .send(command)
-            .await
-            .map_err(|_| TaskError::Internal("Feedback channel closed".into()))?;
-
-        Ok(())
+    async fn execute_plugin(
+        &self,
+        plugin_id: &str,
+        context: PluginContext,
+    ) -> Result<PluginResult> {
+        todo!()
     }
 }
