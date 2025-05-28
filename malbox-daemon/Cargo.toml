@@ -9,7 +9,6 @@ malbox-hashing = { path = "../malbox-hashing" }
 malbox-config = { path = "../malbox-config" }
 malbox-scheduler = { path = "../malbox-scheduler" }
 malbox-http = { path = "../malbox-http" }
-malbox-core = { path = "../malbox-core" }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 thiserror = { workspace = true }

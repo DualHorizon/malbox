@@ -1,0 +1,10 @@
+[package]
+name = "malbox-plugin-api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde.workspace = true
+semver.workspace = true
+thiserror.workspace = true
+async-trait = "0.1.88"

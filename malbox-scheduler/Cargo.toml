@@ -9,7 +9,6 @@ edition = "2021"
 malbox-database = { path = "../malbox-database" }
 malbox-config.path = "../malbox-config"
 malbox-infra.path = "../malbox-infra"
-malbox-core.path = "../malbox-core"
 serde_json.workspace = true
 thiserror.workspace = true
 uuid.workspace = true

@@ -3,7 +3,7 @@
 use super::ApiVersion;
 use semver::{Version, VersionReq};
 
-/// Check if a plugin API version is compatible with the current core version
+/// Check if a plugin API version is compatible with the current core version.
 pub fn is_plugin_compatible(plugin_version: &str) -> bool {
     let Ok(plugin_ver) = Version::parse(plugin_version) else {
         return false;
@@ -20,7 +20,7 @@ pub fn is_plugin_compatible(plugin_version: &str) -> bool {
     plugin_ver.major == current_semver.major && plugin_ver <= current_semver
 }
 
-/// Get the best compatible API version for a plugin request
+/// Get the best compatible API version for a plugin request.
 pub fn negotiate_api_version(requested: &str) -> Option<String> {
     let Ok(requested_ver) = Version::parse(requested) else {
         return None;
@@ -41,12 +41,12 @@ pub fn negotiate_api_version(requested: &str) -> Option<String> {
     }
 }
 
-/// Get all supported API versions
+/// Get all supported API versions.
 pub fn supported_versions() -> Vec<String> {
     vec![ApiVersion::current().to_string()]
 }
 
-/// Create a version requirement for the current API
+/// Create a version requirement for the current API.
 pub fn current_version_req() -> VersionReq {
     let current = ApiVersion::current();
     VersionReq::parse(&format!(

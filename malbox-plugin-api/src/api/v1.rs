@@ -1,4 +1,4 @@
-//! Plugin API Version 1.0
+//! Plugin API Version 1.0.
 //!
 //! This is the current stable plugin API. All plugins should implement
 //! the traits defined in this module.
