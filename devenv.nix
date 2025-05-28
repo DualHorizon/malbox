@@ -51,7 +51,6 @@ in {
     python311Packages.sphinx
     python311Packages.sphinx-rtd-theme
     python311Packages.ninja
-    libvirt
     llvm_18
     libllvm
     clang_18

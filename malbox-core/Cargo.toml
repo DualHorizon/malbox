@@ -2,8 +2,13 @@
 name = "malbox-core"
 version = "0.1.0"
 edition = "2024"
+description = "Core plugin system and communication infrastructure for Malbox"
+
+# API Versions
+api-v1 = []
 
 [dependencies]
+malbox-communication.path = "../malbox-communication"
 tokio.workspace = true
 tracing.workspace = true
 semver.workspace = true
@@ -11,7 +16,5 @@ serde.workspace = true
 uuid.workspace = true
 thiserror.workspace = true
 serde_json.workspace = true
-iceoryx2.workspace = true
-iceoryx2-bb-container.version = "0.5.0"
-malbox-plugin-api.path = "../malbox-plugin-api"
 bincode = { version = "2.0.1", features = [ "serde" ] }
+async-trait = "0.1.88"
