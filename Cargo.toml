@@ -12,7 +12,9 @@ members = [
     "malbox-cli",
     "malbox-infra",
     "malbox-downloader",
-    "malbox-core", "malbox-communication",
+    "malbox-communication",
+    "malbox-plugin-api",
+    "malbox-plugin-internal",
 ]
 
 [workspace.dependencies]

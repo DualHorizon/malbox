@@ -8,7 +8,7 @@ pub mod v1;
 
 pub use v1::*;
 
-/// API version information and metadata
+/// API version information and metadata.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApiVersion {
     pub major: u32,
@@ -17,19 +17,19 @@ pub struct ApiVersion {
 }
 
 impl ApiVersion {
-    /// Current stable API version
+    /// Current stable API version.
     pub const V1_0_0: Self = Self {
         major: 1,
         minor: 0,
         patch: 0,
     };
 
-    /// Get the current API version
+    /// Get the current API version.
     pub fn current() -> Self {
         Self::V1_0_0
     }
 
-    /// Check if this version is compatible with another version
+    /// Check if this version is compatible with another version.
     pub fn is_compatible_with(&self, other: &Self) -> bool {
         // Same major version, plugin minor <= core minor
         self.major == other.major && other.minor <= self.minor
