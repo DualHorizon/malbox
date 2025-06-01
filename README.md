@@ -4,13 +4,12 @@
 
 <div align="center">
 
-[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![License](https://img.shields.io/github/license/DualHorizon/malbox?style=for-the-badge)](LICENSE)
-[![Coverage](https://codecov.io/gh/DualHorizon/malbox/branch/main/graph/badge.svg?token=123)](https://codecov.io/gh/DualHorizon/malbox)
-[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/your-invite)
-[![Plugins](https://img.shields.io/badge/plugins-WIP-blue?style=for-the-badge)](https://marketplace.malbox.io)
+[![Rust](https://img.shields.io/badge/Built%20with%20Rust-grey?style=for-the-badge&logo=rust&color=%23282828)](https://www.rust-lang.org/)
+[![License](https://img.shields.io/github/license/DualHorizon/malbox?style=for-the-badge&color=%23282828)](LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-grey?style=for-the-badge&logo=discord&color=%23282828)](https://discord.gg/7BVnQHRy7h)
+[![Plugins](https://img.shields.io/badge/plugins-WIP-blue?style=for-the-badge&color=%23282828)](#)
 
-[Documentation](docs) • [Installation](docs/installation.md) • [API Reference](docs/api) • [Plugin Marketplace](https://marketplace.mal.box) • [Discord](https://discord.gg/XWBdpQ5bMp)
+[Documentation](https://dualhorizon.github.io/malbox-docs/) • [Installation](https://dualhorizon.github.io/malbox-docs/getting-started/quickstart/) • [API Reference](https://dualhorizon.github.io/malbox-docs/reference/api/) • [Plugin Marketplace](#) • [Discord](https://discord.gg/7BVnQHRy7h)
 
 </div>
 
@@ -43,43 +42,14 @@ Malbox is a malware analysis platform/framework built in Rust. Its plugin-driven
 
 At the core of Malbox is its extensible plugin system, designed for analysis flexibility while maintaining process isolation. Plugins operate with a well-defined lifecycle and communication framework that enables seamless integration of new capabilities, sharing data between plugins without any duplication, and much more.
 
-## Architecture Overview
-
-```mermaid
-graph TD
-    A[Core System] --> B[Plugin Manager]
-    B --> C[Host Plugins]
-    B --> D[Guest Plugins]
-    B --> E[Hybrid Plugins]
-    
-    C --> F[IPC Channel]
-    D --> G[gRPC Channel]
-    E --> F
-    E --> G
-    
-    F --> H[Plugin Registry]
-    G --> H
-    
-    subgraph "Communication Bridge"
-        F
-        G
-    end
-    
-    subgraph "Plugin Management"
-        B
-        H
-    end
-```
-
-## Plugin Types by Execution Context
+## Execution Context
 
 Malbox supports plugins in diverse execution environments:
 
-- **Host Plugins**: Run directly on the host OS for static analysis, reporting, and task coordination
-- **Guest Plugins**: Execute within VM environments for dynamic analysis
-- **Hybrid Plugins**: Operate across both environments with coordinated components
+- **Host Plugins**: Run directly on the host OS (e.g. for static analysis, emulation, etc.)
+- **Guest Plugins**: Execute within VM environments (e.g. for dynamic analysis)
 
-## Execution Models
+## Execution Policies
 
 Plugins can operate in various modes:
 
@@ -92,36 +62,18 @@ Plugins can operate in various modes:
 
 Plugins can maintain different levels of persistence:
 
-- **Stateless**: Fresh state for each task (default)
-- **Stateful**: Maintains state between all tasks
-- **StatefulByType**: Maintains state only across tasks of the same type
+- **Isolated**: Fresh state for each task (default)
+- **Global**: Maintains state between all tasks
+- **ContextAware**: Maintains state only across tasks of the same type
 
 ## Communication Infrastructure
 
-The plugin system uses advanced IPC mechanisms:
+The plugin system mainly uses IPC mechanisms:
 
 - **Host Communication**: Zero-copy IPC using iceoryx2
-- **Guest Communication**: gRPC for VM-based plugins
-- **Bridge Component**: Translates between different communication protocols
+- **Guest Communication**: Zero-copy IPC using iceoryx2 for communication within the VM, exposed to a gRPC bridge that communicates back to the host
 
-## Plugin Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> Created
-    Created --> Starting: start()
-    Starting --> Running
-    Running --> Stopping: stop()
-    Stopping --> Stopped
-    Stopped --> Starting: start()
-    Stopped --> [*]
-    
-    Starting --> Failed
-    Running --> Failed
-    Failed --> [*]
-```
-
-## Example Plugin Categories
+## [![TBD](https://img.shields.io/badge/TBD-red?style=flat-square)](#) Example Plugin Categories 
 
 - **Static Analysis Plugins**
   - File format analysis (PE/ELF/MachO)
@@ -154,35 +106,34 @@ Plugins are discoverable via metadata, which defines their capabilities, require
 
 ### Plugin Marketplace
 
-Access 50+ verified and official plugins from our [Marketplace](https://marketplace.mal.box) or at your self-hosted Malbox instance:
+Access community verified or official plugins through our [Marketplace](#) - also available in your self-hosted Malbox instance:
 
 ![Plugin Marketplace](https://github.com/user-attachments/assets/f0c2c099-1093-4d9c-a4d9-30adac8da4c9)
 
 #### Official Plugins
-[![PE Analysis](https://img.shields.io/badge/PE%20Analysis-1.2.0-blue?style=flat-square&logo=windows)](https://marketplace.malbox.io/plugins/pe-analysis)
-[![Network Monitor](https://img.shields.io/badge/Network%20Monitor-2.0.1-blue?style=flat-square&logo=wireshark)](https://marketplace.malbox.io/plugins/network-monitor)
-[![YARA Engine](https://img.shields.io/badge/YARA%20Engine-3.1.0-blue?style=flat-square&logo=search)](https://marketplace.malbox.io/plugins/yara-engine)
-[![Memory Analysis](https://img.shields.io/badge/Memory%20Analysis-1.0.2-blue?style=flat-square&logo=memory)](https://marketplace.malbox.io/plugins/memory-analysis)
+[![PE Analysis](https://img.shields.io/badge/PE%20Analysis-1.2.0-blue?style=flat-square&logo=windows)](#)
+[![Network Monitor](https://img.shields.io/badge/Network%20Monitor-2.0.1-blue?style=flat-square&logo=wireshark)](#)
+[![YARA Engine](https://img.shields.io/badge/YARA%20Engine-3.1.0-blue?style=flat-square&logo=search)](#)
+[![Memory Analysis](https://img.shields.io/badge/Memory%20Analysis-1.0.2-blue?style=flat-square&logo=memory)](#)
 
 #### Featured Community Plugins
-[![Threat Intel](https://img.shields.io/badge/Threat%20Intel-2.1.0-green?style=flat-square)](https://marketplace.malbox.io/plugins/threat-intel)
-[![ML Classifier](https://img.shields.io/badge/ML%20Classifier-1.5.0-green?style=flat-square)](https://marketplace.malbox.io/plugins/ml-classifier)
-[![Report Generator](https://img.shields.io/badge/Report%20Generator-2.2.1-green?style=flat-square)](https://marketplace.malbox.io/plugins/report-gen)
+[![Threat Intel](https://img.shields.io/badge/Threat%20Intel-2.1.0-green?style=flat-square)](#)
+[![ML Classifier](https://img.shields.io/badge/ML%20Classifier-1.5.0-green?style=flat-square)](#)
+[![Malcat Scripting](https://img.shields.io/badge/Malcat%20Scripting-2.2.1-green?style=flat-square)](#)
 
 > [!IMPORTANT]  
-> All plugins undergo security review and verification before being listed in the marketplace. [Submit your plugin](docs/plugins/publishing.md)
+> All plugins undergo security review and verification before being listed in the marketplace. [Submit your plugin](#)
 
 ## Features
 
 ### Analysis Capabilities
 
-Analysis capabilities depend on the plugins installed, hence, the capabilities will continue to grow as the project lives.
-For good measure, you can find a couple of functionalities that are already available through our plugins.
+Analysis capabilities depend on the plugins installed, hence, the capabilities will continue to grow as plugins are released, both from the community and maintainers.
+For good measure, you can find a couple of functionalities that will be available through official plugins.
 
 - **File Type Support**
   - Windows Executables (PE32, PE32+)
   - Linux Executables (ELF)
-  - macOS Executables (MachO)
   - Office Documents
   - PDF Files
   - Script Files (JS, VBS, PS1)
@@ -192,14 +143,14 @@ For good measure, you can find a couple of functionalities that are already avai
   - Automated unpacking
   - String extraction
   - Entropy analysis
-  - Network simulation
+  - Network analysis
   - Memory inspection
   - Behavioral analysis
   - Custom scripting support
 
 ![Analysis Result Popup](https://github.com/user-attachments/assets/1d25d9fc-291c-4cea-80bc-6c10e5ccff27)
 
-### Enterprise Features
+### [![TBD](https://img.shields.io/badge/TBD-red?style=flat-square)](#) Enterprise Features
 
 - Multi-user support with RBAC
 - Team management
@@ -207,60 +158,11 @@ For good measure, you can find a couple of functionalities that are already avai
 - Custom reporting
 - Integration capabilities
 
-## Technology Stack
-
-| Component | Technology | Details |
-|-----------|------------|----------|
-| Core | ![Rust](https://img.shields.io/badge/rust-1.81.0-orange.svg) | Safe, high-performance execution |
-| IPC | ![iceoryx2](https://img.shields.io/badge/iceoryx2-latest-blue.svg) | Zero-copy plugin communication |
-| Database | ![PostgreSQL](https://img.shields.io/badge/postgresql-13+-blue.svg) | Reliable state management |
-| API | ![Axum](https://img.shields.io/badge/axum-latest-green.svg) | Modern web framework |
-| Frontend | ![Astro](https://img.shields.io/badge/astro-latest-purple.svg) | Fast, static frontend |
-
-## Architecture
-
-![Runtime Architecture](assets/malbox-runtime.svg)
-
-## Quick Start
-
-### Prerequisites
-- Rust 1.81.0+
-- PostgreSQL 13+
-- One of: KVM, VMware, or VirtualBox
-
-```bash
-# Install
-git clone https://github.com/DualHorizon/malbox.git
-cd malbox
-
-# Configure
-cp configuration/malbox.example.toml configuration/malbox.toml
-$EDITOR configuration/malbox.toml
-
-# Build and Run
-cargo build --release
-cargo run --release
-```
-
-Detailed setup instructions available in our [Installation Guide](docs/installation.md).
-
-### Docker Support
-
-```bash
-# Pull official image
-docker pull malbox/malbox:latest
-
-# Start with docker-compose
-wget https://raw.githubusercontent.com/DualHorizon/malbox/main/docker-compose.yml
-docker-compose up -d
-```
-
 ## Support & Community
 
-- [Documentation](https://docs.malbox.io)
+- [Documentation](#)
 - [GitHub Issues](https://github.com/DualHorizon/malbox/issues)
-- [Discord Community](https://discord.gg/your-invite)
-- [Enterprise Support](https://malbox.io/enterprise)
+- [Discord Community](https://discord.gg/XWBdpQ5bMp)
 
 ## Contributing
 
@@ -275,7 +177,7 @@ Licensed under GNU General Public License (GPL) - © 2024 Malbox Contributors
 
 <div align="center">
 
-**[⬆ Back to Top](#top)** • Made with ❤️ by the Malbox Team
+**[⬆ Back to Top](#top)** • Made with ❤️ by the Malbox maintainers and its contributors
 
 <a href="https://star-history.com/#DualHorizon/malbox">
   <img src="https://api.star-history.com/svg?repos=DualHorizon/malbox&type=Date" alt="Star History Chart" />
