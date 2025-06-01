@@ -24,87 +24,26 @@
 > The estimated release version to achieve something functional and stable is `v0.4.0`. 
 
 
-## Overview
+# Overview
 
-Malbox is a malware analysis platform/framework built in Rust. Its plugin-driven architecture enables security teams and malware analysis enthousiasts to extend and customize analysis capabilities easily. 
+Malbox is an open-source malware analysis platform designed to provide security researchers, malware analysts, and cybersecurity teams with a powerful, extensible environment for analyzing files and understanding their behavior. 
 
+## Why Malbox?
 
-### Why Malbox?
-
-- **Plugin Architecture**: Extend functionality easily through plugins, which can be written in Rust, Javascript and Python.
-- **High Performance**: Malbox does not compromise on performance despite its modular plugin system. It primarily uses [iceoryx2](https://docs.rs/iceoryx2/latest/iceoryx2/), a shared-memory IPC (Inter-Process-Communication) library that enables zero-copy and lock-free communication. In addition, plugin creators and users can declare and configure plugin specifics, often resulting in more optimized runtimes and adaptable use cases.
+- **Plugin Architecture**: Extend functionality easily through plugins, which can be written in Rust, Javascript and Python. Malbox's plugin system lets you extend functionality as easily as installing a package, and discover them through the Malbox marketplace.
+- **High Performance**: Malbox does not compromise on performance despite its modular plugin system. It primarily uses [iceoryx2](https://docs.rs/iceoryx2/latest/iceoryx2/), a shared-memory IPC (Inter-Process-Communication) library that enables zero-copy and lock-free communication. In addition, plugin creators and users can declare and configure plugin specifics, often resulting in more optimized runtimes and adaptable use cases. 
 - **Completely Free and Self-Hostable**: Retain full control over your infrastructure—Malbox will remain open-source and free forever.
 - **User-friendly Ecosystem**: Malbox’s built-in marketplace makes it easy to install official and community verified plugins. Installation does not require rebuilding or restarting the Malbox service. Plugins and profiles follow strict standards to ensure a healthy, thriving ecosystem.
 - **Cloud or On-Premise Storage and Deployment**: Malbox supports both cloud-based and on-premise solutions for your infrastructure and storage needs.
-- **Easy Deployment**: Enjoy a user-friendly, minimal-overhead setup that is ready to use within minutes. Malbox emphasizes declarative configuration to reduce complexity and simplify the setup and configuration process.
+- **Easy Setup**: Enjoy a user-friendly, minimal-overhead setup that is ready to use within minutes. Malbox emphasizes declarative configuration to reduce complexity and simplify the setup and configuration process.
 
 # Plugin Ecosystem
 
 At the core of Malbox is its extensible plugin system, designed for analysis flexibility while maintaining process isolation. Plugins operate with a well-defined lifecycle and communication framework that enables seamless integration of new capabilities, sharing data between plugins without any duplication, and much more.
 
-## Execution Context
-
-Malbox supports plugins in diverse execution environments:
-
-- **Host Plugins**: Run directly on the host OS (e.g. for static analysis, emulation, etc.)
-- **Guest Plugins**: Execute within VM environments (e.g. for dynamic analysis)
-
-## Execution Policies
-
-Plugins can operate in various modes:
-
-- **Exclusive**: Plugin must be executed alone, no other plugins can run
-- **Sequential**: Plugin must be executed sequentially, one at a time
-- **Parallel**: Plugin can run in parallel with other plugins in the same group
-- **Unrestricted**: Plugin has no special execution requirements
-
-## State Management
-
-Plugins can maintain different levels of persistence:
-
-- **Isolated**: Fresh state for each task (default)
-- **Global**: Maintains state between all tasks
-- **ContextAware**: Maintains state only across tasks of the same type
-
-## Communication Infrastructure
-
-The plugin system mainly uses IPC mechanisms:
-
-- **Host Communication**: Zero-copy IPC using iceoryx2
-- **Guest Communication**: Zero-copy IPC using iceoryx2 for communication within the VM, exposed to a gRPC bridge that communicates back to the host
-
-## [![TBD](https://img.shields.io/badge/TBD-red?style=flat-square)](#) Example Plugin Categories 
-
-- **Static Analysis Plugins**
-  - File format analysis (PE/ELF/MachO)
-  - YARA scanning
-  - Signature verification
-  - String extraction and analysis
-  
-- **Dynamic Analysis Plugins**
-  - Process monitoring
-  - Network traffic analysis
-  - Memory inspection
-  - Behavioral analysis
-  
-- **Infrastructure Plugins**
-  - VM management
-  - Network configuration
-  - Artifact storage
-  - Result aggregation
-
-- **Utility Plugins**
-  - Unpacking
-  - Decryption
-  - File type detection
-  - Data visualization
-
 Plugins are discoverable via metadata, which defines their capabilities, requirements, and compatibility with other plugins. This allows for creating comprehensive analysis profiles that combine multiple plugins for in-depth examination of artifacts.
 
-> [!WARNING]  
-> Plugin categories aren't defined yet, this is just a rough idea of what they could be. Stay tuned for updates!
-
-### Plugin Marketplace
+## Plugin Marketplace
 
 Access community verified or official plugins through our [Marketplace](#) - also available in your self-hosted Malbox instance:
 
