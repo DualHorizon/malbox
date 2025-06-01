@@ -153,7 +153,7 @@ impl Worker {
         Ok(())
     }
 
-    /// Handle a single job.
+    /// Handle a job.
     async fn handle_job(&mut self, job: Job) -> Result<()> {
         let start_time = Instant::now();
 
