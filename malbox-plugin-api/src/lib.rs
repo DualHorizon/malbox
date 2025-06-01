@@ -4,6 +4,7 @@
 //! that plugin authors need to depend on.
 
 pub mod api;
+pub mod error;
 pub mod sealed;
 
 pub use api::v1::{
