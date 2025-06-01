@@ -14,7 +14,7 @@ members = [
     "malbox-downloader",
     "malbox-communication",
     "malbox-plugin-api",
-    "malbox-plugin-internal",
+    "malbox-plugin-internal", "malbox-plugin-utils",
 ]
 
 [workspace.dependencies]
