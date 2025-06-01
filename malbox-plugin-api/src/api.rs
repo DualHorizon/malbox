@@ -45,7 +45,7 @@ impl std::fmt::Display for ApiVersion {
 impl std::str::FromStr for ApiVersion {
     type Err = semver::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let version = semver::Version::parse(s)?;
         Ok(Self {
             major: version.major as u32,

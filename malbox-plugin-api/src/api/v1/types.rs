@@ -12,7 +12,6 @@ use std::collections::HashSet;
 pub enum ExecutionContext {
     /// Plugin executes on the host system.
     Host,
-
     /// Plugin executes within a guest VM.
     Guest {
         /// The platform the plugin is designed for.
@@ -26,13 +25,10 @@ pub enum ExecutionContext {
 pub enum ExecutionPolicy {
     /// Plugin must be executed alone, no other plugins can run on the task.
     Exclusive,
-
     /// Plugin must be executed sequentially, one at a time.
     Sequential,
-
     /// Plugin can run in parallel with other plugins in the same group.
     Parallel(String),
-
     /// Plugin has no special execution policy.
     Unrestricted,
 }
@@ -43,7 +39,6 @@ pub enum ExecutionPolicy {
 pub enum GuestPlatform {
     /// Microsoft Windows platform.
     Windows,
-
     /// Linux platform.
     Linux,
 }
@@ -53,13 +48,10 @@ pub enum GuestPlatform {
 pub struct PluginMetadata {
     /// Plugin API version this plugin was built for.
     pub api_version: String,
-
     /// Plugin capabilities/features.
     pub capabilities: HashSet<PluginCapability>,
-
     /// Plugin tags for categorization.
     pub tags: HashSet<String>,
-
     /// Whether this plugin is considered stable.
     pub stable: bool,
 }
@@ -70,16 +62,12 @@ pub struct PluginMetadata {
 pub enum PluginCapability {
     /// Plugin can analyze files.
     FileAnalysis,
-
     /// Plugin can perform network analysis.
     NetworkAnalysis,
-
     /// Plugin can generate reports.
     Reporting,
-
     /// Plugin provides visualization.
     Visualization,
-
     /// Plugin can unpack/decode files.
     Unpacking,
 }
