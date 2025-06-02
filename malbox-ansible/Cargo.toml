@@ -1,0 +1,12 @@
+[package]
+name = "malbox-ansible"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+malbox-io-utils.path = "../malbox-io-utils"
+malbox-config.path = "../malbox-config"
+thiserror.workspace = true
+tracing.workspace = true
+serde.workspace = true
+serde_norway = "0.9.42"
