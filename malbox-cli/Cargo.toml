@@ -6,7 +6,6 @@ edition = "2021"
 [dependencies]
 malbox-daemon = { path = "../malbox-daemon" }
 malbox-config = { path = "../malbox-config" }
-malbox-infra = { path = "../malbox-infra" }
 malbox-tracing = { path = "../malbox-tracing" }
 malbox-downloader = { path = "../malbox-downloader" }
 anyhow = { workspace = true }
