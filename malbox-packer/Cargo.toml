@@ -4,3 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+malbox-config.path = "../malbox-config"
+malbox-io-utils.path = "../malbox-io-utils"
+malbox-hcl-utils.path = "../malbox-hcl-utils"
+serde.workspace = true
+tokio.workspace = true
+tracing.workspace = true
