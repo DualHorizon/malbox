@@ -1,14 +1,10 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! Malbox Resource Management
+//!
+//! This crate provides resource management capabilities for Malbox,
+//! focusing on machinery resources such as VMs.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub mod allocation;
+pub mod error;
+pub mod manager;
+pub mod types;
+pub mod vm;

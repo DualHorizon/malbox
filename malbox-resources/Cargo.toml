@@ -4,3 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+malbox-database.path = "../malbox-database"
+malbox-terraform.path = "../malbox-terraform"
+malbox-config.path = "../malbox-config"
+serde.workspace = true
+uuid.workspace = true
+time.workspace = true
+thiserror.workspace = true
+bon.workspace = true
+tracing.workspace = true
