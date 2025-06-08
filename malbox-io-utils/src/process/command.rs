@@ -1,6 +1,7 @@
 use crate::error::{IoError, Result};
 use futures::{Future, FutureExt, Stream, StreamExt};
 use std::collections::HashMap;
+use std::ffi::{CString, OsStr};
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::process::Stdio;
@@ -50,82 +51,68 @@ impl CommandOutput {
     }
 }
 
-#[derive(Clone)]
 pub struct AsyncCommand {
-    program: String,
-    args: Vec<String>,
-    working_dir: Option<PathBuf>,
-    env_vars: HashMap<String, String>,
+    inner: tokio::process::Command,
+    stdin: bool,
+    stdout: bool,
+    stderr: bool,
 }
 
 impl AsyncCommand {
-    pub fn new<S: Into<String>>(program: S) -> Self {
+    pub fn new<S: AsRef<OsStr>>(program: S) -> Self {
         Self {
-            program: program.into(),
-            args: Vec::new(),
-            working_dir: None,
-            env_vars: HashMap::new(),
+            inner: tokio::process::Command::new(program),
+            stdin: false,
+            stdout: true,
+            stderr: true,
         }
     }
 
-    pub fn arg<S: Into<String>>(mut self, arg: S) -> Self {
-        self.args.push(arg.into());
+    pub fn arg<S: AsRef<OsStr>>(mut self, arg: S) -> Self {
+        self.inner.arg(arg);
         self
     }
 
     pub fn args<I, S>(mut self, args: I) -> Self
     where
         I: IntoIterator<Item = S>,
-        S: Into<String>,
+        S: AsRef<OsStr>,
     {
-        for arg in args {
-            self.args.push(arg.into());
-        }
+        self.inner.args(args);
         self
     }
 
-    pub fn current_dir<P: Into<PathBuf>>(mut self, dir: P) -> Self {
-        self.working_dir = Some(dir.into());
+    pub fn current_dir<P: AsRef<Path>>(mut self, dir: P) -> Self {
+        self.inner.current_dir(dir);
         self
     }
 
     pub fn env<K, V>(mut self, key: K, value: V) -> Self
     where
-        K: Into<String>,
-        V: Into<String>,
+        K: AsRef<OsStr>,
+        V: AsRef<OsStr>,
     {
-        self.env_vars.insert(key.into(), value.into());
+        self.inner.env(key, value);
         self
     }
 
     pub async fn output_stream(
-        &self,
+        &mut self,
     ) -> Result<(
         Pin<Box<dyn Stream<Item = OutputLine> + Send>>,
         Pin<Box<dyn Future<Output = i32> + Send>>,
     )> {
-        let mut cmd = Command::new(&self.program);
-        cmd.args(&self.args);
+        self.inner.stdout(Stdio::piped());
+        self.inner.stderr(Stdio::piped());
 
-        if let Some(dir) = &self.working_dir {
-            cmd.current_dir(dir);
-        }
-
-        for (key, value) in &self.env_vars {
-            cmd.env(key, value);
-        }
-
-        cmd.stdout(Stdio::piped());
-        cmd.stderr(Stdio::piped());
-
-        let mut child = cmd.spawn().map_err(|e| {
+        let mut child = self.inner.spawn().map_err(|e| {
             if e.kind() == std::io::ErrorKind::NotFound {
                 IoError::CommandNotFound {
-                    command: self.program.clone(),
+                    command: format!("{:?}", self.inner),
                 }
             } else {
                 IoError::SpawnFailed {
-                    command: self.program.clone(),
+                    command: format!("{:?}", self.inner),
                     message: e.to_string(),
                 }
             }
@@ -191,7 +178,10 @@ impl AsyncCommand {
         Ok((output_stream, exit_code_future))
     }
 
-    pub async fn run_with_output_handler<F>(&self, mut output_handler: F) -> Result<CommandOutput>
+    pub async fn run_with_output_handler<F>(
+        &mut self,
+        mut output_handler: F,
+    ) -> Result<CommandOutput>
     where
         F: FnMut(&OutputLine),
     {
@@ -222,11 +212,11 @@ impl AsyncCommand {
         })
     }
 
-    pub async fn run(&self) -> Result<CommandOutput> {
+    pub async fn run(&mut self) -> Result<CommandOutput> {
         self.run_with_output_handler(|_| {}).await
     }
 
-    pub async fn run_with_standard_logging(&self) -> Result<CommandOutput> {
+    pub async fn run_with_standard_logging(&mut self) -> Result<CommandOutput> {
         self.run_with_output_handler(|line| {
             let content = &line.content;
             match line.source {
